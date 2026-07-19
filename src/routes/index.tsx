@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, useSpring, useInView } from "framer-motion";
 import logoAsset from "@/assets/logo.png";
@@ -77,17 +77,16 @@ function Nav() {
         className={`relative mx-auto flex items-center justify-between gap-4 rounded-3xl border border-chrome bg-white transition-all duration-500 ${scrolled ? "max-w-6xl px-5 py-2.5" : "max-w-7xl px-7 py-4"}`}
         style={{ boxShadow: "var(--shadow-plate)" }}
       >
-        <div className="flex items-center gap-3 min-w-0">
+        <Link to="/" className="flex items-center gap-3 min-w-0">
           <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-black" />
           <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-black truncate">VentageCvunt</span>
-        </div>
+        </Link>
 
         <nav className="hidden md:flex items-center gap-8 font-mono text-[11px] uppercase tracking-[0.24em] text-black/70">
-          {["Home", "Shop", "About Us", "Contact"].map((l) => (
-            <a key={l} href={`#${l.toLowerCase().replace(/\s+/g, "-")}`} className="relative transition-colors hover:text-black">
-              {l}
-            </a>
-          ))}
+          <Link to="/" className="relative transition-colors hover:text-black">Home</Link>
+          <Link to="/shop" className="relative transition-colors hover:text-black">Shop</Link>
+          <a href="#" className="relative transition-colors hover:text-black">About Us</a>
+          <a href="#" className="relative transition-colors hover:text-black">Contact</a>
         </nav>
 
         <div className="flex items-center justify-end gap-5 font-mono text-[11px] uppercase tracking-[0.24em] text-black">
@@ -115,11 +114,10 @@ function Nav() {
       >
         <div className="rounded-3xl border border-chrome bg-white p-6 flex flex-col gap-6" style={{ boxShadow: "var(--shadow-plate)" }}>
           <nav className="flex flex-col gap-6 font-mono text-sm uppercase tracking-[0.24em] text-black/70">
-            {["Home", "Shop", "About Us", "Contact"].map((l) => (
-              <a key={l} href={`#${l.toLowerCase().replace(/\s+/g, "-")}`} onClick={() => setMenuOpen(false)} className="hover:text-black transition-colors">
-                {l}
-              </a>
-            ))}
+            <Link to="/" onClick={() => setMenuOpen(false)} className="hover:text-black transition-colors">Home</Link>
+            <Link to="/shop" onClick={() => setMenuOpen(false)} className="hover:text-black transition-colors">Shop</Link>
+            <a href="#" onClick={() => setMenuOpen(false)} className="hover:text-black transition-colors">About Us</a>
+            <a href="#" onClick={() => setMenuOpen(false)} className="hover:text-black transition-colors">Contact</a>
           </nav>
           <div className="h-px w-full bg-black/10" />
           <div className="flex flex-col gap-4 font-mono text-[11px] uppercase tracking-[0.24em] text-black/70">

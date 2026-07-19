@@ -4,10 +4,10 @@ import { n as require_jsx_runtime, r as require_react, t as QueryClientProvider 
 import { c as HeadContent, d as Outlet, f as lazyRouteComponent, g as useRouter, h as Link, m as createRootRouteWithContext, p as createFileRoute, s as Scripts, u as createRouter } from "../_libs/@tanstack/react-router+[...].mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
 import { t as Lenis } from "../_libs/lenis.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-DlSpc4_O.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-YY_TBMM9.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-DpRpk8hM.css";
+var styles_default = "/assets/styles-D_KS8Yj7.css";
 function reportLovableError(error, context = {}) {
 	if (typeof window === "undefined") return;
 	window.__lovableEvents?.captureException?.(error, {
@@ -94,7 +94,7 @@ function ErrorComponent({ error, reset }) {
 		})
 	});
 }
-var Route$1 = createRootRouteWithContext()({
+var Route$2 = createRootRouteWithContext()({
 	head: () => ({
 		meta: [
 			{ charSet: "utf-8" },
@@ -165,7 +165,7 @@ function RootShell({ children }) {
 	});
 }
 function RootComponent() {
-	const { queryClient } = Route$1.useRouteContext();
+	const { queryClient } = Route$2.useRouteContext();
 	(0, import_react.useEffect)(() => {
 		const lenis = new Lenis();
 		function raf(time) {
@@ -180,9 +180,9 @@ function RootComponent() {
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Outlet, {})
 	});
 }
-var $$splitComponentImporter = () => import("./routes-CtYn5lwQ.mjs");
-var rootRouteChildren = { IndexRoute: createFileRoute("/")({
-	component: lazyRouteComponent($$splitComponentImporter, "component"),
+var $$splitComponentImporter$1 = () => import("./routes-BMf1pgX_.mjs");
+var Route$1 = createFileRoute("/")({
+	component: lazyRouteComponent($$splitComponentImporter$1, "component"),
 	head: () => ({
 		meta: [
 			{ title: "VintageCvunt — Modern Gothic Luxury House" },
@@ -203,12 +203,28 @@ var rootRouteChildren = { IndexRoute: createFileRoute("/")({
 			fetchPriority: "high"
 		}]
 	})
-}).update({
-	id: "/",
-	path: "/",
-	getParentRoute: () => Route$1
-}) };
-var routeTree = Route$1._addFileChildren(rootRouteChildren)._addFileTypes();
+});
+var $$splitComponentImporter = () => import("./shop-CpV9Iuor.mjs");
+var Route = createFileRoute("/shop")({
+	component: lazyRouteComponent($$splitComponentImporter, "component"),
+	head: () => ({ meta: [{ title: "Shop — VintageCvunt" }, {
+		name: "description",
+		content: "Browse the VintageCvunt collection. Outerwear, silverwork, footwear, and adornment."
+	}] })
+});
+var rootRouteChildren = {
+	IndexRoute: Route$1.update({
+		id: "/",
+		path: "/",
+		getParentRoute: () => Route$2
+	}),
+	ShopRoute: Route.update({
+		id: "/shop",
+		path: "/shop",
+		getParentRoute: () => Route$2
+	})
+};
+var routeTree = Route$2._addFileChildren(rootRouteChildren)._addFileTypes();
 var getRouter = () => {
 	return createRouter({
 		routeTree,

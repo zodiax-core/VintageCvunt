@@ -1,24 +1,14 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { n as butterfly_img_default$1, t as butterfly_img_default } from "./butterfly-img-DGXirbV2.mjs";
 import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
+import { h as Link } from "../_libs/@tanstack/react-router+[...].mjs";
+import { a as logo_default$1, c as product_chain_default, d as product_jacket_default$1, f as product_ring_default, i as logo_default, l as product_chain_default$1, n as editorial_1_default, o as product_boots_default, p as product_ring_default$1, r as editorial_1_default$1, s as product_boots_default$1, t as OptimizedImage, u as product_jacket_default } from "./OptimizedImage-CDdK_kKj.mjs";
 import { i as motion, n as useTransform, r as useScroll, t as useSpring } from "../_libs/framer-motion.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-CtYn5lwQ.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-BMf1pgX_.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
-var editorial_1_default$1 = "/assets/editorial-1-D3rgpRoR.jpg";
-var product_ring_default$1 = "/assets/product-ring-BA7MlDfG.jpg";
-var product_jacket_default$1 = "/assets/product-jacket-DPDTWWFf.jpg";
-var product_chain_default$1 = "/assets/product-chain-DGOeWrtB.jpg";
-var product_boots_default$1 = "/assets/product-boots-DIlAebCu.jpg";
-var logo_default$1 = "/assets/logo-CJzlZTIN.png";
-var logo_default = "/assets/logo-BudfrtGN.webp";
 var sculpture_default$1 = "/assets/sculpture-5IDv_oDO.png";
 var sculpture_default = "/assets/sculpture-Cu905QCK.webp";
-var editorial_1_default = "/assets/editorial-1-BrSs0-Sl.webp";
-var product_ring_default = "/assets/product-ring-DR2POQjK.webp";
-var product_jacket_default = "/assets/product-jacket-DrU1o3KE.webp";
-var product_chain_default = "/assets/product-chain-BfrTm7do.webp";
-var product_boots_default = "/assets/product-boots-Tj6A_5Qm.webp";
 function ChromeCursor() {
 	const [pos, setPos] = (0, import_react.useState)({
 		x: -100,
@@ -45,17 +35,6 @@ function ChromeCursor() {
 		className: `chrome-cursor${hover ? " hovering" : ""}`,
 		style: { transform: `translate(${pos.x}px, ${pos.y}px) translate(-50%, -50%)` }
 	});
-}
-function OptimizedImage({ webp, fallback, className, alt, ...rest }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("picture", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("source", {
-		srcSet: webp,
-		type: "image/webp"
-	}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-		src: fallback,
-		alt: alt ?? "",
-		className,
-		...rest
-	})] });
 }
 var EASE = [
 	.16,
@@ -107,25 +86,38 @@ function Nav() {
 			className: `relative mx-auto flex items-center justify-between gap-4 rounded-3xl border border-chrome bg-white transition-all duration-500 ${scrolled ? "max-w-6xl px-5 py-2.5" : "max-w-7xl px-7 py-4"}`,
 			style: { boxShadow: "var(--shadow-plate)" },
 			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
+					to: "/",
 					className: "flex items-center gap-3 min-w-0",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "inline-block h-2 w-2 shrink-0 rounded-full bg-black" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 						className: "font-mono text-[10px] uppercase tracking-[0.28em] text-black truncate",
 						children: "VentageCvunt"
 					})]
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("nav", {
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
 					className: "hidden md:flex items-center gap-8 font-mono text-[11px] uppercase tracking-[0.24em] text-black/70",
 					children: [
-						"Home",
-						"Shop",
-						"About Us",
-						"Contact"
-					].map((l) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
-						href: `#${l.toLowerCase().replace(/\s+/g, "-")}`,
-						className: "relative transition-colors hover:text-black",
-						children: l
-					}, l))
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
+							to: "/",
+							className: "relative transition-colors hover:text-black",
+							children: "Home"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
+							to: "/shop",
+							className: "relative transition-colors hover:text-black",
+							children: "Shop"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
+							href: "#",
+							className: "relative transition-colors hover:text-black",
+							children: "About Us"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
+							href: "#",
+							className: "relative transition-colors hover:text-black",
+							children: "Contact"
+						})
+					]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "flex items-center justify-end gap-5 font-mono text-[11px] uppercase tracking-[0.24em] text-black",
@@ -188,19 +180,34 @@ function Nav() {
 				className: "rounded-3xl border border-chrome bg-white p-6 flex flex-col gap-6",
 				style: { boxShadow: "var(--shadow-plate)" },
 				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("nav", {
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
 						className: "flex flex-col gap-6 font-mono text-sm uppercase tracking-[0.24em] text-black/70",
 						children: [
-							"Home",
-							"Shop",
-							"About Us",
-							"Contact"
-						].map((l) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
-							href: `#${l.toLowerCase().replace(/\s+/g, "-")}`,
-							onClick: () => setMenuOpen(false),
-							className: "hover:text-black transition-colors",
-							children: l
-						}, l))
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
+								to: "/",
+								onClick: () => setMenuOpen(false),
+								className: "hover:text-black transition-colors",
+								children: "Home"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
+								to: "/shop",
+								onClick: () => setMenuOpen(false),
+								className: "hover:text-black transition-colors",
+								children: "Shop"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
+								href: "#",
+								onClick: () => setMenuOpen(false),
+								className: "hover:text-black transition-colors",
+								children: "About Us"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
+								href: "#",
+								onClick: () => setMenuOpen(false),
+								className: "hover:text-black transition-colors",
+								children: "Contact"
+							})
+						]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "h-px w-full bg-black/10" }),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
