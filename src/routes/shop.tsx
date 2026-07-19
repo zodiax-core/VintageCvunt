@@ -188,9 +188,9 @@ function Shop() {
       </section>
 
       {/* FILTERS */}
-      <section className="border-y border-chrome bg-graphite">
+      <section className="sticky top-0 z-40 border-y border-chrome bg-graphite">
         <div className="mx-auto max-w-7xl px-3 md:px-6 py-3 md:py-5">
-          <div className="flex flex-nowrap items-center gap-1.5 md:gap-6 overflow-x-auto">
+          <div className="flex flex-nowrap items-center gap-1.5 md:gap-6 overflow-visible">
             <span className="hidden md:inline font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim mr-2 shrink-0">Filter by</span>
 
             {/* Category dropdown */}
@@ -208,7 +208,7 @@ function Shop() {
                     initial={{ opacity: 0, y: -8, height: 0 }}
                     animate={{ opacity: 1, y: 0, height: 'auto' }}
                     exit={{ opacity: 0, y: -8, height: 0 }}
-                    className="absolute top-full left-0 max-md:left-0 max-md:right-auto mt-2 z-20 min-w-[180px] md:min-w-[220px] overflow-hidden rounded-2xl border border-chrome bg-graphite-2"
+                    className="absolute top-full left-0 max-md:right-0 max-md:left-auto mt-2 z-50 min-w-[160px] md:min-w-[220px] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-chrome bg-graphite-2"
                     style={{ boxShadow: "var(--shadow-heavy)" }}
                   >
                     {categories.map((c) => (
@@ -240,7 +240,7 @@ function Shop() {
                     initial={{ opacity: 0, y: -8, height: 0 }}
                     animate={{ opacity: 1, y: 0, height: 'auto' }}
                     exit={{ opacity: 0, y: -8, height: 0 }}
-                    className="absolute top-full left-0 max-md:left-0 max-md:right-auto mt-2 z-20 min-w-[180px] md:min-w-[260px] overflow-hidden rounded-2xl border border-chrome bg-graphite-2"
+                    className="absolute top-full left-0 max-md:right-0 max-md:left-auto mt-2 z-50 min-w-[160px] md:min-w-[260px] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-chrome bg-graphite-2"
                     style={{ boxShadow: "var(--shadow-heavy)" }}
                   >
                     {priceRanges.map((r) => (
@@ -274,7 +274,7 @@ function Shop() {
                     initial={{ opacity: 0, y: -8, height: 0 }}
                     animate={{ opacity: 1, y: 0, height: 'auto' }}
                     exit={{ opacity: 0, y: -8, height: 0 }}
-                    className="absolute top-full left-0 md:right-0 md:left-auto mt-2 z-20 min-w-[180px] md:min-w-[240px] overflow-hidden rounded-2xl border border-chrome bg-graphite-2"
+                    className="absolute top-full right-0 max-md:right-0 max-md:left-auto mt-2 z-50 min-w-[160px] md:min-w-[240px] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-chrome bg-graphite-2"
                     style={{ boxShadow: "var(--shadow-heavy)" }}
                   >
                     {sortOptions.map((s) => (

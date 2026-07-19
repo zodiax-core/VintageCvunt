@@ -4,10 +4,10 @@ import { n as require_jsx_runtime, r as require_react, t as QueryClientProvider 
 import { c as HeadContent, d as Outlet, f as lazyRouteComponent, g as useRouter, h as Link, m as createRootRouteWithContext, p as createFileRoute, s as Scripts, u as createRouter } from "../_libs/@tanstack/react-router+[...].mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
 import { t as Lenis } from "../_libs/lenis.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-CGVqbc1k.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-COMFshIQ.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-C3J7GwCK.css";
+var styles_default = "/assets/styles-Cfqr3FF1.css";
 function reportLovableError(error, context = {}) {
 	if (typeof window === "undefined") return;
 	window.__lovableEvents?.captureException?.(error, {
@@ -204,7 +204,7 @@ var Route$1 = createFileRoute("/")({
 		}]
 	})
 });
-var $$splitComponentImporter = () => import("./shop-Dkk99uK3.mjs");
+var $$splitComponentImporter = () => import("./shop-CwX2GgrE.mjs");
 var Route = createFileRoute("/shop")({
 	component: lazyRouteComponent($$splitComponentImporter, "component"),
 	head: () => ({ meta: [{ title: "Shop — VintageCvunt" }, {
