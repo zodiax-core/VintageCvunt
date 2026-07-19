@@ -8,6 +8,7 @@
   --font-display: "Cormorant Garamond", "Times New Roman", serif;
   --font-body: "Inter Tight", "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+  --font-gothic: "Oswald", "Arial", sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);

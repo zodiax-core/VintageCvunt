@@ -1,17 +1,24 @@
 import { o as __toESM } from "../_runtime.mjs";
-import { t as butterfly_img_default } from "./butterfly-img-Dyn_ysNW.mjs";
+import { n as butterfly_img_default$1, t as butterfly_img_default } from "./butterfly-img-DGXirbV2.mjs";
 import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
-import { a as motion, i as useScroll, n as useSpring, r as useTransform, t as useInView } from "../_libs/framer-motion.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-HRvvm8Rp.js
+import { i as motion, n as useTransform, r as useScroll, t as useSpring } from "../_libs/framer-motion.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-CtYn5lwQ.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
-var editorial_1_default = "/assets/editorial-1-D3rgpRoR.jpg";
-var product_ring_default = "/assets/product-ring-BA7MlDfG.jpg";
-var product_jacket_default = "/assets/product-jacket-DPDTWWFf.jpg";
-var product_chain_default = "/assets/product-chain-DGOeWrtB.jpg";
-var product_boots_default = "/assets/product-boots-DIlAebCu.jpg";
-var logo_default = "/assets/logo-CJzlZTIN.png";
-var sculpture_default = "/assets/sculpture-5IDv_oDO.png";
+var editorial_1_default$1 = "/assets/editorial-1-D3rgpRoR.jpg";
+var product_ring_default$1 = "/assets/product-ring-BA7MlDfG.jpg";
+var product_jacket_default$1 = "/assets/product-jacket-DPDTWWFf.jpg";
+var product_chain_default$1 = "/assets/product-chain-DGOeWrtB.jpg";
+var product_boots_default$1 = "/assets/product-boots-DIlAebCu.jpg";
+var logo_default$1 = "/assets/logo-CJzlZTIN.png";
+var logo_default = "/assets/logo-BudfrtGN.webp";
+var sculpture_default$1 = "/assets/sculpture-5IDv_oDO.png";
+var sculpture_default = "/assets/sculpture-Cu905QCK.webp";
+var editorial_1_default = "/assets/editorial-1-BrSs0-Sl.webp";
+var product_ring_default = "/assets/product-ring-DR2POQjK.webp";
+var product_jacket_default = "/assets/product-jacket-DrU1o3KE.webp";
+var product_chain_default = "/assets/product-chain-BfrTm7do.webp";
+var product_boots_default = "/assets/product-boots-Tj6A_5Qm.webp";
 function ChromeCursor() {
 	const [pos, setPos] = (0, import_react.useState)({
 		x: -100,
@@ -38,6 +45,17 @@ function ChromeCursor() {
 		className: `chrome-cursor${hover ? " hovering" : ""}`,
 		style: { transform: `translate(${pos.x}px, ${pos.y}px) translate(-50%, -50%)` }
 	});
+}
+function OptimizedImage({ webp, fallback, className, alt, ...rest }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("picture", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("source", {
+		srcSet: webp,
+		type: "image/webp"
+	}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+		src: fallback,
+		alt: alt ?? "",
+		className,
+		...rest
+	})] });
 }
 var EASE = [
 	.16,
@@ -233,13 +251,14 @@ function Hero() {
 					delay: .2
 				},
 				className: "pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-					src: butterfly_img_default,
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(OptimizedImage, {
+					webp: butterfly_img_default,
+					fallback: butterfly_img_default$1,
 					alt: "",
 					width: 1400,
 					height: 1050,
 					fetchPriority: "high",
-					className: "h-[42vh] sm:h-[52vh] md:h-[62vh] w-full object-contain max-w-[92vw] select-none",
+					className: "h-[55vh] sm:h-[52vh] md:h-[62vh] w-full object-contain max-w-none select-none",
 					style: { filter: "drop-shadow(0 25px 55px oklch(0.7 0.008 240 / 0.25))" },
 					draggable: false
 				})
@@ -275,7 +294,7 @@ function Hero() {
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "relative z-10 flex flex-col md:flex-row min-h-[76vh] w-full items-end justify-between gap-10 px-8 md:px-16 lg:px-24 pb-16",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "max-w-3xl",
+					className: "max-w-3xl w-full md:w-auto text-center md:text-left",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.p, {
 						initial: { clipPath: "inset(0 100% 0 0)" },
 						animate: { clipPath: "inset(0 0% 0 0)" },
@@ -284,10 +303,10 @@ function Hero() {
 							ease: EASE,
 							delay: .8
 						},
-						className: "font-mono text-[11px] uppercase tracking-[0.32em] text-chrome-dim mb-6",
+						className: "font-mono text-[10px] md:text-[11px] uppercase tracking-[0.32em] text-chrome-dim mb-6",
 						children: "— VintageCvunt · Autumn / Winter Campaign No. 01"
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", {
-						className: "font-display text-[clamp(2.4rem,9vw,8.5rem)] leading-[0.9] tracking-[-0.03em]",
+						className: "font-display text-[clamp(2rem,9vw,8.5rem)] leading-[0.9] tracking-[-0.03em]",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MaskLine, {
 							delay: 1,
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
@@ -300,9 +319,9 @@ function Hero() {
 						})]
 					})]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "space-y-6 max-w-md md:pb-4",
+					className: "space-y-4 max-w-md md:pb-4 w-full md:w-auto flex flex-col items-center md:items-start",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "space-y-2 text-sm leading-relaxed text-chrome-dim",
+						className: "space-y-1 text-xs md:text-sm leading-relaxed text-chrome-dim text-center md:text-left",
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MaskLine, {
 								delay: 1.3,
@@ -502,26 +521,29 @@ function Featured() {
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ProductCase, {
 							span: "col-span-12 md:col-span-7 md:row-span-2",
-							src: editorial_1_default,
+							src: editorial_1_default$1,
+							webp: editorial_1_default,
 							number: "No. 001",
 							name: "Meridian Coat",
-							price: "€ 4,280",
+							price: "PKR 1,284,000",
 							tall: true,
 							priority: true
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ProductCase, {
-							span: "col-span-6 md:col-span-5",
-							src: product_ring_default,
+							span: "col-span-12 md:col-span-5",
+							src: product_ring_default$1,
+							webp: product_ring_default,
 							number: "No. 007",
 							name: "Thorn Signet, Silver",
-							price: "€ 890"
+							price: "PKR 267,000"
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ProductCase, {
-							span: "col-span-6 md:col-span-5",
-							src: product_chain_default,
+							span: "col-span-12 md:col-span-5",
+							src: product_chain_default$1,
+							webp: product_chain_default,
 							number: "No. 012",
 							name: "Papillon Chain",
-							price: "€ 1,340"
+							price: "PKR 402,000"
 						})
 					]
 				})
@@ -535,14 +557,14 @@ function SectionTag({ children }) {
 		children
 	});
 }
-function ProductCase({ span, src, number, name, price, tall, priority }) {
+function ProductCase({ span, src, webp, number, name, price, tall, priority }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
 		"data-cursor": "hover",
 		initial: { clipPath: "inset(100% 0 0 0)" },
 		whileInView: { clipPath: "inset(0% 0 0 0)" },
 		viewport: {
 			once: true,
-			margin: priority ? "0px" : "-40px"
+			margin: "0px"
 		},
 		transition: {
 			duration: 1.3,
@@ -551,12 +573,12 @@ function ProductCase({ span, src, number, name, price, tall, priority }) {
 		className: `${span} group relative overflow-hidden rounded-3xl border border-chrome bg-graphite`,
 		style: { boxShadow: "var(--shadow-plate)" },
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: `relative overflow-hidden ${tall ? "aspect-[3/4] md:aspect-auto md:h-[820px]" : "aspect-[4/5]"}`,
+			className: `relative overflow-hidden ${tall ? "aspect-[3/4] md:aspect-auto md:h-[820px]" : "aspect-[3/4] md:aspect-[4/5]"}`,
 			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-					src,
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(OptimizedImage, {
+					webp,
+					fallback: src,
 					alt: name,
-					loading: "lazy",
 					className: "h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 group-hover:rotate-[1deg]"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-background/30" }),
@@ -569,32 +591,21 @@ function ProductCase({ span, src, number, name, price, tall, priority }) {
 					children: "✦"
 				})
 			]
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "flex items-end justify-between gap-4 px-6 py-5",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "min-w-0",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
-					className: "font-display text-2xl leading-tight truncate",
-					children: name
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-					className: "mt-1 font-mono text-[10px] uppercase tracking-[0.28em] text-chrome-dim",
-					children: "Hand-cast · Milano"
-				})]
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "overflow-hidden",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "translate-y-1 transition-transform duration-500 group-hover:-translate-y-0",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-						className: "font-mono text-sm tracking-[0.14em] text-chrome",
-						children: price
-					})
-				})
-			})]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "px-6 py-5",
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "font-mono text-sm tracking-[0.14em] text-chrome",
+				children: price
+			})
 		})]
 	});
 }
 function SculptureSection() {
 	const ref = (0, import_react.useRef)(null);
+	const [isDesktop, setIsDesktop] = (0, import_react.useState)(false);
+	(0, import_react.useEffect)(() => {
+		setIsDesktop(window.innerWidth >= 768);
+	}, []);
 	const { scrollYProgress } = useScroll({
 		target: ref,
 		offset: ["start end", "end start"]
@@ -607,7 +618,11 @@ function SculptureSection() {
 		0,
 		.5,
 		1
-	], [
+	], isDesktop ? [
+		1.4,
+		2.4,
+		3.2
+	] : [
 		1.1,
 		1.55,
 		1.9
@@ -619,10 +634,10 @@ function SculptureSection() {
 	const wordX = useTransform(scrollYProgress, [0, 1], ["20%", "-40%"]);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 		ref,
-		className: "relative overflow-hidden border-b border-chrome bg-background py-20 md:py-56",
+		className: "relative overflow-hidden border-b border-chrome bg-background py-20 md:py-56 mt-20 md:mt-0",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
 			style: { x: wordX },
-			className: "pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 whitespace-nowrap text-center",
+			className: "pointer-events-none absolute inset-x-0 top-[55%] md:top-1/2 -translate-y-1/2 whitespace-nowrap text-center",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "font-display italic text-[22vw] leading-none text-chrome-h opacity-[0.14]",
 				children: "Ars · Chroma · Corpus"
@@ -647,17 +662,26 @@ function SculptureSection() {
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "relative h-[60vh] md:h-[85vh] w-full",
 					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.img, {
-							src: sculpture_default,
-							alt: "Chrome sculpture",
-							fetchPriority: "high",
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
 							style: {
 								x,
 								scale,
 								rotate: rot
 							},
-							className: "pointer-events-none absolute left-1/2 top-1/2 h-[80%] w-full object-cover md:h-[140%] md:w-auto md:object-contain -translate-x-1/2 -translate-y-1/2 select-none will-change-transform",
-							draggable: false
+							className: "pointer-events-none absolute left-1/2 top-1/2 h-[80%] w-full md:h-[140%] md:w-auto -translate-x-1/2 -translate-y-1/2 select-none will-change-transform",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("picture", {
+								className: "flex h-full w-full items-center justify-center",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("source", {
+									srcSet: sculpture_default,
+									type: "image/webp"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+									src: sculpture_default$1,
+									alt: "Chrome sculpture",
+									fetchPriority: "high",
+									className: "h-full w-full object-cover md:object-contain",
+									draggable: false
+								})]
+							})
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 							className: "absolute bottom-6 left-0 max-w-xs font-mono text-[10px] uppercase tracking-[0.28em] text-chrome-dim",
@@ -703,28 +727,32 @@ function BestSellers() {
 					className: "grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6",
 					children: [
 						{
-							src: product_jacket_default,
+							src: product_jacket_default$1,
+							webp: product_jacket_default,
 							name: "Reliquary Rider",
 							num: "No. 021",
-							price: "€ 3,690"
+							price: "PKR 1,107,000"
 						},
 						{
-							src: product_boots_default,
+							src: product_boots_default$1,
+							webp: product_boots_default,
 							name: "Ossuary Boot",
 							num: "No. 034",
-							price: "€ 1,540"
+							price: "PKR 462,000"
 						},
 						{
-							src: product_ring_default,
+							src: product_ring_default$1,
+							webp: product_ring_default,
 							name: "Thorn Signet",
 							num: "No. 007",
-							price: "€ 890"
+							price: "PKR 267,000"
 						},
 						{
-							src: product_chain_default,
+							src: product_chain_default$1,
+							webp: product_chain_default,
 							name: "Papillon Chain",
 							num: "No. 012",
-							price: "€ 1,340"
+							price: "PKR 402,000"
 						}
 					].map((it, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SmallCase, { ...it }, i))
 				})
@@ -732,17 +760,15 @@ function BestSellers() {
 		})
 	});
 }
-function SmallCase({ src, name, num, price }) {
-	const ref = (0, import_react.useRef)(null);
-	const inView = useInView(ref, {
-		once: true,
-		margin: "-60px"
-	});
+function SmallCase({ src, webp, name, num, price }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
-		ref,
 		"data-cursor": "hover",
 		initial: { clipPath: "inset(100% 0 0 0)" },
-		animate: inView ? { clipPath: "inset(0 0 0 0)" } : void 0,
+		whileInView: { clipPath: "inset(0 0 0 0)" },
+		viewport: {
+			once: true,
+			margin: "0px"
+		},
 		transition: {
 			duration: 1.1,
 			ease: EASE
@@ -753,25 +779,22 @@ function SmallCase({ src, name, num, price }) {
 			style: { boxShadow: "var(--shadow-plate)" },
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "aspect-[4/5] overflow-hidden",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-					src,
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(OptimizedImage, {
+					webp,
+					fallback: src,
 					alt: name,
-					loading: "lazy",
 					className: "h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06] group-hover:rotate-[1deg]"
 				})
 			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 				className: "absolute left-3 top-3 rounded-full border border-chrome bg-background/70 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.22em]",
 				children: num
 			})]
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "mt-4 flex items-baseline justify-between gap-2",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
-				className: "font-display text-xl truncate",
-				children: name
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "mt-4",
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 				className: "font-mono text-xs tracking-[0.14em] text-chrome",
 				children: price
-			})]
+			})
 		})]
 	});
 }
@@ -802,22 +825,26 @@ function Categories() {
 						{
 							name: "Outerwear",
 							count: "18 pieces",
-							img: editorial_1_default
+							img: editorial_1_default$1,
+							webp: editorial_1_default
 						},
 						{
 							name: "Silverwork",
 							count: "22 pieces",
-							img: product_ring_default
+							img: product_ring_default$1,
+							webp: product_ring_default
 						},
 						{
 							name: "Footwear",
 							count: "9 pieces",
-							img: product_boots_default
+							img: product_boots_default$1,
+							webp: product_boots_default
 						},
 						{
 							name: "Adornment",
 							count: "13 pieces",
-							img: product_chain_default
+							img: product_chain_default$1,
+							webp: product_chain_default
 						}
 					].map((c, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
 						href: "#",
@@ -826,10 +853,10 @@ function Categories() {
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 								className: "aspect-[3/4] overflow-hidden",
-								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-									src: c.img,
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(OptimizedImage, {
+									webp: c.webp,
+									fallback: c.img,
 									alt: c.name,
-									loading: "lazy",
 									className: "h-full w-full object-cover transition-transform duration-[1400ms] group-hover:scale-110"
 								})
 							}),
@@ -860,8 +887,9 @@ function Newsletter() {
 		className: "relative border-b border-chrome overflow-hidden",
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "relative mx-auto max-w-7xl px-6 py-32 md:py-48",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-				src: butterfly_img_default,
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(OptimizedImage, {
+				webp: butterfly_img_default,
+				fallback: butterfly_img_default$1,
 				alt: "",
 				"aria-hidden": true,
 				className: "pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[85%] w-auto opacity-20"
@@ -917,8 +945,9 @@ function Footer() {
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "flex justify-center",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-						src: logo_default,
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(OptimizedImage, {
+						webp: logo_default,
+						fallback: logo_default$1,
 						alt: "VintageCvunt",
 						width: 1400,
 						height: 400,

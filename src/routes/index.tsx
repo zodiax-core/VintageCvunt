@@ -2,15 +2,25 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, useSpring, useInView } from "framer-motion";
 import logoAsset from "@/assets/logo.png";
+import logoWebp from "@/assets/logo.webp";
 import butterflyAsset from "@/assets/butterfly-img.png";
+import butterflyWebp from "@/assets/butterfly-img.webp";
 import sculptureAsset from "@/assets/sculpture.png";
+import sculptureWebp from "@/assets/sculpture.webp";
 import editorial1 from "@/assets/editorial-1.jpg";
+import editorial1Webp from "@/assets/editorial-1.webp";
 import editorial2 from "@/assets/editorial-2.jpg";
+import editorial2Webp from "@/assets/editorial-2.webp";
 import productRing from "@/assets/product-ring.jpg";
+import productRingWebp from "@/assets/product-ring.webp";
 import productJacket from "@/assets/product-jacket.jpg";
+import productJacketWebp from "@/assets/product-jacket.webp";
 import productChain from "@/assets/product-chain.jpg";
+import productChainWebp from "@/assets/product-chain.webp";
 import productBoots from "@/assets/product-boots.jpg";
+import productBootsWebp from "@/assets/product-boots.webp";
 import { ChromeCursor } from "@/components/ChromeCursor";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -19,6 +29,9 @@ export const Route = createFileRoute("/")({
       { title: "VintageCvunt — Modern Gothic Luxury House" },
       { name: "description", content: "An interactive luxury fashion campaign in chrome, leather and silver. Explore VintageCvunt's inaugural collection." },
       { property: "og:image", content: butterflyAsset },
+    ],
+    links: [
+      { rel: "preload", href: butterflyWebp, as: "image", type: "image/webp", fetchPriority: "high" },
     ],
   }),
 });
@@ -142,15 +155,17 @@ function Hero() {
         transition={{ duration: 1.8, ease: EASE, delay: 0.2 }}
         className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0"
       >
-        <img
-          src={butterflyAsset}
+        <OptimizedImage
+          webp={butterflyWebp}
+          fallback={butterflyAsset}
           alt=""
           width={1400}
           height={1050}
           fetchPriority="high"
-          className="h-[42vh] sm:h-[52vh] md:h-[62vh] w-full object-contain max-w-[92vw] select-none"
+          className="h-[55vh] sm:h-[52vh] md:h-[62vh] w-full object-contain max-w-none select-none"
           style={{ filter: "drop-shadow(0 25px 55px oklch(0.7 0.008 240 / 0.25))" }}
           draggable={false}
+         
         />
       </motion.div>
 
@@ -168,22 +183,22 @@ function Hero() {
 
       {/* Copy */}
       <div className="relative z-10 flex flex-col md:flex-row min-h-[76vh] w-full items-end justify-between gap-10 px-8 md:px-16 lg:px-24 pb-16">
-        <div className="max-w-3xl">
+        <div className="max-w-3xl w-full md:w-auto text-center md:text-left">
           <motion.p
             initial={{ clipPath: "inset(0 100% 0 0)" }}
             animate={{ clipPath: "inset(0 0% 0 0)" }}
             transition={{ duration: 1.4, ease: EASE, delay: 0.8 }}
-            className="font-mono text-[11px] uppercase tracking-[0.32em] text-chrome-dim mb-6"
+            className="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.32em] text-chrome-dim mb-6"
           >
             — VintageCvunt · Autumn / Winter Campaign No. 01
           </motion.p>
-          <h1 className="font-display text-[clamp(2.4rem,9vw,8.5rem)] leading-[0.9] tracking-[-0.03em]">
+          <h1 className="font-display text-[clamp(2rem,9vw,8.5rem)] leading-[0.9] tracking-[-0.03em]">
             <MaskLine delay={1.0}><span className="italic text-chrome">Vintage</span></MaskLine>
             <MaskLine delay={1.15}><span>Cvunt</span></MaskLine>
           </h1>
         </div>
-        <div className="space-y-6 max-w-md md:pb-4">
-          <div className="space-y-2 text-sm leading-relaxed text-chrome-dim">
+        <div className="space-y-4 max-w-md md:pb-4 w-full md:w-auto flex flex-col items-center md:items-start">
+          <div className="space-y-1 text-xs md:text-sm leading-relaxed text-chrome-dim text-center md:text-left">
             <MaskLine delay={1.3}>A gothic house rendered in liquid metal.</MaskLine>
             <MaskLine delay={1.4}>Sixty-two pieces cast in silver, leather</MaskLine>
             <MaskLine delay={1.5}>and the cold breath of cathedral air.</MaskLine>
@@ -283,9 +298,9 @@ function Featured() {
         </div>
         <div className="divider-chrome mb-16" />
         <div className="grid grid-cols-12 gap-6">
-          <ProductCase span="col-span-12 md:col-span-7 md:row-span-2" src={editorial1} number="No. 001" name="Meridian Coat" price="€ 4,280" tall priority={true} />
-          <ProductCase span="col-span-6 md:col-span-5" src={productRing} number="No. 007" name="Thorn Signet, Silver" price="€ 890" />
-          <ProductCase span="col-span-6 md:col-span-5" src={productChain} number="No. 012" name="Papillon Chain" price="€ 1,340" />
+          <ProductCase span="col-span-12 md:col-span-7 md:row-span-2" src={editorial1} webp={editorial1Webp} number="No. 001" name="Meridian Coat" price="PKR 1,284,000" tall priority={true} />
+          <ProductCase span="col-span-12 md:col-span-5" src={productRing} webp={productRingWebp} number="No. 007" name="Thorn Signet, Silver" price="PKR 267,000" />
+          <ProductCase span="col-span-12 md:col-span-5" src={productChain} webp={productChainWebp} number="No. 012" name="Papillon Chain" price="PKR 402,000" />
         </div>
       </div>
     </section>
@@ -296,33 +311,25 @@ function SectionTag({ children }: { children: React.ReactNode }) {
   return <span className="font-mono text-[10px] uppercase tracking-[0.32em] text-chrome-dim">{children}</span>;
 }
 
-function ProductCase({ span, src, number, name, price, tall, priority }: { span: string; src: string; number: string; name: string; price: string; tall?: boolean, priority?: boolean }) {
+function ProductCase({ span, src, webp, number, name, price, tall, priority }: { span: string; src: string; webp: string; number: string; name: string; price: string; tall?: boolean, priority?: boolean }) {
   return (
     <motion.div
       data-cursor="hover"
       initial={{ clipPath: "inset(100% 0 0 0)" }}
       whileInView={{ clipPath: "inset(0% 0 0 0)" }}
-      viewport={{ once: true, margin: priority ? "0px" : "-40px" }}
+      viewport={{ once: true, margin: "0px" }}
       transition={{ duration: 1.3, ease: EASE }}
       className={`${span} group relative overflow-hidden rounded-3xl border border-chrome bg-graphite`}
       style={{ boxShadow: "var(--shadow-plate)" }}
     >
-      <div className={`relative overflow-hidden ${tall ? "aspect-[3/4] md:aspect-auto md:h-[820px]" : "aspect-[4/5]"}`}>
-        <img src={src} alt={name} loading="lazy" className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 group-hover:rotate-[1deg]" />
+      <div className={`relative overflow-hidden ${tall ? "aspect-[3/4] md:aspect-auto md:h-[820px]" : "aspect-[3/4] md:aspect-[4/5]"}`}>
+        <OptimizedImage webp={webp} fallback={src} alt={name} className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 group-hover:rotate-[1deg]" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-background/30" />
         <span className="absolute left-5 top-5 font-mono text-[10px] uppercase tracking-[0.3em] text-chrome">{number}</span>
         <span className="absolute right-5 top-5 h-6 w-6 rounded-full border border-chrome bg-graphite/60 backdrop-blur grid place-items-center text-[10px]">✦</span>
       </div>
-      <div className="flex items-end justify-between gap-4 px-6 py-5">
-        <div className="min-w-0">
-          <h3 className="font-display text-2xl leading-tight truncate">{name}</h3>
-          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.28em] text-chrome-dim">Hand-cast · Milano</p>
-        </div>
-        <div className="overflow-hidden">
-          <div className="translate-y-1 transition-transform duration-500 group-hover:-translate-y-0">
-            <p className="font-mono text-sm tracking-[0.14em] text-chrome">{price}</p>
-          </div>
-        </div>
+      <div className="px-6 py-5">
+        <p className="font-mono text-sm tracking-[0.14em] text-chrome">{price}</p>
       </div>
       {/* draw-in border */}
     </motion.div>
@@ -332,16 +339,21 @@ function ProductCase({ span, src, number, name, price, tall, priority }: { span:
 /* ---------------- SCULPTURE SCROLL ---------------- */
 function SculptureSection() {
   const ref = useRef<HTMLDivElement>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    setIsDesktop(window.innerWidth >= 768);
+  }, []);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const x = useSpring(useTransform(scrollYProgress, [0, 1], ["-30%", "40%"]), { stiffness: 60, damping: 20 });
-  const scale = useSpring(useTransform(scrollYProgress, [0, 0.5, 1], [1.1, 1.55, 1.9]), { stiffness: 60, damping: 22 });
+  const scaleRange = isDesktop ? [1.4, 2.4, 3.2] : [1.1, 1.55, 1.9];
+  const scale = useSpring(useTransform(scrollYProgress, [0, 0.5, 1], scaleRange), { stiffness: 60, damping: 22 });
   const rot = useTransform(scrollYProgress, [0, 1], [-6, 4]);
   const wordX = useTransform(scrollYProgress, [0, 1], ["20%", "-40%"]);
 
   return (
-    <section ref={ref} className="relative overflow-hidden border-b border-chrome bg-background py-20 md:py-56">
+    <section ref={ref} className="relative overflow-hidden border-b border-chrome bg-background py-20 md:py-56 mt-20 md:mt-0">
       {/* Giant chrome word + subtitle floating opposite direction */}
-      <motion.div style={{ x: wordX }} className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 whitespace-nowrap text-center">
+      <motion.div style={{ x: wordX }} className="pointer-events-none absolute inset-x-0 top-[55%] md:top-1/2 -translate-y-1/2 whitespace-nowrap text-center">
         <div className="font-display italic text-[22vw] leading-none text-chrome-h opacity-[0.14]">
           Ars · Chroma · Corpus
         </div>
@@ -363,14 +375,12 @@ function SculptureSection() {
         <div className="divider-chrome mb-10 md:mb-16" />
 
         <div className="relative h-[60vh] md:h-[85vh] w-full">
-          <motion.img
-            src={sculptureAsset}
-            alt="Chrome sculpture"
-            fetchPriority="high"
-            style={{ x, scale, rotate: rot }}
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[80%] w-full object-cover md:h-[140%] md:w-auto md:object-contain -translate-x-1/2 -translate-y-1/2 select-none will-change-transform"
-            draggable={false}
-          />
+          <motion.div style={{ x, scale, rotate: rot }} className="pointer-events-none absolute left-1/2 top-1/2 h-[80%] w-full md:h-[140%] md:w-auto -translate-x-1/2 -translate-y-1/2 select-none will-change-transform">
+            <picture className="flex h-full w-full items-center justify-center">
+              <source srcSet={sculptureWebp} type="image/webp" />
+              <img src={sculptureAsset} alt="Chrome sculpture" fetchPriority="high" className="h-full w-full object-cover md:object-contain" draggable={false} />
+            </picture>
+          </motion.div>
           {/* Editorial captions */}
           <div className="absolute bottom-6 left-0 max-w-xs font-mono text-[10px] uppercase tracking-[0.28em] text-chrome-dim">
             <p>Fig. 04 — Argenta<br />sculpture in motion</p>
@@ -387,10 +397,10 @@ function SculptureSection() {
 /* ---------------- BEST SELLERS ---------------- */
 function BestSellers() {
   const items = [
-    { src: productJacket, name: "Reliquary Rider", num: "No. 021", price: "€ 3,690" },
-    { src: productBoots, name: "Ossuary Boot", num: "No. 034", price: "€ 1,540" },
-    { src: productRing, name: "Thorn Signet", num: "No. 007", price: "€ 890" },
-    { src: productChain, name: "Papillon Chain", num: "No. 012", price: "€ 1,340" },
+    { src: productJacket, webp: productJacketWebp, name: "Reliquary Rider", num: "No. 021", price: "PKR 1,107,000" },
+    { src: productBoots, webp: productBootsWebp, name: "Ossuary Boot", num: "No. 034", price: "PKR 462,000" },
+    { src: productRing, webp: productRingWebp, name: "Thorn Signet", num: "No. 007", price: "PKR 267,000" },
+    { src: productChain, webp: productChainWebp, name: "Papillon Chain", num: "No. 012", price: "PKR 402,000" },
   ];
   return (
     <section className="relative border-b border-chrome py-28 md:py-40">
@@ -410,26 +420,23 @@ function BestSellers() {
   );
 }
 
-function SmallCase({ src, name, num, price }: { src: string; name: string; num: string; price: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
+function SmallCase({ src, webp, name, num, price }: { src: string; webp: string; name: string; num: string; price: string }) {
   return (
     <motion.div
-      ref={ref}
       data-cursor="hover"
       initial={{ clipPath: "inset(100% 0 0 0)" }}
-      animate={inView ? { clipPath: "inset(0 0 0 0)" } : undefined}
+      whileInView={{ clipPath: "inset(0 0 0 0)" }}
+      viewport={{ once: true, margin: "0px" }}
       transition={{ duration: 1.1, ease: EASE }}
       className="group cursor-pointer"
     >
       <div className="relative overflow-hidden rounded-2xl border border-chrome bg-graphite" style={{ boxShadow: "var(--shadow-plate)" }}>
         <div className="aspect-[4/5] overflow-hidden">
-          <img src={src} alt={name} loading="lazy" className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06] group-hover:rotate-[1deg]" />
+          <OptimizedImage webp={webp} fallback={src} alt={name} className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06] group-hover:rotate-[1deg]" />
         </div>
         <span className="absolute left-3 top-3 rounded-full border border-chrome bg-background/70 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.22em]">{num}</span>
       </div>
-      <div className="mt-4 flex items-baseline justify-between gap-2">
-        <h3 className="font-display text-xl truncate">{name}</h3>
+      <div className="mt-4">
         <p className="font-mono text-xs tracking-[0.14em] text-chrome">{price}</p>
       </div>
     </motion.div>
@@ -439,10 +446,10 @@ function SmallCase({ src, name, num, price }: { src: string; name: string; num: 
 /* ---------------- CATEGORIES ---------------- */
 function Categories() {
   const cats = [
-    { name: "Outerwear", count: "18 pieces", img: editorial1 },
-    { name: "Silverwork", count: "22 pieces", img: productRing },
-    { name: "Footwear", count: "9 pieces", img: productBoots },
-    { name: "Adornment", count: "13 pieces", img: productChain },
+    { name: "Outerwear", count: "18 pieces", img: editorial1, webp: editorial1Webp },
+    { name: "Silverwork", count: "22 pieces", img: productRing, webp: productRingWebp },
+    { name: "Footwear", count: "9 pieces", img: productBoots, webp: productBootsWebp },
+    { name: "Adornment", count: "13 pieces", img: productChain, webp: productChainWebp },
   ];
   return (
     <section id="archive" className="relative border-b border-chrome py-28 md:py-40">
@@ -459,7 +466,7 @@ function Categories() {
           {cats.map((c, i) => (
             <a key={i} href="#" data-cursor="hover" className="group relative block overflow-hidden rounded-3xl border border-chrome">
               <div className="aspect-[3/4] overflow-hidden">
-                <img src={c.img} alt={c.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-[1400ms] group-hover:scale-110" />
+                <OptimizedImage webp={c.webp} fallback={c.img} alt={c.name} className="h-full w-full object-cover transition-transform duration-[1400ms] group-hover:scale-110" />
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-6">
@@ -478,11 +485,11 @@ function Categories() {
 /* ---------------- NEW ARRIVALS ---------------- */
 function NewArrivals() {
   const rows = [
-    { num: "046", name: "Argent Cross Pendant", cat: "Adornment", price: "€ 620" },
-    { num: "047", name: "Basilica Trench, Onyx", cat: "Outerwear", price: "€ 5,120" },
-    { num: "048", name: "Vesper Cuff, Brushed", cat: "Silverwork", price: "€ 780" },
-    { num: "049", name: "Nave Boot, High", cat: "Footwear", price: "€ 1,880" },
-    { num: "050", name: "Rosary of Iron", cat: "Adornment", price: "€ 940" },
+    { num: "046", name: "Argent Cross Pendant", cat: "Adornment", price: "PKR 186,000" },
+    { num: "047", name: "Basilica Trench, Onyx", cat: "Outerwear", price: "PKR 1,536,000" },
+    { num: "048", name: "Vesper Cuff, Brushed", cat: "Silverwork", price: "PKR 234,000" },
+    { num: "049", name: "Nave Boot, High", cat: "Footwear", price: "PKR 564,000" },
+    { num: "050", name: "Rosary of Iron", cat: "Adornment", price: "PKR 282,000" },
   ];
   return (
     <section className="relative border-b border-chrome py-28 md:py-40">
@@ -542,7 +549,7 @@ function Newsletter() {
   return (
     <section className="relative border-b border-chrome overflow-hidden">
       <div className="relative mx-auto max-w-7xl px-6 py-32 md:py-48">
-        <img src={butterflyAsset} alt="" aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[85%] w-auto opacity-20" />
+        <OptimizedImage webp={butterflyWebp} fallback={butterflyAsset} alt="" aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[85%] w-auto opacity-20" />
         <div className="relative grid grid-cols-12 gap-6 items-end">
           <div className="col-span-12 md:col-span-7">
             <SectionTag>§ Correspondence</SectionTag>
@@ -572,7 +579,7 @@ function Footer() {
     <footer className="relative bg-background pt-24 pb-10">
       <div className="mx-auto max-w-7xl px-6">
         <div className="flex justify-center">
-          <img src={logoAsset} alt="VintageCvunt" width={1400} height={400} className="h-auto w-full max-w-4xl opacity-95" />
+          <OptimizedImage webp={logoWebp} fallback={logoAsset} alt="VintageCvunt" width={1400} height={400} className="h-auto w-full max-w-4xl opacity-95" />
         </div>
         <div className="divider-chrome my-14" />
         <div className="grid grid-cols-2 gap-10 md:grid-cols-5 text-sm">

@@ -1,13 +1,13 @@
 import { o as __toESM } from "../_runtime.mjs";
-import { t as butterfly_img_default } from "./butterfly-img-Dyn_ysNW.mjs";
+import { n as butterfly_img_default$1, t as butterfly_img_default } from "./butterfly-img-DGXirbV2.mjs";
 import { n as require_jsx_runtime, r as require_react, t as QueryClientProvider } from "../_libs/react+tanstack__react-query.mjs";
 import { c as HeadContent, d as Outlet, f as lazyRouteComponent, g as useRouter, h as Link, m as createRootRouteWithContext, p as createFileRoute, s as Scripts, u as createRouter } from "../_libs/@tanstack/react-router+[...].mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
 import { t as Lenis } from "../_libs/lenis.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-DJFa8tdT.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-DlSpc4_O.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-BfPFR-8J.css";
+var styles_default = "/assets/styles-DpRpk8hM.css";
 function reportLovableError(error, context = {}) {
 	if (typeof window === "undefined") return;
 	window.__lovableEvents?.captureException?.(error, {
@@ -149,7 +149,7 @@ var Route$1 = createRootRouteWithContext()({
 			},
 			{
 				rel: "stylesheet",
-				href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+				href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Oswald:wght@400;500;600;700&display=swap"
 			}
 		]
 	}),
@@ -180,20 +180,29 @@ function RootComponent() {
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Outlet, {})
 	});
 }
-var $$splitComponentImporter = () => import("./routes-HRvvm8Rp.mjs");
+var $$splitComponentImporter = () => import("./routes-CtYn5lwQ.mjs");
 var rootRouteChildren = { IndexRoute: createFileRoute("/")({
 	component: lazyRouteComponent($$splitComponentImporter, "component"),
-	head: () => ({ meta: [
-		{ title: "VintageCvunt — Modern Gothic Luxury House" },
-		{
-			name: "description",
-			content: "An interactive luxury fashion campaign in chrome, leather and silver. Explore VintageCvunt's inaugural collection."
-		},
-		{
-			property: "og:image",
-			content: butterfly_img_default
-		}
-	] })
+	head: () => ({
+		meta: [
+			{ title: "VintageCvunt — Modern Gothic Luxury House" },
+			{
+				name: "description",
+				content: "An interactive luxury fashion campaign in chrome, leather and silver. Explore VintageCvunt's inaugural collection."
+			},
+			{
+				property: "og:image",
+				content: butterfly_img_default$1
+			}
+		],
+		links: [{
+			rel: "preload",
+			href: butterfly_img_default,
+			as: "image",
+			type: "image/webp",
+			fetchPriority: "high"
+		}]
+	})
 }).update({
 	id: "/",
 	path: "/",
