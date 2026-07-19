@@ -1,0 +1,194 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-display: "Cormorant Garamond", "Times New Roman", serif;
+  --font-body: "Inter Tight", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-graphite: var(--graphite);
+  --color-graphite-2: var(--graphite-2);
+  --color-chrome: var(--chrome);
+  --color-chrome-dim: var(--chrome-dim);
+  --color-bone: var(--bone);
+  --color-border: var(--border);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-primary: var(--foreground);
+  --color-primary-foreground: var(--background);
+  --color-card: var(--graphite);
+  --color-card-foreground: var(--foreground);
+  --color-popover: var(--graphite);
+  --color-popover-foreground: var(--foreground);
+  --color-secondary: var(--graphite-2);
+  --color-secondary-foreground: var(--foreground);
+  --color-muted: var(--graphite);
+  --color-accent: var(--chrome);
+  --color-accent-foreground: var(--background);
+  --color-destructive: oklch(0.55 0.22 25);
+  --color-destructive-foreground: var(--foreground);
+  --color-input: var(--border);
+  --color-ring: var(--chrome);
+}
+
+:root {
+  --radius: 1.25rem;
+  --background: oklch(0.03 0 0);
+  --foreground: oklch(0.96 0.005 240);
+  --graphite: oklch(0.10 0.005 240);
+  --graphite-2: oklch(0.16 0.005 240);
+  --chrome: oklch(0.86 0.008 240);
+  --chrome-dim: oklch(0.55 0.008 240);
+  --bone: oklch(0.92 0.01 80);
+  --border: oklch(0.28 0.005 240 / 60%);
+  --muted-foreground: oklch(0.62 0.008 240);
+
+  --grad-chrome: linear-gradient(180deg,
+    oklch(0.95 0.008 240) 0%,
+    oklch(0.72 0.008 240) 20%,
+    oklch(0.38 0.005 240) 50%,
+    oklch(0.78 0.008 240) 80%,
+    oklch(0.55 0.008 240) 100%);
+  --grad-chrome-h: linear-gradient(90deg,
+    oklch(0.55 0.008 240) 0%,
+    oklch(0.95 0.008 240) 25%,
+    oklch(0.42 0.005 240) 55%,
+    oklch(0.88 0.008 240) 78%,
+    oklch(0.55 0.008 240) 100%);
+  --grad-brushed: repeating-linear-gradient(90deg,
+    oklch(0.72 0.008 240) 0px,
+    oklch(0.82 0.008 240) 1px,
+    oklch(0.68 0.008 240) 2px,
+    oklch(0.78 0.008 240) 3px);
+  --shadow-heavy: 0 30px 60px -20px oklch(0 0 0 / 0.9), 0 0 0 1px oklch(1 0 0 / 0.04);
+  --shadow-plate: inset 0 1px 0 oklch(1 0 0 / 0.08), inset 0 -1px 0 oklch(0 0 0 / 0.5);
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html, body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body { overflow-x: hidden; }
+  ::selection { background: var(--chrome); color: var(--background); }
+}
+
+@utility font-display { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.02em; }
+@utility font-body { font-family: var(--font-body); }
+@utility font-mono { font-family: var(--font-mono); }
+
+@utility text-chrome {
+  background: var(--grad-chrome);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 1px 0 oklch(1 0 0 / 0.06);
+}
+@utility text-chrome-h {
+  background: var(--grad-chrome-h);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@utility bg-brushed {
+  background: var(--grad-brushed);
+}
+@utility border-chrome {
+  border-color: oklch(0.72 0.008 240 / 0.35);
+}
+@utility divider-chrome {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, oklch(0.75 0.008 240 / 0.55) 20%, oklch(0.95 0.008 240 / 0.9) 50%, oklch(0.75 0.008 240 / 0.55) 80%, transparent 100%);
+}
+
+@utility btn-chrome {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  border-radius: 999px;
+  border: 1px solid oklch(0.72 0.008 240 / 0.5);
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, oklch(0.12 0.005 240) 0%, oklch(0.05 0 0) 100%);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  isolation: isolate;
+}
+@utility btn-chrome-inner {
+  &:hover { border-color: oklch(0.85 0.008 240 / 0.75); color: var(--foreground); }
+  &:hover .btn-label { transform: translateY(-2px); }
+  & .btn-label { display: inline-block; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+}
+
+@keyframes butterfly-breathe {
+  0%, 100% { transform: scale(0.88) rotateY(0deg); filter: drop-shadow(0 20px 40px oklch(0.7 0.008 240 / 0.15)); }
+  50% { transform: scale(1) rotateY(0deg); filter: drop-shadow(0 30px 60px oklch(0.7 0.008 240 / 0.3)); }
+}
+@keyframes wing-flap {
+  0%, 100% { transform: scaleX(1); }
+  50% { transform: scaleX(0.94); }
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes shine {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes draw {
+  from { stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+
+.animate-butterfly { animation: butterfly-breathe 7s cubic-bezier(0.4, 0, 0.2, 1) infinite; transform-origin: center; }
+.animate-wings { animation: wing-flap 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite; transform-origin: center; }
+.animate-marquee { animation: marquee 40s linear infinite; }
+.animate-shine {
+  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.4), transparent);
+  background-size: 200% 100%;
+  animation: shine 3s ease-in-out infinite;
+}
+
+/* Cursor */
+.chrome-cursor {
+  position: fixed;
+  top: 0; left: 0;
+  width: 32px; height: 32px;
+  border-radius: 999px;
+  border: 1px solid oklch(0.88 0.008 240 / 0.9);
+  background: radial-gradient(circle, oklch(1 0 0 / 0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: difference;
+  transition: width 0.3s ease, height 0.3s ease, border-color 0.3s ease;
+}
+.chrome-cursor.hovering {
+  width: 56px; height: 56px;
+  border-color: oklch(0.95 0.008 240);
+}
+@media (max-width: 768px) { .chrome-cursor { display: none; } }
+
+/* Clip reveal for section headers */
+@keyframes clip-in {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+.reveal { clip-path: inset(0 100% 0 0); }
+.reveal.in { animation: clip-in 1.4s cubic-bezier(0.65, 0, 0.35, 1) forwards; }
+
