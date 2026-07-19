@@ -3,7 +3,7 @@ import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tan
 import { h as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { a as logo_default$1, c as product_chain_default, d as product_jacket_default$1, f as product_ring_default, i as logo_default, l as product_chain_default$1, n as editorial_1_default, o as product_boots_default, p as product_ring_default$1, r as editorial_1_default$1, s as product_boots_default$1, t as OptimizedImage, u as product_jacket_default } from "./OptimizedImage-CDdK_kKj.mjs";
 import { a as AnimatePresence, i as motion } from "../_libs/framer-motion.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/shop-CpV9Iuor.js
+//#region node_modules/.nitro/vite/services/ssr/assets/shop-Dkk99uK3.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var editorial_2_default$1 = "/assets/editorial-2-8RJuX1gc.jpg";
@@ -406,25 +406,25 @@ function Shop() {
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", {
 				className: "border-y border-chrome bg-graphite",
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "mx-auto max-w-7xl px-6 py-5",
+					className: "mx-auto max-w-7xl px-3 md:px-6 py-3 md:py-5",
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "flex flex-wrap items-center gap-3 md:gap-6",
+						className: "flex flex-nowrap items-center gap-1.5 md:gap-6 overflow-x-auto",
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-								className: "font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim mr-2",
+								className: "hidden md:inline font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim mr-2 shrink-0",
 								children: "Filter by"
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "relative",
+								className: "relative shrink-0",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 									onClick: () => {
 										setCatOpen(!catOpen);
 										setPriceOpen(false);
 										setSortOpen(false);
 									},
-									className: "flex items-center gap-3 rounded-full border border-chrome bg-graphite-2 px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.24em] text-foreground hover:border-chrome/60 transition-colors",
+									className: "flex items-center gap-1 md:gap-3 rounded-full border border-chrome bg-graphite-2 px-2.5 py-1 md:px-5 md:py-2.5 font-mono text-[9px] md:text-[11px] uppercase tracking-[0.24em] text-foreground hover:border-chrome/60 transition-colors whitespace-nowrap",
 									children: [category, /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
-										className: `w-3 h-3 transition-transform duration-300 ${catOpen ? "rotate-180" : ""}`,
+										className: `w-2.5 h-2.5 md:w-3 md:h-3 transition-transform duration-300 ${catOpen ? "rotate-180" : ""}`,
 										viewBox: "0 0 12 12",
 										fill: "none",
 										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
@@ -451,29 +451,29 @@ function Shop() {
 										y: -8,
 										height: 0
 									},
-									className: "absolute top-full left-0 mt-2 z-20 min-w-[220px] overflow-hidden rounded-2xl border border-chrome bg-graphite-2",
+									className: "absolute top-full left-0 max-md:left-0 max-md:right-auto mt-2 z-20 min-w-[180px] md:min-w-[220px] overflow-hidden rounded-2xl border border-chrome bg-graphite-2",
 									style: { boxShadow: "var(--shadow-heavy)" },
 									children: categories.map((c) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 										onClick: () => {
 											setCategory(c);
 											setCatOpen(false);
 										},
-										className: `block w-full px-5 py-3 text-left font-mono text-[11px] uppercase tracking-[0.24em] transition-colors hover:bg-chrome/10 ${category === c ? "text-chrome" : "text-foreground/70"}`,
+										className: `block w-full px-4 py-2.5 md:px-5 md:py-3 text-left font-mono text-[10px] md:text-[11px] uppercase tracking-[0.24em] transition-colors hover:bg-chrome/10 ${category === c ? "text-chrome" : "text-foreground/70"}`,
 										children: c
 									}, c))
 								}) })]
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "relative",
+								className: "relative shrink-0",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 									onClick: () => {
 										setPriceOpen(!priceOpen);
 										setCatOpen(false);
 										setSortOpen(false);
 									},
-									className: "flex items-center gap-3 rounded-full border border-chrome bg-graphite-2 px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.24em] text-foreground hover:border-chrome/60 transition-colors",
+									className: "flex items-center gap-1 md:gap-3 rounded-full border border-chrome bg-graphite-2 px-2.5 py-1 md:px-5 md:py-2.5 font-mono text-[9px] md:text-[11px] uppercase tracking-[0.24em] text-foreground hover:border-chrome/60 transition-colors whitespace-nowrap",
 									children: [priceRange.label, /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
-										className: `w-3 h-3 transition-transform duration-300 ${priceOpen ? "rotate-180" : ""}`,
+										className: `w-2.5 h-2.5 md:w-3 md:h-3 transition-transform duration-300 ${priceOpen ? "rotate-180" : ""}`,
 										viewBox: "0 0 12 12",
 										fill: "none",
 										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
@@ -500,33 +500,33 @@ function Shop() {
 										y: -8,
 										height: 0
 									},
-									className: "absolute top-full left-0 mt-2 z-20 min-w-[260px] overflow-hidden rounded-2xl border border-chrome bg-graphite-2",
+									className: "absolute top-full left-0 max-md:left-0 max-md:right-auto mt-2 z-20 min-w-[180px] md:min-w-[260px] overflow-hidden rounded-2xl border border-chrome bg-graphite-2",
 									style: { boxShadow: "var(--shadow-heavy)" },
 									children: priceRanges.map((r) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 										onClick: () => {
 											setPriceRange(r);
 											setPriceOpen(false);
 										},
-										className: `block w-full px-5 py-3 text-left font-mono text-[11px] uppercase tracking-[0.24em] transition-colors hover:bg-chrome/10 ${priceRange.label === r.label ? "text-chrome" : "text-foreground/70"}`,
+										className: `block w-full px-4 py-2.5 md:px-5 md:py-3 text-left font-mono text-[10px] md:text-[11px] uppercase tracking-[0.24em] transition-colors hover:bg-chrome/10 ${priceRange.label === r.label ? "text-chrome" : "text-foreground/70"}`,
 										children: r.label
 									}, r.label))
 								}) })]
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-								className: "font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim ml-auto mr-2",
+								className: "hidden md:inline font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim ml-auto mr-2 shrink-0",
 								children: "Sort by"
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "relative",
+								className: "relative shrink-0",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 									onClick: () => {
 										setSortOpen(!sortOpen);
 										setCatOpen(false);
 										setPriceOpen(false);
 									},
-									className: "flex items-center gap-3 rounded-full border border-chrome bg-graphite-2 px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.24em] text-foreground hover:border-chrome/60 transition-colors",
+									className: "flex items-center gap-1 md:gap-3 rounded-full border border-chrome bg-graphite-2 px-2.5 py-1 md:px-5 md:py-2.5 font-mono text-[9px] md:text-[11px] uppercase tracking-[0.24em] text-foreground hover:border-chrome/60 transition-colors whitespace-nowrap",
 									children: [sort, /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
-										className: `w-3 h-3 transition-transform duration-300 ${sortOpen ? "rotate-180" : ""}`,
+										className: `w-2.5 h-2.5 md:w-3 md:h-3 transition-transform duration-300 ${sortOpen ? "rotate-180" : ""}`,
 										viewBox: "0 0 12 12",
 										fill: "none",
 										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
@@ -553,14 +553,14 @@ function Shop() {
 										y: -8,
 										height: 0
 									},
-									className: "absolute top-full right-0 mt-2 z-20 min-w-[240px] overflow-hidden rounded-2xl border border-chrome bg-graphite-2",
+									className: "absolute top-full left-0 md:right-0 md:left-auto mt-2 z-20 min-w-[180px] md:min-w-[240px] overflow-hidden rounded-2xl border border-chrome bg-graphite-2",
 									style: { boxShadow: "var(--shadow-heavy)" },
 									children: sortOptions.map((s) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 										onClick: () => {
 											setSort(s);
 											setSortOpen(false);
 										},
-										className: `block w-full px-5 py-3 text-left font-mono text-[11px] uppercase tracking-[0.24em] transition-colors hover:bg-chrome/10 ${sort === s ? "text-chrome" : "text-foreground/70"}`,
+										className: `block w-full px-4 py-2.5 md:px-5 md:py-3 text-left font-mono text-[10px] md:text-[11px] uppercase tracking-[0.24em] transition-colors hover:bg-chrome/10 ${sort === s ? "text-chrome" : "text-foreground/70"}`,
 										children: s
 									}, s))
 								}) })]
@@ -571,8 +571,8 @@ function Shop() {
 									setPriceRange(priceRanges[0]);
 									setSort("Featured");
 								},
-								className: "font-mono text-[10px] uppercase tracking-[0.24em] text-chrome-dim hover:text-chrome transition-colors ml-2",
-								children: "Clear all"
+								className: "shrink-0 font-mono text-[8px] md:text-[10px] uppercase tracking-[0.24em] text-chrome-dim hover:text-chrome transition-colors ml-1 md:ml-2",
+								children: "Clear"
 							})
 						]
 					})
@@ -630,45 +630,35 @@ function Shop() {
 								ease: EASE
 							},
 							className: "group cursor-pointer",
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "relative overflow-hidden rounded-2xl border border-chrome bg-graphite",
-									style: { boxShadow: "var(--shadow-plate)" },
-									children: [
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-											className: "aspect-[4/5] overflow-hidden",
-											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(OptimizedImage, {
-												webp: product.webp,
-												fallback: product.src,
-												alt: product.name,
-												className: "h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
-											})
-										}),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-											className: "absolute left-3 top-3 rounded-full border border-chrome bg-background/70 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.22em]",
-											children: product.num
-										}),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-											className: "absolute right-3 top-3 h-6 w-6 rounded-full border border-chrome bg-graphite/60 backdrop-blur grid place-items-center text-[10px]",
-											children: "✦"
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "relative overflow-hidden rounded-2xl border border-chrome bg-graphite",
+								style: { boxShadow: "var(--shadow-plate)" },
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "aspect-[4/5] overflow-hidden",
+										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(OptimizedImage, {
+											webp: product.webp,
+											fallback: product.src,
+											alt: product.name,
+											className: "h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
 										})
-									]
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "mt-4 flex items-baseline justify-between gap-2",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
-										className: "font-display text-base md:text-xl truncate",
-										children: product.name
-									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-										className: "font-mono text-xs tracking-[0.14em] text-chrome whitespace-nowrap",
-										children: priceLabel(product.price)
-									})]
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-									className: "font-mono text-[9px] uppercase tracking-[0.28em] text-chrome-dim mt-1",
-									children: product.category
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "absolute left-3 top-3 rounded-full border border-chrome bg-background/70 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.22em]",
+										children: product.num
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "absolute right-3 top-3 h-6 w-6 rounded-full border border-chrome bg-graphite/60 backdrop-blur grid place-items-center text-[10px]",
+										children: "✦"
+									})
+								]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "mt-4",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "font-mono text-xs tracking-[0.14em] text-chrome",
+									children: priceLabel(product.price)
 								})
-							]
+							})]
 						}, product.id))
 					})]
 				})

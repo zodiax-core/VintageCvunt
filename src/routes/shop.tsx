@@ -189,18 +189,18 @@ function Shop() {
 
       {/* FILTERS */}
       <section className="border-y border-chrome bg-graphite">
-        <div className="mx-auto max-w-7xl px-6 py-5">
-          <div className="flex flex-wrap items-center gap-3 md:gap-6">
-            <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim mr-2">Filter by</span>
+        <div className="mx-auto max-w-7xl px-3 md:px-6 py-3 md:py-5">
+          <div className="flex flex-nowrap items-center gap-1.5 md:gap-6 overflow-x-auto">
+            <span className="hidden md:inline font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim mr-2 shrink-0">Filter by</span>
 
             {/* Category dropdown */}
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 onClick={() => { setCatOpen(!catOpen); setPriceOpen(false); setSortOpen(false); }}
-                className="flex items-center gap-3 rounded-full border border-chrome bg-graphite-2 px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.24em] text-foreground hover:border-chrome/60 transition-colors"
+                className="flex items-center gap-1 md:gap-3 rounded-full border border-chrome bg-graphite-2 px-2.5 py-1 md:px-5 md:py-2.5 font-mono text-[9px] md:text-[11px] uppercase tracking-[0.24em] text-foreground hover:border-chrome/60 transition-colors whitespace-nowrap"
               >
                 {category}
-                <svg className={`w-3 h-3 transition-transform duration-300 ${catOpen ? 'rotate-180' : ''}`} viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <svg className={`w-2.5 h-2.5 md:w-3 md:h-3 transition-transform duration-300 ${catOpen ? 'rotate-180' : ''}`} viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
               <AnimatePresence>
                 {catOpen && (
@@ -208,14 +208,14 @@ function Shop() {
                     initial={{ opacity: 0, y: -8, height: 0 }}
                     animate={{ opacity: 1, y: 0, height: 'auto' }}
                     exit={{ opacity: 0, y: -8, height: 0 }}
-                    className="absolute top-full left-0 mt-2 z-20 min-w-[220px] overflow-hidden rounded-2xl border border-chrome bg-graphite-2"
+                    className="absolute top-full left-0 max-md:left-0 max-md:right-auto mt-2 z-20 min-w-[180px] md:min-w-[220px] overflow-hidden rounded-2xl border border-chrome bg-graphite-2"
                     style={{ boxShadow: "var(--shadow-heavy)" }}
                   >
                     {categories.map((c) => (
                       <button
                         key={c}
                         onClick={() => { setCategory(c); setCatOpen(false); }}
-                        className={`block w-full px-5 py-3 text-left font-mono text-[11px] uppercase tracking-[0.24em] transition-colors hover:bg-chrome/10 ${category === c ? 'text-chrome' : 'text-foreground/70'}`}
+                        className={`block w-full px-4 py-2.5 md:px-5 md:py-3 text-left font-mono text-[10px] md:text-[11px] uppercase tracking-[0.24em] transition-colors hover:bg-chrome/10 ${category === c ? 'text-chrome' : 'text-foreground/70'}`}
                       >
                         {c}
                       </button>
@@ -226,13 +226,13 @@ function Shop() {
             </div>
 
             {/* Price dropdown */}
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 onClick={() => { setPriceOpen(!priceOpen); setCatOpen(false); setSortOpen(false); }}
-                className="flex items-center gap-3 rounded-full border border-chrome bg-graphite-2 px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.24em] text-foreground hover:border-chrome/60 transition-colors"
+                className="flex items-center gap-1 md:gap-3 rounded-full border border-chrome bg-graphite-2 px-2.5 py-1 md:px-5 md:py-2.5 font-mono text-[9px] md:text-[11px] uppercase tracking-[0.24em] text-foreground hover:border-chrome/60 transition-colors whitespace-nowrap"
               >
                 {priceRange.label}
-                <svg className={`w-3 h-3 transition-transform duration-300 ${priceOpen ? 'rotate-180' : ''}`} viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <svg className={`w-2.5 h-2.5 md:w-3 md:h-3 transition-transform duration-300 ${priceOpen ? 'rotate-180' : ''}`} viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
               <AnimatePresence>
                 {priceOpen && (
@@ -240,14 +240,14 @@ function Shop() {
                     initial={{ opacity: 0, y: -8, height: 0 }}
                     animate={{ opacity: 1, y: 0, height: 'auto' }}
                     exit={{ opacity: 0, y: -8, height: 0 }}
-                    className="absolute top-full left-0 mt-2 z-20 min-w-[260px] overflow-hidden rounded-2xl border border-chrome bg-graphite-2"
+                    className="absolute top-full left-0 max-md:left-0 max-md:right-auto mt-2 z-20 min-w-[180px] md:min-w-[260px] overflow-hidden rounded-2xl border border-chrome bg-graphite-2"
                     style={{ boxShadow: "var(--shadow-heavy)" }}
                   >
                     {priceRanges.map((r) => (
                       <button
                         key={r.label}
                         onClick={() => { setPriceRange(r); setPriceOpen(false); }}
-                        className={`block w-full px-5 py-3 text-left font-mono text-[11px] uppercase tracking-[0.24em] transition-colors hover:bg-chrome/10 ${priceRange.label === r.label ? 'text-chrome' : 'text-foreground/70'}`}
+                        className={`block w-full px-4 py-2.5 md:px-5 md:py-3 text-left font-mono text-[10px] md:text-[11px] uppercase tracking-[0.24em] transition-colors hover:bg-chrome/10 ${priceRange.label === r.label ? 'text-chrome' : 'text-foreground/70'}`}
                       >
                         {r.label}
                       </button>
@@ -257,16 +257,16 @@ function Shop() {
               </AnimatePresence>
             </div>
 
-            <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim ml-auto mr-2">Sort by</span>
+            <span className="hidden md:inline font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim ml-auto mr-2 shrink-0">Sort by</span>
 
             {/* Sort dropdown */}
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 onClick={() => { setSortOpen(!sortOpen); setCatOpen(false); setPriceOpen(false); }}
-                className="flex items-center gap-3 rounded-full border border-chrome bg-graphite-2 px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.24em] text-foreground hover:border-chrome/60 transition-colors"
+                className="flex items-center gap-1 md:gap-3 rounded-full border border-chrome bg-graphite-2 px-2.5 py-1 md:px-5 md:py-2.5 font-mono text-[9px] md:text-[11px] uppercase tracking-[0.24em] text-foreground hover:border-chrome/60 transition-colors whitespace-nowrap"
               >
                 {sort}
-                <svg className={`w-3 h-3 transition-transform duration-300 ${sortOpen ? 'rotate-180' : ''}`} viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <svg className={`w-2.5 h-2.5 md:w-3 md:h-3 transition-transform duration-300 ${sortOpen ? 'rotate-180' : ''}`} viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
               <AnimatePresence>
                 {sortOpen && (
@@ -274,14 +274,14 @@ function Shop() {
                     initial={{ opacity: 0, y: -8, height: 0 }}
                     animate={{ opacity: 1, y: 0, height: 'auto' }}
                     exit={{ opacity: 0, y: -8, height: 0 }}
-                    className="absolute top-full right-0 mt-2 z-20 min-w-[240px] overflow-hidden rounded-2xl border border-chrome bg-graphite-2"
+                    className="absolute top-full left-0 md:right-0 md:left-auto mt-2 z-20 min-w-[180px] md:min-w-[240px] overflow-hidden rounded-2xl border border-chrome bg-graphite-2"
                     style={{ boxShadow: "var(--shadow-heavy)" }}
                   >
                     {sortOptions.map((s) => (
                       <button
                         key={s}
                         onClick={() => { setSort(s); setSortOpen(false); }}
-                        className={`block w-full px-5 py-3 text-left font-mono text-[11px] uppercase tracking-[0.24em] transition-colors hover:bg-chrome/10 ${sort === s ? 'text-chrome' : 'text-foreground/70'}`}
+                        className={`block w-full px-4 py-2.5 md:px-5 md:py-3 text-left font-mono text-[10px] md:text-[11px] uppercase tracking-[0.24em] transition-colors hover:bg-chrome/10 ${sort === s ? 'text-chrome' : 'text-foreground/70'}`}
                       >
                         {s}
                       </button>
@@ -294,9 +294,9 @@ function Shop() {
             {(category !== "All" || priceRange.label !== "All Prices" || sort !== "Featured") && (
               <button
                 onClick={() => { setCategory("All"); setPriceRange(priceRanges[0]); setSort("Featured"); }}
-                className="font-mono text-[10px] uppercase tracking-[0.24em] text-chrome-dim hover:text-chrome transition-colors ml-2"
+                className="shrink-0 font-mono text-[8px] md:text-[10px] uppercase tracking-[0.24em] text-chrome-dim hover:text-chrome transition-colors ml-1 md:ml-2"
               >
-                Clear all
+                Clear
               </button>
             )}
           </div>
