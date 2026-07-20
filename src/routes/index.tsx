@@ -221,9 +221,15 @@ function Featured() {
         </div>
         <div className="divider-chrome mb-16" />
         <div className="grid grid-cols-12 gap-6">
-          <ProductCase span="col-span-12 md:col-span-7 md:row-span-2" src={editorial1} webp={editorial1Webp} number="No. 001" name="Meridian Coat" price="PKR 1,284,000" tall priority={true} />
-          <ProductCase span="col-span-12 md:col-span-5" src={productRing} webp={productRingWebp} number="No. 007" name="Thorn Signet, Silver" price="PKR 267,000" />
-          <ProductCase span="col-span-12 md:col-span-5" src={productChain} webp={productChainWebp} number="No. 012" name="Papillon Chain" price="PKR 402,000" />
+          <Link to="/products/$slug" params={{ slug: "meridian-coat" }} className="col-span-12 md:col-span-7 md:row-span-2">
+            <ProductCase span="" src={editorial1} webp={editorial1Webp} number="No. 001" name="Meridian Coat" price="PKR 1,284,000" tall priority={true} />
+          </Link>
+          <Link to="/products/$slug" params={{ slug: "thorn-signet-silver" }} className="col-span-12 md:col-span-5">
+            <ProductCase span="" src={productRing} webp={productRingWebp} number="No. 007" name="Thorn Signet, Silver" price="PKR 267,000" />
+          </Link>
+          <Link to="/products/$slug" params={{ slug: "papillon-chain" }} className="col-span-12 md:col-span-5">
+            <ProductCase span="" src={productChain} webp={productChainWebp} number="No. 012" name="Papillon Chain" price="PKR 402,000" />
+          </Link>
         </div>
       </div>
     </section>
@@ -319,11 +325,11 @@ function SculptureSection() {
 
 /* ---------------- BEST SELLERS ---------------- */
 function BestSellers() {
-  const items = [
-    { src: productJacket, webp: productJacketWebp, name: "Reliquary Rider", num: "No. 021", price: "PKR 1,107,000" },
-    { src: productBoots, webp: productBootsWebp, name: "Ossuary Boot", num: "No. 034", price: "PKR 462,000" },
-    { src: productRing, webp: productRingWebp, name: "Thorn Signet", num: "No. 007", price: "PKR 267,000" },
-    { src: productChain, webp: productChainWebp, name: "Papillon Chain", num: "No. 012", price: "PKR 402,000" },
+  const items: { src: string; webp: string; name: string; num: string; price: string; slug: string }[] = [
+    { src: productJacket, webp: productJacketWebp, name: "Reliquary Rider", num: "No. 021", price: "PKR 1,107,000", slug: "reliquary-rider" },
+    { src: productBoots, webp: productBootsWebp, name: "Ossuary Boot", num: "No. 034", price: "PKR 462,000", slug: "ossuary-boot" },
+    { src: productRing, webp: productRingWebp, name: "Thorn Signet", num: "No. 007", price: "PKR 267,000", slug: "thorn-signet-silver" },
+    { src: productChain, webp: productChainWebp, name: "Papillon Chain", num: "No. 012", price: "PKR 402,000", slug: "papillon-chain" },
   ];
   return (
     <section className="relative border-b border-chrome py-28 md:py-40">
@@ -335,7 +341,9 @@ function BestSellers() {
         <div className="divider-chrome mb-14" />
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
           {items.map((it, i) => (
-            <SmallCase key={i} {...it} />
+            <Link key={i} to="/products/$slug" params={{ slug: it.slug }}>
+              <SmallCase {...it} />
+            </Link>
           ))}
         </div>
       </div>
