@@ -3621,11 +3621,11 @@ var BaseRootRoute = class extends BaseRoute {
 };
 //#endregion
 //#region node_modules/@tanstack/router-core/dist/esm/ssr/constants.js
+var import_jsx_runtime = require_jsx_runtime();
 var GLOBAL_TSR = "$_TSR";
 var TSR_SCRIPT_BARRIER_ID = "$tsr-stream-barrier";
 //#endregion
 //#region node_modules/@tanstack/react-router/dist/esm/CatchBoundary.js
-var import_jsx_runtime = require_jsx_runtime();
 function CatchBoundary(props) {
 	const errorComponent = props.errorComponent ?? ErrorComponent;
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CatchBoundaryImpl, {
@@ -14869,4 +14869,4 @@ var renderRouterToStream = async ({ request, router, responseHeaders, children }
 	throw new Error("No renderToReadableStream or renderToPipeableStream found in react-dom/server. Ensure you are using a version of react-dom that supports streaming.");
 };
 //#endregion
-export { createLRUCache as A, resolveManifestAssetLink as C, isResolvedRedirect as D, isRedirect as E, decodePath as M, rootRouteId as O, getStylesheetHref as S, executeRewriteInput as T, GLOBAL_TSR as _, replaceSsrResponse as a, createInlineCssStyleAsset as b, HeadContent as c, Outlet as d, lazyRouteComponent as f, useRouter as g, Link as h, normalizeSsrResponse as i, invariant as j, isNotFound as k, RouterProvider as l, createRootRouteWithContext as m, defineHandlerCallback as n, stripSsrResponseBody as o, createFileRoute as p, isSsrResponse as r, Scripts as s, renderRouterToStream as t, createRouter as u, TSR_SCRIPT_BARRIER_ID as v, resolveManifestCssLink as w, getScriptPreloadAttrs as x, createInlineCssPlaceholderAsset as y };
+export { isNotFound as A, getStylesheetHref as C, isRedirect as D, executeRewriteInput as E, invariant as M, decodePath as N, isResolvedRedirect as O, getScriptPreloadAttrs as S, resolveManifestCssLink as T, useRouter as _, replaceSsrResponse as a, createInlineCssPlaceholderAsset as b, HeadContent as c, Outlet as d, lazyRouteComponent as f, useNavigate as g, Link as h, normalizeSsrResponse as i, createLRUCache as j, rootRouteId as k, RouterProvider as l, createRootRouteWithContext as m, defineHandlerCallback as n, stripSsrResponseBody as o, createFileRoute as p, isSsrResponse as r, Scripts as s, renderRouterToStream as t, createRouter as u, GLOBAL_TSR as v, resolveManifestAssetLink as w, createInlineCssStyleAsset as x, TSR_SCRIPT_BARRIER_ID as y };

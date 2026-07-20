@@ -1,0 +1,1 @@
+var e=`/assets/butterfly-img-BZbSO911.png`,t=`/assets/butterfly-img-CYjXnJeY.webp`;export{e as n,t};

@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useMemo, useEffect } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import productRing from "@/assets/product-ring.jpg";
 import productRingWebp from "@/assets/product-ring.webp";
@@ -13,9 +13,9 @@ import editorial1 from "@/assets/editorial-1.jpg";
 import editorial1Webp from "@/assets/editorial-1.webp";
 import editorial2 from "@/assets/editorial-2.jpg";
 import editorial2Webp from "@/assets/editorial-2.webp";
-import logoAsset from "@/assets/logo.png";
-import logoWebp from "@/assets/logo.webp";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export const Route = createFileRoute("/shop")({
   component: Shop,
@@ -66,8 +66,6 @@ const sortOptions = ["Featured", "Newest", "Price: Low — High", "Price: High �
 const priceLabel = (p: number) => "PKR " + p.toLocaleString("en-PK");
 
 function Shop() {
-  const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
@@ -75,12 +73,6 @@ function Shop() {
   const [category, setCategory] = useState("All");
   const [priceRange, setPriceRange] = useState(priceRanges[0]);
   const [sort, setSort] = useState(sortOptions[0]);
-
-  useEffect(() => {
-    const on = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", on, { passive: true });
-    return () => window.removeEventListener("scroll", on);
-  }, []);
 
   const filtered = useMemo(() => {
     let result = category === "All"
@@ -97,68 +89,7 @@ function Shop() {
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
-      {/* NAV */}
-      <motion.header
-        initial={{ y: -30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 1.2, ease: EASE, delay: 0.3 }}
-        className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${scrolled ? "px-3 pt-3" : "px-6 pt-6"}`}
-      >
-        <div
-          className={`relative mx-auto flex items-center justify-between gap-4 rounded-3xl border border-chrome bg-white transition-all duration-500 ${scrolled ? "max-w-6xl px-5 py-2.5" : "max-w-7xl px-7 py-4"}`}
-          style={{ boxShadow: "var(--shadow-plate)" }}
-        >
-          <Link to="/" className="flex items-center gap-3 min-w-0">
-            <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-black" />
-            <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-black truncate">VintageCvunt</span>
-          </Link>
-          <nav className="hidden md:flex items-center gap-8 font-mono text-[11px] uppercase tracking-[0.24em] text-black/70">
-            <Link to="/" className="transition-colors hover:text-black">Home</Link>
-            <Link to="/shop" className="text-black">Shop</Link>
-            <a href="#" className="transition-colors hover:text-black">About Us</a>
-            <a href="#" className="transition-colors hover:text-black">Contact</a>
-          </nav>
-          <div className="flex items-center justify-end gap-5 font-mono text-[11px] uppercase tracking-[0.24em] text-black">
-            <button className="hidden sm:inline hover:opacity-70 transition-opacity">Search</button>
-            <button className="hidden md:inline hover:opacity-70 transition-opacity">Account</button>
-            <button className="flex items-center hover:opacity-70 transition-opacity">
-              <span className="relative">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-                <span className="absolute -top-1.5 -right-2 grid h-4 w-4 place-items-center rounded-full bg-black text-white text-[9px] font-medium border border-white">0</span>
-              </span>
-            </button>
-            <button className="md:hidden flex flex-col items-center justify-center gap-1.5 h-8 w-8 ml-2" onClick={() => setMenuOpen(!menuOpen)}>
-              <span className={`block h-[1px] w-5 bg-black transition-transform duration-300 ${menuOpen ? 'translate-y-[7px] rotate-45' : ''}`} />
-              <span className={`block h-[1px] w-5 bg-black transition-opacity duration-300 ${menuOpen ? 'opacity-0' : 'opacity-100'}`} />
-              <span className={`block h-[1px] w-5 bg-black transition-transform duration-300 ${menuOpen ? '-translate-y-[7px] -rotate-45' : ''}`} />
-            </button>
-          </div>
-        </div>
-        <AnimatePresence>
-          {menuOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0, marginTop: 0 }}
-              animate={{ height: 'auto', opacity: 1, marginTop: 12 }}
-              exit={{ height: 0, opacity: 0, marginTop: 0 }}
-              className="overflow-hidden mx-auto max-w-7xl px-3"
-            >
-              <div className="rounded-3xl border border-chrome bg-white p-6 flex flex-col gap-6" style={{ boxShadow: "var(--shadow-plate)" }}>
-                <nav className="flex flex-col gap-6 font-mono text-sm uppercase tracking-[0.24em] text-black/70">
-                  <Link to="/" className="hover:text-black transition-colors" onClick={() => setMenuOpen(false)}>Home</Link>
-                  <Link to="/shop" className="text-black" onClick={() => setMenuOpen(false)}>Shop</Link>
-                  <a href="#" className="hover:text-black transition-colors">About Us</a>
-                  <a href="#" className="hover:text-black transition-colors">Contact</a>
-                </nav>
-                <div className="h-px w-full bg-black/10" />
-                <div className="flex flex-col gap-4 font-mono text-[11px] uppercase tracking-[0.24em] text-black/70">
-                  <button className="text-left hover:text-black transition-colors" onClick={() => setMenuOpen(false)}>Search</button>
-                  <button className="text-left hover:text-black transition-colors" onClick={() => setMenuOpen(false)}>Account</button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.header>
+      <SiteNav />
 
       {/* HERO */}
       <section className="relative pt-36 pb-16 md:pt-44 md:pb-20 overflow-hidden">
@@ -351,36 +282,7 @@ function Shop() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="relative bg-background pt-24 pb-10 border-t border-chrome">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="flex justify-center">
-            <OptimizedImage webp={logoWebp} fallback={logoAsset} alt="VintageCvunt" width={1400} height={400} className="h-auto w-full max-w-4xl opacity-95" />
-          </div>
-          <div className="divider-chrome my-14" />
-          <div className="grid grid-cols-2 gap-10 md:grid-cols-5 text-sm">
-            {[
-              { h: "Atelier", l: ["Milano", "Paris", "Tokyo", "Bookings"] },
-              { h: "Objects", l: ["Outerwear", "Silverwork", "Footwear", "Adornment"] },
-              { h: "House", l: ["Manifesto", "Craftsmen", "Materials", "Sustainability"] },
-              { h: "Service", l: ["Shipping", "Returns", "Care", "Contact"] },
-              { h: "Follow", l: ["Instagram", "Journal", "Pinterest", "Discord"] },
-            ].map((c) => (
-              <div key={c.h}>
-                <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">{c.h}</div>
-                <ul className="mt-4 space-y-2 font-display text-lg">
-                  {c.l.map((x) => <li key={x}><a href="#" className="hover:text-chrome transition-colors">{x}</a></li>)}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <div className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-chrome pt-8 font-mono text-[10px] uppercase tracking-[0.28em] text-chrome-dim">
-            <span>© MMXXVI VintageCvunt · Casa d'Argento</span>
-            <span>Milano · N 45°27′ E 9°11′</span>
-            <span>Privacy · Terms · Cookies</span>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
