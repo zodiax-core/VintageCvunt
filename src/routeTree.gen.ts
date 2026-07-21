@@ -11,13 +11,32 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as ContentRouteImport } from './routes/content'
+import { Route as CouponRouteImport } from './routes/coupon'
+import { Route as CustomerRouteImport } from './routes/customer'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as MessageRouteImport } from './routes/message'
+import { Route as OrderRouteImport } from './routes/order'
 import { Route as OrderConfirmedRouteImport } from './routes/order-confirmed'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as ProductRouteImport } from './routes/product'
+import { Route as ReviewRouteImport } from './routes/review'
+import { Route as SettingRouteImport } from './routes/setting'
+import { Route as ShippingReturnsRouteImport } from './routes/shipping-returns'
 import { Route as ShopRouteImport } from './routes/shop'
+import { Route as SizeGuideRouteImport } from './routes/size-guide'
+import { Route as TermsConditionsRouteImport } from './routes/terms-conditions'
+import { Route as CustomerIdRouteImport } from './routes/customer.$id'
+import { Route as OrderIdRouteImport } from './routes/order.$id'
+import { Route as ProductNewRouteImport } from './routes/product.new'
 import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
+import { Route as ProductIdEditRouteImport } from './routes/product.$id.edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -27,6 +46,16 @@ const IndexRoute = IndexRouteImport.update({
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalyticsRoute = AnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -49,9 +78,64 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContentRoute = ContentRouteImport.update({
+  id: '/content',
+  path: '/content',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CouponRoute = CouponRouteImport.update({
+  id: '/coupon',
+  path: '/coupon',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerRoute = CustomerRouteImport.update({
+  id: '/customer',
+  path: '/customer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessageRoute = MessageRouteImport.update({
+  id: '/message',
+  path: '/message',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrderRoute = OrderRouteImport.update({
+  id: '/order',
+  path: '/order',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrderConfirmedRoute = OrderConfirmedRouteImport.update({
   id: '/order-confirmed',
   path: '/order-confirmed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductRoute = ProductRouteImport.update({
+  id: '/product',
+  path: '/product',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewRoute = ReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingRoute = SettingRouteImport.update({
+  id: '/setting',
+  path: '/setting',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShippingReturnsRoute = ShippingReturnsRouteImport.update({
+  id: '/shipping-returns',
+  path: '/shipping-returns',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShopRoute = ShopRouteImport.update({
@@ -59,91 +143,250 @@ const ShopRoute = ShopRouteImport.update({
   path: '/shop',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SizeGuideRoute = SizeGuideRouteImport.update({
+  id: '/size-guide',
+  path: '/size-guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsConditionsRoute = TermsConditionsRouteImport.update({
+  id: '/terms-conditions',
+  path: '/terms-conditions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerIdRoute = CustomerIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CustomerRoute,
+} as any)
+const OrderIdRoute = OrderIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => OrderRoute,
+} as any)
+const ProductNewRoute = ProductNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => ProductRoute,
+} as any)
 const ProductsSlugRoute = ProductsSlugRouteImport.update({
   id: '/products/$slug',
   path: '/products/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProductIdEditRoute = ProductIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => ProductRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
+  '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/content': typeof ContentRoute
+  '/coupon': typeof CouponRoute
+  '/customer': typeof CustomerRouteWithChildren
+  '/faq': typeof FaqRoute
+  '/message': typeof MessageRoute
+  '/order': typeof OrderRouteWithChildren
   '/order-confirmed': typeof OrderConfirmedRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/product': typeof ProductRouteWithChildren
+  '/review': typeof ReviewRoute
+  '/setting': typeof SettingRoute
+  '/shipping-returns': typeof ShippingReturnsRoute
   '/shop': typeof ShopRoute
+  '/size-guide': typeof SizeGuideRoute
+  '/terms-conditions': typeof TermsConditionsRoute
+  '/customer/$id': typeof CustomerIdRoute
+  '/order/$id': typeof OrderIdRoute
+  '/product/new': typeof ProductNewRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/product/$id/edit': typeof ProductIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
+  '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/content': typeof ContentRoute
+  '/coupon': typeof CouponRoute
+  '/customer': typeof CustomerRouteWithChildren
+  '/faq': typeof FaqRoute
+  '/message': typeof MessageRoute
+  '/order': typeof OrderRouteWithChildren
   '/order-confirmed': typeof OrderConfirmedRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/product': typeof ProductRouteWithChildren
+  '/review': typeof ReviewRoute
+  '/setting': typeof SettingRoute
+  '/shipping-returns': typeof ShippingReturnsRoute
   '/shop': typeof ShopRoute
+  '/size-guide': typeof SizeGuideRoute
+  '/terms-conditions': typeof TermsConditionsRoute
+  '/customer/$id': typeof CustomerIdRoute
+  '/order/$id': typeof OrderIdRoute
+  '/product/new': typeof ProductNewRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/product/$id/edit': typeof ProductIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
+  '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/content': typeof ContentRoute
+  '/coupon': typeof CouponRoute
+  '/customer': typeof CustomerRouteWithChildren
+  '/faq': typeof FaqRoute
+  '/message': typeof MessageRoute
+  '/order': typeof OrderRouteWithChildren
   '/order-confirmed': typeof OrderConfirmedRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/product': typeof ProductRouteWithChildren
+  '/review': typeof ReviewRoute
+  '/setting': typeof SettingRoute
+  '/shipping-returns': typeof ShippingReturnsRoute
   '/shop': typeof ShopRoute
+  '/size-guide': typeof SizeGuideRoute
+  '/terms-conditions': typeof TermsConditionsRoute
+  '/customer/$id': typeof CustomerIdRoute
+  '/order/$id': typeof OrderIdRoute
+  '/product/new': typeof ProductNewRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/product/$id/edit': typeof ProductIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/about'
+    | '/admin'
+    | '/analytics'
     | '/auth'
     | '/cart'
     | '/checkout'
     | '/contact'
+    | '/content'
+    | '/coupon'
+    | '/customer'
+    | '/faq'
+    | '/message'
+    | '/order'
     | '/order-confirmed'
+    | '/privacy-policy'
+    | '/product'
+    | '/review'
+    | '/setting'
+    | '/shipping-returns'
     | '/shop'
+    | '/size-guide'
+    | '/terms-conditions'
+    | '/customer/$id'
+    | '/order/$id'
+    | '/product/new'
     | '/products/$slug'
+    | '/product/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
+    | '/admin'
+    | '/analytics'
     | '/auth'
     | '/cart'
     | '/checkout'
     | '/contact'
+    | '/content'
+    | '/coupon'
+    | '/customer'
+    | '/faq'
+    | '/message'
+    | '/order'
     | '/order-confirmed'
+    | '/privacy-policy'
+    | '/product'
+    | '/review'
+    | '/setting'
+    | '/shipping-returns'
     | '/shop'
+    | '/size-guide'
+    | '/terms-conditions'
+    | '/customer/$id'
+    | '/order/$id'
+    | '/product/new'
     | '/products/$slug'
+    | '/product/$id/edit'
   id:
     | '__root__'
     | '/'
     | '/about'
+    | '/admin'
+    | '/analytics'
     | '/auth'
     | '/cart'
     | '/checkout'
     | '/contact'
+    | '/content'
+    | '/coupon'
+    | '/customer'
+    | '/faq'
+    | '/message'
+    | '/order'
     | '/order-confirmed'
+    | '/privacy-policy'
+    | '/product'
+    | '/review'
+    | '/setting'
+    | '/shipping-returns'
     | '/shop'
+    | '/size-guide'
+    | '/terms-conditions'
+    | '/customer/$id'
+    | '/order/$id'
+    | '/product/new'
     | '/products/$slug'
+    | '/product/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AdminRoute: typeof AdminRoute
+  AnalyticsRoute: typeof AnalyticsRoute
   AuthRoute: typeof AuthRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   ContactRoute: typeof ContactRoute
+  ContentRoute: typeof ContentRoute
+  CouponRoute: typeof CouponRoute
+  CustomerRoute: typeof CustomerRouteWithChildren
+  FaqRoute: typeof FaqRoute
+  MessageRoute: typeof MessageRoute
+  OrderRoute: typeof OrderRouteWithChildren
   OrderConfirmedRoute: typeof OrderConfirmedRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  ProductRoute: typeof ProductRouteWithChildren
+  ReviewRoute: typeof ReviewRoute
+  SettingRoute: typeof SettingRoute
+  ShippingReturnsRoute: typeof ShippingReturnsRoute
   ShopRoute: typeof ShopRoute
+  SizeGuideRoute: typeof SizeGuideRoute
+  TermsConditionsRoute: typeof TermsConditionsRoute
   ProductsSlugRoute: typeof ProductsSlugRoute
 }
 
@@ -161,6 +404,20 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analytics': {
+      id: '/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -191,11 +448,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/content': {
+      id: '/content'
+      path: '/content'
+      fullPath: '/content'
+      preLoaderRoute: typeof ContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coupon': {
+      id: '/coupon'
+      path: '/coupon'
+      fullPath: '/coupon'
+      preLoaderRoute: typeof CouponRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer': {
+      id: '/customer'
+      path: '/customer'
+      fullPath: '/customer'
+      preLoaderRoute: typeof CustomerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/message': {
+      id: '/message'
+      path: '/message'
+      fullPath: '/message'
+      preLoaderRoute: typeof MessageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/order': {
+      id: '/order'
+      path: '/order'
+      fullPath: '/order'
+      preLoaderRoute: typeof OrderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/order-confirmed': {
       id: '/order-confirmed'
       path: '/order-confirmed'
       fullPath: '/order-confirmed'
       preLoaderRoute: typeof OrderConfirmedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/product': {
+      id: '/product'
+      path: '/product'
+      fullPath: '/product'
+      preLoaderRoute: typeof ProductRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/review': {
+      id: '/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof ReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setting': {
+      id: '/setting'
+      path: '/setting'
+      fullPath: '/setting'
+      preLoaderRoute: typeof SettingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shipping-returns': {
+      id: '/shipping-returns'
+      path: '/shipping-returns'
+      fullPath: '/shipping-returns'
+      preLoaderRoute: typeof ShippingReturnsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shop': {
@@ -205,6 +539,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/size-guide': {
+      id: '/size-guide'
+      path: '/size-guide'
+      fullPath: '/size-guide'
+      preLoaderRoute: typeof SizeGuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms-conditions': {
+      id: '/terms-conditions'
+      path: '/terms-conditions'
+      fullPath: '/terms-conditions'
+      preLoaderRoute: typeof TermsConditionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/$id': {
+      id: '/customer/$id'
+      path: '/$id'
+      fullPath: '/customer/$id'
+      preLoaderRoute: typeof CustomerIdRouteImport
+      parentRoute: typeof CustomerRoute
+    }
+    '/order/$id': {
+      id: '/order/$id'
+      path: '/$id'
+      fullPath: '/order/$id'
+      preLoaderRoute: typeof OrderIdRouteImport
+      parentRoute: typeof OrderRoute
+    }
+    '/product/new': {
+      id: '/product/new'
+      path: '/new'
+      fullPath: '/product/new'
+      preLoaderRoute: typeof ProductNewRouteImport
+      parentRoute: typeof ProductRoute
+    }
     '/products/$slug': {
       id: '/products/$slug'
       path: '/products/$slug'
@@ -212,18 +581,75 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/product/$id/edit': {
+      id: '/product/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/product/$id/edit'
+      preLoaderRoute: typeof ProductIdEditRouteImport
+      parentRoute: typeof ProductRoute
+    }
   }
 }
+
+interface CustomerRouteChildren {
+  CustomerIdRoute: typeof CustomerIdRoute
+}
+
+const CustomerRouteChildren: CustomerRouteChildren = {
+  CustomerIdRoute: CustomerIdRoute,
+}
+
+const CustomerRouteWithChildren = CustomerRoute._addFileChildren(
+  CustomerRouteChildren,
+)
+
+interface OrderRouteChildren {
+  OrderIdRoute: typeof OrderIdRoute
+}
+
+const OrderRouteChildren: OrderRouteChildren = {
+  OrderIdRoute: OrderIdRoute,
+}
+
+const OrderRouteWithChildren = OrderRoute._addFileChildren(OrderRouteChildren)
+
+interface ProductRouteChildren {
+  ProductNewRoute: typeof ProductNewRoute
+  ProductIdEditRoute: typeof ProductIdEditRoute
+}
+
+const ProductRouteChildren: ProductRouteChildren = {
+  ProductNewRoute: ProductNewRoute,
+  ProductIdEditRoute: ProductIdEditRoute,
+}
+
+const ProductRouteWithChildren =
+  ProductRoute._addFileChildren(ProductRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AdminRoute: AdminRoute,
+  AnalyticsRoute: AnalyticsRoute,
   AuthRoute: AuthRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   ContactRoute: ContactRoute,
+  ContentRoute: ContentRoute,
+  CouponRoute: CouponRoute,
+  CustomerRoute: CustomerRouteWithChildren,
+  FaqRoute: FaqRoute,
+  MessageRoute: MessageRoute,
+  OrderRoute: OrderRouteWithChildren,
   OrderConfirmedRoute: OrderConfirmedRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
+  ProductRoute: ProductRouteWithChildren,
+  ReviewRoute: ReviewRoute,
+  SettingRoute: SettingRoute,
+  ShippingReturnsRoute: ShippingReturnsRoute,
   ShopRoute: ShopRoute,
+  SizeGuideRoute: SizeGuideRoute,
+  TermsConditionsRoute: TermsConditionsRoute,
   ProductsSlugRoute: ProductsSlugRoute,
 }
 export const routeTree = rootRouteImport

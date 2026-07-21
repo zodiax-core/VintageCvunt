@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SiteNav } from "@/components/SiteNav";
@@ -17,6 +17,7 @@ export const Route = createFileRoute("/auth")({
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 function Auth() {
+  const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -47,7 +48,7 @@ function Auth() {
     setTouched({ name: true, email: true, password: true, confirmPassword: true });
     if (Object.keys(errs).length === 0) {
       setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      setTimeout(() => navigate({ to: "/admin" }), 1000);
     }
   };
 
