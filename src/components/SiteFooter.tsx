@@ -3,15 +3,6 @@ import logoWebp from "@/assets/logo.webp";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { Link } from "@tanstack/react-router";
 
-const ROUTE_MAP: Record<string, string> = {
-  "Contact": "/contact",
-  "Shipping & Returns": "/shipping-returns",
-  "Size Guide": "/size-guide",
-  "FAQ": "/faq",
-  "Privacy": "/privacy-policy",
-  "Terms": "/terms-conditions",
-};
-
 export function SiteFooter() {
   return (
     <footer className="relative bg-background pt-24 pb-10">
@@ -20,29 +11,33 @@ export function SiteFooter() {
           <OptimizedImage webp={logoWebp} fallback={logoAsset} alt="VintageCvunt" width={1400} height={400} className="h-auto w-full max-w-4xl opacity-95" />
         </div>
         <div className="divider-chrome my-14" />
-        <div className="grid grid-cols-2 gap-10 md:grid-cols-5 text-sm">
+        <div className="grid grid-cols-2 gap-10 md:grid-cols-4 text-sm">
           {[
-            { h: "Atelier", l: ["Milano", "Paris", "Tokyo", "Bookings"] },
-            { h: "Objects", l: ["Outerwear", "Silverwork", "Footwear", "Adornment"] },
-            { h: "House", l: ["Manifesto", "Craftsmen", "Materials", "Sustainability"] },
-            { h: "Service", l: ["Shipping & Returns", "Size Guide", "FAQ", "Care", "Contact"] },
-            { h: "Follow", l: ["Instagram", "Journal", "Pinterest", "Discord"] },
+            { h: "Brand", l: [{ n: "About", to: "/about" }, { n: "Contact", to: "/contact" }, { n: "FAQ", to: "/faq" }] },
+            { h: "Shop", l: [{ n: "All Objects", to: "/shop" }, { n: "Outerwear", to: "/shop" }, { n: "Footwear", to: "/shop" }, { n: "Silverwork", to: "/shop" }, { n: "Adornment", to: "/shop" }] },
+            { h: "Service", l: [{ n: "Shipping & Returns", to: "/shipping-returns" }, { n: "Size Guide", to: "/size-guide" }, { n: "Privacy Policy", to: "/privacy-policy" }, { n: "Terms & Conditions", to: "/terms-conditions" }] },
+            { h: "Follow", l: [{ n: "Instagram", to: "#", ext: true }, { n: "Pinterest", to: "#", ext: true }, { n: "Discord", to: "#", ext: true }] },
           ].map((c) => (
             <div key={c.h}>
               <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">{c.h}</div>
               <ul className="mt-4 space-y-2 font-display text-lg">
-                {c.l.map((x) => {
-                  const to = ROUTE_MAP[x] || "/";
-                  return <li key={x}><Link to={to} className="hover:text-chrome transition-colors">{x}</Link></li>;
-                })}
+                {c.l.map((x) => (
+                  <li key={x.n}>
+                    {x.ext ? (
+                      <a href={x.to} target="_blank" rel="noopener noreferrer" className="hover:text-chrome transition-colors">{x.n}</a>
+                    ) : (
+                      <Link to={x.to} className="hover:text-chrome transition-colors">{x.n}</Link>
+                    )}
+                  </li>
+                ))}
               </ul>
             </div>
           ))}
         </div>
         <div className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-chrome pt-8 font-mono text-[10px] uppercase tracking-[0.28em] text-chrome-dim">
-          <span>© MMXXVI VintageCvunt · Casa d'Argento</span>
-          <span>Milano · N 45°27′ E 9°11′</span>
-          <span><Link to="/privacy-policy" className="hover:text-chrome transition-colors">Privacy</Link> · <Link to="/terms-conditions" className="hover:text-chrome transition-colors">Terms</Link> · Cookies</span>
+          <span>&copy; MMXXVI VintageCvunt &middot; Casa d'Argento</span>
+          <span>Karachi &middot; Pakistan</span>
+          <span><Link to="/privacy-policy" className="hover:text-chrome transition-colors">Privacy</Link> &middot; <Link to="/terms-conditions" className="hover:text-chrome transition-colors">Terms</Link> &middot; Cookies</span>
         </div>
       </div>
     </footer>

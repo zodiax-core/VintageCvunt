@@ -6,6 +6,7 @@ import {
   MessageSquare, Star, Tag, FileText, Settings, LogOut,
   Menu, ChevronLeft, Bell, Search, User
 } from "lucide-react";
+import { useAuthContext } from "@/lib/auth-context";
 
 interface NavItem {
   to: string;
@@ -29,6 +30,7 @@ const NAV_ITEMS: NavItem[] = [
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout } = useAuthContext();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
@@ -50,6 +52,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   };
 
   const handleLogout = () => {
+    logout();
     navigate({ to: "/auth" });
   };
 
@@ -142,8 +145,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 <User size={14} className="text-chrome-dim" />
               </div>
               <div className="hidden lg:block">
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] leading-tight">Admin</p>
-                <p className="font-mono text-[9px] text-chrome-dim">admin@vintagecvunt.com</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] leading-tight">{user?.name || "Admin"}</p>
+                <p className="font-mono text-[9px] text-chrome-dim">{user?.email || "admin@vintagecvunt.com"}</p>
               </div>
             </div>
           </div>

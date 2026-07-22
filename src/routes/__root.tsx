@@ -7,12 +7,15 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Lenis from "lenis";
+import { ConvexProvider } from "convex/react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { CartProvider } from "../lib/cart-context";
+import { AuthProvider } from "../lib/auth-context";
+import { getConvexClient } from "../lib/convex";
 
 function NotFoundComponent() {
   return (
@@ -43,14 +46,20 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
+  const isConvexError = error?.message?.includes("Could not find public function") ||
+    error?.message?.includes("CONVEX") ||
+    error?.message?.includes("Server Error");
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          {isConvexError ? "Backend Connecting…" : "This page didn't load"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          {isConvexError
+            ? "The backend server is starting up. Please wait a moment and try again."
+            : "Something went wrong on our end. You can try refreshing or head back home."}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -106,11 +115,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         {children}
         <Scripts />
       </body>
@@ -120,6 +129,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const [convexClient] = useState(() => getConvexClient());
 
   useEffect(() => {
     const lenis = new Lenis();
@@ -133,9 +143,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        <Outlet />
-      </CartProvider>
+      <ConvexProvider client={convexClient}>
+        <AuthProvider>
+          <CartProvider>
+            <Outlet />
+          </CartProvider>
+        </AuthProvider>
+      </ConvexProvider>
     </QueryClientProvider>
   );
 }

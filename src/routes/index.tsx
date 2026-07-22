@@ -94,7 +94,7 @@ function Hero() {
 
       {/* Vertical side rails */}
       <div className="pointer-events-none absolute left-6 top-40 bottom-16 hidden md:flex flex-col items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">
-        <span className="[writing-mode:vertical-rl] rotate-180">N 41°24′ · E 2°10′</span>
+        <span className="[writing-mode:vertical-rl] rotate-180">N 24°51′ · E 67°00′</span>
         <div className="h-40 w-px bg-brushed opacity-60" />
         <span className="[writing-mode:vertical-rl] rotate-180">Est. MMXXVI</span>
       </div>
@@ -127,10 +127,10 @@ function Hero() {
             <MaskLine delay={1.5}>and the cold breath of cathedral air.</MaskLine>
           </div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: EASE, delay: 1.7 }}>
-            <button className="btn-chrome btn-chrome-inner">
+            <Link to="/shop" className="btn-chrome btn-chrome-inner">
               <span className="btn-label">Enter the Collection</span>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7h12M8 2l5 5-5 5" stroke="currentColor" strokeWidth="1.2" /></svg>
-            </button>
+            </Link>
           </motion.div>
         </div>
       </div>
@@ -139,8 +139,8 @@ function Hero() {
       <div className="relative z-10 border-y border-chrome bg-background/60 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-8 px-6 py-3 font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">
           <span>001 / 062 objects</span>
-          <span className="hidden sm:inline">Cast in Milano</span>
-          <span className="hidden md:inline">Shipping worldwide</span>
+          <span className="hidden sm:inline">Cast in Karachi</span>
+          <span className="hidden md:inline">Shipping across Pakistan</span>
           <span className="flex items-center gap-2">
             Scroll
             <span className="inline-block h-3 w-px bg-chrome animate-pulse" />
@@ -185,7 +185,7 @@ function CornerOrnament({ className = "" }: { className?: string }) {
 
 /* ---------------- MARQUEE ---------------- */
 function Marquee() {
-  const items = ["Modern Gothic", "Cast in Chrome", "Cathedral Tailoring", "Hand-Finished", "Milano · Paris · Tokyo", "Chapter I", "Objects of Weight"];
+  const items = ["Modern Gothic", "Cast in Chrome", "Cathedral Tailoring", "Hand-Finished", "Karachi · Lahore · Islamabad", "Chapter I", "Objects of Weight"];
   return (
     <section className="relative overflow-hidden border-b border-chrome bg-graphite py-6">
       <div className="flex animate-marquee whitespace-nowrap">
@@ -315,7 +315,7 @@ function SculptureSection() {
             <p>Fig. 04 — Argenta<br />sculpture in motion</p>
           </div>
           <div className="absolute top-6 right-0 max-w-xs text-right font-mono text-[10px] uppercase tracking-[0.28em] text-chrome-dim">
-            <p>MMXXVI · Milano<br />24° / 120mm / Kodak Vision</p>
+            <p>MMXXVI · Karachi<br />24° / 120mm / Kodak Vision</p>
           </div>
         </div>
       </div>

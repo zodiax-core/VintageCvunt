@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 
@@ -33,12 +35,24 @@ function Contact() {
     return errs;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const sendMessage = useMutation(api.messages.create);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
     setErrors(errs);
     if (Object.keys(errs).length === 0) {
-      setSubmitted(true);
+      try {
+        await sendMessage({
+          name: form.name,
+          email: form.email,
+          subject: form.subject || form.type,
+          message: form.message,
+        });
+        setSubmitted(true);
+      } catch (err) {
+        console.error("Failed to send message", err);
+      }
     }
   };
 
@@ -189,17 +203,17 @@ function Contact() {
                 <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">§ Atelier</span>
                 <div className="mt-4 space-y-1 font-display text-lg">
                   <p>Casa d'Argento</p>
-                  <p>Via Brera 24</p>
-                  <p>20121 Milano, Italy</p>
+                  <p>42 Clifton Avenue</p>
+                  <p>Karachi, Pakistan</p>
                 </div>
-                <a href="#" className="mt-4 inline-block font-mono text-[10px] md:text-[11px] uppercase tracking-[0.24em] text-chrome hover:text-foreground transition-colors">View on Map ↗</a>
+                <a href="https://maps.google.com/?q=Clifton+Karachi+Pakistan" target="_blank" rel="noopener noreferrer" className="mt-4 inline-block font-mono text-[10px] md:text-[11px] uppercase tracking-[0.24em] text-chrome hover:text-foreground transition-colors">View on Map ↗</a>
               </div>
 
               <div>
                 <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">§ Contact</span>
                 <div className="mt-4 space-y-3">
                   <a href="mailto:studio@vintagecvunt.com" className="block font-mono text-sm text-chrome hover:text-foreground transition-colors">studio@vintagecvunt.com</a>
-                  <a href="tel:+390212345678" className="block font-mono text-sm text-chrome hover:text-foreground transition-colors">+39 02 1234 5678</a>
+                  <a href="tel:+922111234567" className="block font-mono text-sm text-chrome hover:text-foreground transition-colors">+92 21 1123 4567</a>
                 </div>
               </div>
 

@@ -2,27 +2,22 @@ import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/shipping-returns")({
   component: ShippingReturns,
   head: () => ({
     meta: [
       { title: "Shipping & Returns — VintageCvunt" },
-      { name: "description", content: "VintageCvunt shipping and returns policy. Domestic and international delivery rates, processing times, and return instructions." },
+      { name: "description", content: "VintageCvunt shipping and returns policy. Domestic delivery rates, processing times, and return instructions." },
     ],
   }),
 });
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-const shippingRates = [
-  { region: "Italy", est: "2–3 business days", cost: "€15" },
-  { region: "European Union", est: "3–6 business days", cost: "€25" },
-  { region: "United Kingdom", est: "4–7 business days", cost: "€35" },
-  { region: "United States & Canada", est: "5–10 business days", cost: "€45" },
-  { region: "Asia Pacific", est: "7–14 business days", cost: "€55" },
-  { region: "Rest of World", est: "10–20 business days", cost: "€65" },
-];
+
 
 const returnSteps = [
   { step: "01", title: "Initiate Request", desc: "Email returns@vintagecvunt.com within 14 days of delivery with your order number and reason for return." },
@@ -32,9 +27,10 @@ const returnSteps = [
   { step: "05", title: "Inspection & Refund", desc: "Upon arrival, our atelier inspects the item. Approved refunds are processed within 10 business days to the original payment method." },
 ];
 
-const exclusions = ["Custom and bespoke pieces are final sale and not eligible for return.", "Items worn, altered, damaged, or returned without original packaging will be refused.", "Earrings, intimates, and grooming products cannot be returned for hygiene reasons.", "Sale or discounted items marked as final sale are non-returnable.", "International returns are the responsibility of the buyer for any customs or duties fees incurred."];
+const exclusions = ["Custom and bespoke pieces are final sale and not eligible for return.", "Items worn, altered, damaged, or returned without original packaging will be refused.", "Earrings, intimates, and grooming products cannot be returned for hygiene reasons.", "Sale or discounted items marked as final sale are non-returnable."];
 
 function ShippingReturns() {
+  const shippingRates = useQuery(api.shippingRates.list) ?? [];
   return (
     <div className="relative min-h-screen bg-background text-foreground">
       <SiteNav />
@@ -77,8 +73,8 @@ function ShippingReturns() {
             <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">§ Shipping</span>
             <h2 className="mt-3 font-display text-3xl md:text-5xl">Delivery Rates & Times</h2>
             <div className="mt-6 space-y-2 font-mono text-sm text-chrome-dim">
-              <p>All orders are processed within 1–2 business days. Orders placed after 14:00 CET are processed the following business day.</p>
-              <p>We ship via DHL Express, UPS, and Poste Italiane. All shipments are fully insured and require a signature upon delivery.</p>
+              <p>All orders are processed within 1–2 business days. Orders placed after 14:00 PKT are processed the following business day.</p>
+              <p>We ship via Leopards Courier, TCS, and M&P. All shipments are fully insured and require a signature upon delivery. Free shipping on orders over PKR 500,000.</p>
             </div>
           </motion.div>
 
@@ -98,11 +94,11 @@ function ShippingReturns() {
                 </tr>
               </thead>
               <tbody>
-                {shippingRates.map((r) => (
-                  <tr key={r.region} className="even:bg-graphite/40">
-                    <td className="border border-chrome px-4 py-3 font-mono text-sm">{r.region}</td>
-                    <td className="border border-chrome px-4 py-3 font-mono text-sm text-chrome-dim">{r.est}</td>
-                    <td className="border border-chrome px-4 py-3 font-mono text-sm">{r.cost}</td>
+                {shippingRates.filter((r) => r.isActive).map((r) => (
+                  <tr key={r._id} className="even:bg-graphite/40">
+                    <td className="border border-chrome px-4 py-3 font-mono text-sm">{r.name}</td>
+                    <td className="border border-chrome px-4 py-3 font-mono text-sm text-chrome-dim">{r.estimatedDays}</td>
+                    <td className="border border-chrome px-4 py-3 font-mono text-sm">{r.price === 0 ? "Free" : `PKR ${r.price.toLocaleString()}`}</td>
                   </tr>
                 ))}
               </tbody>

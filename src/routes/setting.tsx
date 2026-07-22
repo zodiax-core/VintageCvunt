@@ -147,13 +147,7 @@ function Settings() {
                   onChange={(e) => setTimezone(e.target.value)}
                   className="w-full rounded-xl border border-chrome/20 bg-background px-4 py-2.5 font-mono text-sm outline-none focus:border-chrome/50"
                 >
-                  <option value="America/New_York">America/New_York (EST)</option>
-                  <option value="America/Chicago">America/Chicago (CST)</option>
-                  <option value="America/Denver">America/Denver (MST)</option>
-                  <option value="America/Los_Angeles">America/Los_Angeles (PST)</option>
-                  <option value="Europe/London">Europe/London (GMT)</option>
-                  <option value="Europe/Paris">Europe/Paris (CET)</option>
-                  <option value="Europe/Rome">Europe/Rome (CET)</option>
+                  <option value="Asia/Karachi">Asia/Karachi (PKT)</option>
                 </select>
               </div>
             </div>

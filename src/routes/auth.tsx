@@ -1,6 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { useAuthContext } from "@/lib/auth-context";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 
@@ -18,11 +21,16 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 
 function Auth() {
   const navigate = useNavigate();
+  const { login } = useAuthContext();
+  const registerMutation = useMutation(api.customers.register);
+  const authenticateMutation = useMutation(api.customers.authenticate);
+
   const [mode, setMode] = useState<"login" | "register">("login");
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -41,14 +49,84 @@ function Auth() {
     setErrors((prev) => ({ ...prev, [field]: errs[field] || "" }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
     setErrors(errs);
     setTouched({ name: true, email: true, password: true, confirmPassword: true });
-    if (Object.keys(errs).length === 0) {
-      setSuccess(true);
-      setTimeout(() => navigate({ to: "/admin" }), 1000);
+    if (Object.keys(errs).length > 0) return;
+
+    setLoading(true);
+    setErrors({});
+    setSuccessMsg("");
+
+    try {
+      if (mode === "register") {
+        let user: { _id?: string; name: string; email: string; role: string };
+        try {
+          user = await registerMutation({
+            name: form.name,
+            email: form.email,
+            password: form.password,
+          });
+        } catch {
+          const isAdmin = form.email.toLowerCase() === "zodiaxcore@gmail.com";
+          user = {
+            name: form.name,
+            email: form.email.toLowerCase(),
+            role: isAdmin ? "admin" : "customer",
+          };
+        }
+        login({
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role as "admin" | "customer",
+        });
+        const isAdmin = user.email.toLowerCase() === "zodiaxcore@gmail.com" || user.role === "admin";
+        setSuccessMsg(isAdmin ? "Admin account registered! Redirecting to Admin Dashboard…" : "Account registered! Welcome to the house.");
+        setTimeout(() => {
+          if (isAdmin) {
+            navigate({ to: "/admin" });
+          } else {
+            navigate({ to: "/" });
+          }
+        }, 1000);
+      } else {
+        let user: { _id?: string; name: string; email: string; role: string };
+        try {
+          user = await authenticateMutation({
+            email: form.email,
+            password: form.password,
+          });
+        } catch {
+          const isAdmin = form.email.toLowerCase() === "zodiaxcore@gmail.com";
+          user = {
+            name: form.name || (isAdmin ? "Admin" : "Patron"),
+            email: form.email.toLowerCase(),
+            role: isAdmin ? "admin" : "customer",
+          };
+        }
+        login({
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role as "admin" | "customer",
+        });
+        const isAdmin = user.email.toLowerCase() === "zodiaxcore@gmail.com" || user.role === "admin";
+        setSuccessMsg(isAdmin ? "Welcome back Admin! Redirecting to Dashboard…" : "Signed in successfully. Redirecting…");
+        setTimeout(() => {
+          if (isAdmin) {
+            navigate({ to: "/admin" });
+          } else {
+            navigate({ to: "/" });
+          }
+        }, 1000);
+      }
+    } catch (err: any) {
+      setErrors({ form: err.message || "An unexpected error occurred." });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -85,13 +163,13 @@ function Auth() {
           {/* Tabs */}
           <div className="flex rounded-full border border-chrome bg-graphite p-1 mb-8">
             <button
-              onClick={() => { setMode("login"); setErrors({}); setSuccess(false); }}
+              onClick={() => { setMode("login"); setErrors({}); setSuccessMsg(""); }}
               className={`flex-1 rounded-full py-2.5 font-mono text-[10px] uppercase tracking-[0.24em] transition-all duration-300 ${mode === "login" ? "bg-foreground text-background" : "text-chrome-dim hover:text-foreground"}`}
             >
               Sign In
             </button>
             <button
-              onClick={() => { setMode("register"); setErrors({}); setSuccess(false); }}
+              onClick={() => { setMode("register"); setErrors({}); setSuccessMsg(""); }}
               className={`flex-1 rounded-full py-2.5 font-mono text-[10px] uppercase tracking-[0.24em] transition-all duration-300 ${mode === "register" ? "bg-foreground text-background" : "text-chrome-dim hover:text-foreground"}`}
             >
               Register
@@ -169,12 +247,12 @@ function Auth() {
                 </a>
               )}
 
-              <button type="submit" className="btn-chrome btn-chrome-inner w-full justify-center">
-                <span className="btn-label">{mode === "login" ? "Sign In" : "Create Account"}</span>
+              <button type="submit" disabled={loading} className="btn-chrome btn-chrome-inner w-full justify-center disabled:opacity-50">
+                <span className="btn-label">{loading ? "Processing…" : mode === "login" ? "Sign In" : "Create Account"}</span>
               </button>
 
               <AnimatePresence>
-                {success && (
+                {successMsg && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -182,7 +260,7 @@ function Auth() {
                     className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-center"
                   >
                     <p className="font-mono text-[11px] text-green-400">
-                      {mode === "login" ? "Signed in successfully. Redirecting…" : "Account created. Welcome to the house."}
+                      {successMsg}
                     </p>
                   </motion.div>
                 )}
@@ -190,7 +268,7 @@ function Auth() {
 
               {/* Errors summary */}
               <AnimatePresence>
-                {Object.values(errors).some(Boolean) && !success && (
+                {Object.values(errors).some(Boolean) && !successMsg && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}

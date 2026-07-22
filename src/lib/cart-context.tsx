@@ -1,7 +1,7 @@
 import { createContext, useContext, useReducer, useEffect, type ReactNode } from "react";
 
 export type CartItem = {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   src: string;
@@ -14,8 +14,8 @@ type CartState = { items: CartItem[] };
 
 type CartAction =
   | { type: "ADD_ITEM"; payload: { product: Omit<CartItem, "quantity">; qty?: number } }
-  | { type: "REMOVE_ITEM"; payload: { id: number } }
-  | { type: "UPDATE_QTY"; payload: { id: number; qty: number } }
+  | { type: "REMOVE_ITEM"; payload: { id: string } }
+  | { type: "UPDATE_QTY"; payload: { id: string; qty: number } }
   | { type: "CLEAR_CART" };
 
 const STORAGE_KEY = "vc_cart";
@@ -62,15 +62,25 @@ function loadCart(): CartState {
 const CartContext = createContext<{
   cart: CartState;
   addToCart: (product: Omit<CartItem, "quantity">, qty?: number) => void;
-  removeFromCart: (id: number) => void;
-  updateQuantity: (id: number, qty: number) => void;
+  removeFromCart: (id: string) => void;
+  updateQuantity: (id: string, qty: number) => void;
   clearCart: () => void;
   cartTotal: number;
   cartCount: number;
 } | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cart, dispatch] = useReducer(reducer, undefined, loadCart);
+  const [cart, dispatch] = useReducer(reducer, { items: [] });
+
+  useEffect(() => {
+    const loaded = loadCart();
+    if (loaded.items.length > 0) {
+      dispatch({ type: "CLEAR_CART" });
+      loaded.items.forEach((item) => {
+        dispatch({ type: "ADD_ITEM", payload: { product: item, qty: item.quantity } });
+      });
+    }
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
@@ -79,10 +89,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addToCart = (product: Omit<CartItem, "quantity">, qty = 1) =>
     dispatch({ type: "ADD_ITEM", payload: { product, qty } });
 
-  const removeFromCart = (id: number) =>
+  const removeFromCart = (id: string) =>
     dispatch({ type: "REMOVE_ITEM", payload: { id } });
 
-  const updateQuantity = (id: number, qty: number) =>
+  const updateQuantity = (id: string, qty: number) =>
     dispatch({ type: "UPDATE_QTY", payload: { id, qty } });
 
   const clearCart = () => dispatch({ type: "CLEAR_CART" });

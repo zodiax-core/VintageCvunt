@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCartContext } from "@/lib/cart-context";
+import { useAuthContext } from "@/lib/auth-context";
 import { SearchOverlay } from "@/components/SearchOverlay";
 import { CartDrawer } from "@/components/CartDrawer";
 
@@ -13,6 +14,7 @@ export function SiteNav() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const { cartCount } = useCartContext();
+  const { user, isAdmin } = useAuthContext();
   const navigate = useNavigate();
   const headerRef = useRef<HTMLDivElement>(null);
 
@@ -70,7 +72,17 @@ export function SiteNav() {
               </svg>
             </button>
 
-            <Link to="/auth" className="hidden md:inline hover:opacity-70 transition-opacity">Account</Link>
+            {isAdmin ? (
+              <Link to="/admin" className="hidden md:inline font-mono text-[10px] uppercase tracking-[0.2em] bg-foreground text-background px-2.5 py-1 rounded-full hover:opacity-80 transition-opacity">
+                Admin
+              </Link>
+            ) : user ? (
+              <span className="hidden md:inline font-mono text-[11px] text-chrome truncate max-w-[100px]">
+                {user.name.split(" ")[0]}
+              </span>
+            ) : (
+              <Link to="/auth" className="hidden md:inline hover:opacity-70 transition-opacity">Account</Link>
+            )}
 
             <button onClick={handleCartClick} className="flex items-center hover:opacity-70 transition-opacity">
               <span className="relative">

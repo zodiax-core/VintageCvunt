@@ -11,10 +11,10 @@ interface BrandInfo {
 
 const defaultBrand: BrandInfo = {
   name: "VintageCvunt",
-  tagline: "Timeless Elegance",
-  address: "123 Vintage Avenue, Portland, OR 97201",
-  phone: "+1 (555) 000-0000",
-  email: "hello@vintagecvunt.com",
+  tagline: "Modern Gothic Luxury",
+  address: "42 Clifton Avenue, Karachi, Pakistan",
+  phone: "+92 21 1123 4567",
+  email: "studio@vintagecvunt.com",
 };
 
 function addFooter(doc: jsPDF, page?: number, total?: number) {

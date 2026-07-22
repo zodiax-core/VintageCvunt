@@ -4,6 +4,8 @@ import { Link } from "@tanstack/react-router";
 import { Eye, ChevronLeft, ChevronRight, Search, Users, Download, X } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { api } from "../../convex/_generated/api";
+import { useQuery } from "convex/react";
 
 export const Route = createFileRoute("/customer")({
   component: Customers,
@@ -12,20 +14,7 @@ export const Route = createFileRoute("/customer")({
   }),
 });
 
-const mockCustomers = [
-  { id: "CUST-001", name: "Elena Voss", email: "elena@example.com", orders: 8, totalSpent: 3840.0, joined: "2025-06-12", status: "Active" },
-  { id: "CUST-002", name: "Marcus Webb", email: "marcus@example.com", orders: 3, totalSpent: 520.0, joined: "2025-08-04", status: "Active" },
-  { id: "CUST-003", name: "Clara Hemlock", email: "clara@example.com", orders: 12, totalSpent: 8400.0, joined: "2025-03-19", status: "Active" },
-  { id: "CUST-004", name: "Julian Frost", email: "julian@example.com", orders: 1, totalSpent: 175.0, joined: "2026-01-22", status: "Inactive" },
-  { id: "CUST-005", name: "Sylvia Kaine", email: "sylvia@example.com", orders: 5, totalSpent: 2100.0, joined: "2025-09-10", status: "Active" },
-  { id: "CUST-006", name: "Dorian Ashford", email: "dorian@example.com", orders: 2, totalSpent: 1200.0, joined: "2025-11-05", status: "Inactive" },
-  { id: "CUST-007", name: "Priya Nair", email: "priya@example.com", orders: 9, totalSpent: 3650.0, joined: "2025-05-28", status: "Active" },
-  { id: "CUST-008", name: "Leo Ventura", email: "leo@example.com", orders: 4, totalSpent: 890.0, joined: "2025-10-14", status: "Active" },
-  { id: "CUST-009", name: "Wren Calloway", email: "wren@example.com", orders: 6, totalSpent: 2750.0, joined: "2025-07-01", status: "Active" },
-  { id: "CUST-010", name: "Morgan Thorne", email: "morgan@example.com", orders: 7, totalSpent: 4100.0, joined: "2025-04-16", status: "Inactive" },
-  { id: "CUST-011", name: "Ivy Castell", email: "ivy@example.com", orders: 11, totalSpent: 6200.0, joined: "2025-02-09", status: "Active" },
-  { id: "CUST-012", name: "Ronan Voss", email: "ronan@example.com", orders: 2, totalSpent: 120.0, joined: "2026-01-30", status: "Active" },
-];
+
 
 const statusOptions = ["All", "Active", "Inactive"] as const;
 const dateOptions = ["All Time", "Past Month", "Past 3 Months", "Past Year"] as const;
@@ -40,6 +29,7 @@ function isWithinMonths(dateStr: string, months: number): boolean {
 }
 
 function Customers() {
+  const customers = useQuery(api.customers.list) ?? [];
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState<string>("All");
@@ -48,19 +38,20 @@ function Customers() {
   const [maxSpend, setMaxSpend] = useState("");
 
   const filtered = useMemo(() => {
-    return mockCustomers.filter((c) => {
+    return customers.filter((c) => {
       const q = search.toLowerCase();
+      const joined = new Date(c.createdAt).toISOString().split("T")[0];
       if (q && !c.name.toLowerCase().includes(q) && !c.email.toLowerCase().includes(q)) return false;
       if (statusFilter !== "All" && c.status !== statusFilter) return false;
-      if (dateFilter === "Past Month" && !isWithinMonths(c.joined, 1)) return false;
-      if (dateFilter === "Past 3 Months" && !isWithinMonths(c.joined, 3)) return false;
-      if (dateFilter === "Past Year" && !isWithinMonths(c.joined, 12)) return false;
+      if (dateFilter === "Past Month" && !isWithinMonths(joined, 1)) return false;
+      if (dateFilter === "Past 3 Months" && !isWithinMonths(joined, 3)) return false;
+      if (dateFilter === "Past Year" && !isWithinMonths(joined, 12)) return false;
       const min = minSpend ? parseFloat(minSpend) : 0;
       const max = maxSpend ? parseFloat(maxSpend) : Infinity;
       if (c.totalSpent < min || c.totalSpent > max) return false;
       return true;
     });
-  }, [search, statusFilter, dateFilter, minSpend, maxSpend]);
+  }, [customers, search, statusFilter, dateFilter, minSpend, maxSpend]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -84,9 +75,9 @@ function Customers() {
     const rows = filtered.map((c) => [
       c.name,
       c.email,
-      c.orders.toString(),
+      c.totalOrders.toString(),
       c.totalSpent.toFixed(2),
-      c.joined,
+      new Date(c.createdAt).toISOString().split("T")[0],
       c.status,
     ]);
     const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
@@ -105,7 +96,7 @@ function Customers() {
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-semibold text-foreground">Customers</h1>
           <span className="rounded-full bg-graphite border border-chrome/20 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            {mockCustomers.length}
+            {customers.length}
           </span>
         </div>
 
@@ -228,12 +219,12 @@ function Customers() {
               </TableHeader>
               <TableBody>
                 {paged.map((c) => (
-                  <TableRow key={c.id} className="border-chrome/10 hover:bg-chrome/5">
+                  <TableRow key={c._id} className="border-chrome/10 hover:bg-chrome/5">
                     <TableCell className="font-medium text-foreground">{c.name}</TableCell>
                     <TableCell className="text-muted-foreground">{c.email}</TableCell>
-                    <TableCell className="text-right text-muted-foreground">{c.orders}</TableCell>
-                    <TableCell className="text-right text-foreground">${c.totalSpent.toFixed(2)}</TableCell>
-                    <TableCell className="text-muted-foreground">{c.joined}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{c.totalOrders}</TableCell>
+                    <TableCell className="text-right text-foreground">PKR {c.totalSpent.toFixed(2)}</TableCell>
+                    <TableCell className="text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell>
                       <span
                         className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] ${
@@ -249,7 +240,7 @@ function Customers() {
                     <TableCell className="text-right">
                       <Link
                         to="/customer/$id"
-                        params={{ id: c.id }}
+                        params={{ id: c._id }}
                         className="btn-chrome btn-chrome-inner p-2 rounded-lg"
                       >
                         <Eye className="h-4 w-4" />
@@ -264,7 +255,7 @@ function Customers() {
 
         <div className="md:hidden space-y-3">
           {paged.map((c) => (
-            <div key={c.id} className="bg-graphite border border-chrome/20 rounded-2xl p-4 space-y-3">
+            <div key={c._id} className="bg-graphite border border-chrome/20 rounded-2xl p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="font-medium text-foreground">{c.name}</span>
                 <span
@@ -280,14 +271,14 @@ function Customers() {
               </div>
               <div className="text-sm text-muted-foreground">{c.email}</div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">{c.orders} orders</span>
-                <span className="text-foreground font-semibold">${c.totalSpent.toFixed(2)}</span>
+                <span className="text-muted-foreground">{c.totalOrders} orders</span>
+                <span className="text-foreground font-semibold">PKR {c.totalSpent.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Joined {c.joined}</span>
+                <span>Joined {new Date(c.createdAt).toLocaleDateString()}</span>
                 <Link
                   to="/customer/$id"
-                  params={{ id: c.id }}
+                  params={{ id: c._id }}
                   className="btn-chrome btn-chrome-inner p-2 rounded-lg"
                 >
                   <Eye className="h-3.5 w-3.5 mr-1 inline" /> View

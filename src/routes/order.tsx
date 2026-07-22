@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { Eye, Trash2, ChevronLeft, ChevronRight, Search, FileText, SlidersHorizontal, X } from "lucide-react";
+import { Eye, ChevronLeft, ChevronRight, Search, FileText, SlidersHorizontal, X } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { generateOrdersPDF } from "@/lib/pdf-utils";
+import { api } from "../../convex/_generated/api";
+import { useQuery } from "convex/react";
 
 export const Route = createFileRoute("/order")({
   component: Orders,
@@ -31,20 +32,7 @@ const dateRangeLabel: Record<DateRangeKey, string> = {
   month: "This Month",
 };
 
-const mockOrders = [
-  { id: "ORD-1001", customer: "Elena Voss", email: "elena@example.com", date: "2026-03-15", items: 3, total: 245.0, status: "Delivered" },
-  { id: "ORD-1002", customer: "Marcus Webb", email: "marcus@example.com", date: "2026-03-14", items: 1, total: 89.5, status: "Shipped" },
-  { id: "ORD-1003", customer: "Clara Hemlock", email: "clara@example.com", date: "2026-03-14", items: 5, total: 620.0, status: "Processing" },
-  { id: "ORD-1004", customer: "Julian Frost", email: "julian@example.com", date: "2026-03-13", items: 2, total: 175.0, status: "Pending" },
-  { id: "ORD-1005", customer: "Sylvia Kaine", email: "sylvia@example.com", date: "2026-03-12", items: 4, total: 412.0, status: "Delivered" },
-  { id: "ORD-1006", customer: "Dorian Ashford", email: "dorian@example.com", date: "2026-03-11", items: 7, total: 890.0, status: "Cancelled" },
-  { id: "ORD-1007", customer: "Priya Nair", email: "priya@example.com", date: "2026-03-10", items: 2, total: 134.0, status: "Shipped" },
-  { id: "ORD-1008", customer: "Leo Ventura", email: "leo@example.com", date: "2026-03-09", items: 1, total: 45.0, status: "Delivered" },
-  { id: "ORD-1009", customer: "Wren Calloway", email: "wren@example.com", date: "2026-03-08", items: 3, total: 298.0, status: "Processing" },
-  { id: "ORD-1010", customer: "Morgan Thorne", email: "morgan@example.com", date: "2026-03-07", items: 6, total: 567.0, status: "Pending" },
-  { id: "ORD-1011", customer: "Ivy Castell", email: "ivy@example.com", date: "2026-03-06", items: 2, total: 189.0, status: "Delivered" },
-  { id: "ORD-1012", customer: "Ronan Voss", email: "ronan@example.com", date: "2026-03-05", items: 4, total: 376.0, status: "Shipped" },
-];
+
 
 const statusColors: Record<string, string> = {
   Pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
@@ -57,12 +45,11 @@ const statusColors: Record<string, string> = {
 const PAGE_SIZE = 5;
 
 function Orders() {
-  const [orders, setOrders] = useState(mockOrders);
+  const orders = useQuery(api.orders.list) ?? [];
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeKey>("all");
   const [page, setPage] = useState(0);
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const statusCounts = useMemo(() => {
@@ -75,7 +62,7 @@ function Orders() {
 
   const latestDate = useMemo(() => {
     if (orders.length === 0) return new Date();
-    return new Date(Math.max(...orders.map((o) => new Date(o.date).getTime())));
+    return new Date(Math.max(...orders.map((o) => new Date(o.createdAt).getTime())));
   }, [orders]);
 
   function matchesDateRange(dateStr: string, range: DateRangeKey): boolean {
@@ -103,11 +90,12 @@ function Orders() {
 
   const filtered = useMemo(() => {
     return orders.filter((o) => {
+      const dateStr = new Date(o.createdAt).toISOString().split("T")[0];
       const matchSearch =
-        o.id.toLowerCase().includes(search.toLowerCase()) ||
-        o.customer.toLowerCase().includes(search.toLowerCase());
+        o.orderNumber.toLowerCase().includes(search.toLowerCase()) ||
+        o.customerName.toLowerCase().includes(search.toLowerCase());
       const matchStatus = statusFilter === "All" || o.status === statusFilter;
-      const matchDate = matchesDateRange(o.date, dateRangeFilter);
+      const matchDate = matchesDateRange(dateStr, dateRangeFilter);
       return matchSearch && matchStatus && matchDate;
     });
   }, [orders, search, statusFilter, dateRangeFilter]);
@@ -124,13 +112,6 @@ function Orders() {
         {status}
       </span>
     );
-  }
-
-  function handleDelete() {
-    if (!deleteTarget) return;
-    setOrders(orders.filter((o) => o.id !== deleteTarget));
-    setDeleteTarget(null);
-    setPage(0);
   }
 
   return (
@@ -259,28 +240,23 @@ function Orders() {
               </TableHeader>
               <TableBody>
                 {paged.map((o) => (
-                  <TableRow key={o.id} className="border-chrome/10 hover:bg-chrome/5">
-                    <TableCell className="font-medium text-foreground">{o.id}</TableCell>
-                    <TableCell className="text-chrome-dim">{o.customer}</TableCell>
-                    <TableCell className="text-chrome-dim">{o.date}</TableCell>
-                    <TableCell className="text-chrome-dim">{o.items}</TableCell>
-                    <TableCell className="text-foreground">${o.total.toFixed(2)}</TableCell>
+                  <TableRow key={o._id} className="border-chrome/10 hover:bg-chrome/5">
+                    <TableCell className="font-medium text-foreground">{o.orderNumber}</TableCell>
+                    <TableCell className="text-chrome-dim">{o.customerName}</TableCell>
+                    <TableCell className="text-chrome-dim">{new Date(o.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-chrome-dim">{o.items.length}</TableCell>
+                    <TableCell className="text-foreground">PKR {o.total.toFixed(2)}</TableCell>
                     <TableCell><StatusBadge status={o.status} /></TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Link
                           to="/order/$id"
-                          params={{ id: o.id }}
+                          params={{ id: o._id }}
                           className="btn-chrome btn-chrome-inner p-2 rounded-lg"
                         >
                           <Eye className="h-4 w-4" />
                         </Link>
-                        <button
-                          onClick={() => setDeleteTarget(o.id)}
-                          className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+
                       </div>
                     </TableCell>
                   </TableRow>
@@ -292,30 +268,25 @@ function Orders() {
 
         <div className="md:hidden space-y-3 no-print">
           {paged.map((o) => (
-            <div key={o.id} className="bg-graphite border border-chrome/20 rounded-2xl p-4 space-y-3">
+            <div key={o._id} className="bg-graphite border border-chrome/20 rounded-2xl p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-medium text-foreground">{o.id}</span>
+                <span className="font-medium text-foreground">{o.orderNumber}</span>
                 <StatusBadge status={o.status} />
               </div>
-              <div className="text-sm text-chrome-dim">{o.customer}</div>
+              <div className="text-sm text-chrome-dim">{o.customerName}</div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-chrome-dim">{o.date} &middot; {o.items} items</span>
-                <span className="text-foreground font-semibold">${o.total.toFixed(2)}</span>
+                <span className="text-chrome-dim">{new Date(o.createdAt).toLocaleDateString()} &middot; {o.items.length} items</span>
+                <span className="text-foreground font-semibold">PKR {o.total.toFixed(2)}</span>
               </div>
               <div className="flex items-center gap-2 pt-1">
                 <Link
                   to="/order/$id"
-                  params={{ id: o.id }}
+                  params={{ id: o._id }}
                   className="btn-chrome btn-chrome-inner p-2 rounded-lg text-xs"
                 >
                   <Eye className="h-3.5 w-3.5 mr-1 inline" /> View
                 </Link>
-                <button
-                  onClick={() => setDeleteTarget(o.id)}
-                  className="btn-chrome btn-chrome-inner p-2 rounded-lg text-xs text-red-400"
-                >
-                  <Trash2 className="h-3.5 w-3.5 mr-1 inline" /> Delete
-                </button>
+
               </div>
             </div>
           ))}
@@ -346,16 +317,7 @@ function Orders() {
         )}
       </div>
 
-      <ConfirmDialog
-        open={deleteTarget !== null}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={handleDelete}
-        title="Delete Order"
-        message={`Are you sure you want to delete order ${deleteTarget}? This action cannot be undone.`}
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
-        variant="danger"
-      />
+
     </AdminLayout>
   );
 }

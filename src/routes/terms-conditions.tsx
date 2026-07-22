@@ -46,11 +46,11 @@ const sections = [
   },
   {
     title: "Governing Law",
-    content: "These Terms & Conditions are governed by and construed in accordance with the laws of Italy. Any disputes arising from these terms shall be resolved exclusively in the courts of Milano. The United Nations Convention on Contracts for the International Sale of Goods does not apply to these terms.",
+    content: "These Terms & Conditions are governed by and construed in accordance with the laws of Pakistan. Any disputes arising from these terms shall be resolved exclusively in the courts of Karachi. The United Nations Convention on Contracts for the International Sale of Goods does not apply to these terms.",
   },
   {
     title: "Contact",
-    content: "For questions regarding these Terms & Conditions, please contact us at legal@vintagecvunt.com or write to VintageCvunt, Casa d'Argento, Via Brera 24, 20121 Milano, Italy.",
+    content: "For questions regarding these Terms & Conditions, please contact us at legal@vintagecvunt.com or write to VintageCvunt, Casa d'Argento, 42 Clifton Avenue, Karachi, Pakistan.",
   },
 ];
 

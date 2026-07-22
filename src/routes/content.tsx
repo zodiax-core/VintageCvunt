@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Pencil, Save, X, FileText, Quote, Mail, Layout } from "lucide-react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/content")({
   component: Content,
@@ -10,62 +12,33 @@ export const Route = createFileRoute("/content")({
   }),
 });
 
-interface ContentBlock {
-  id: string;
-  title: string;
-  type: string;
-  preview: string;
-  content: string;
-  icon: typeof FileText;
-}
-
-const initialBlocks: ContentBlock[] = [
-  {
-    id: "hero-banner",
-    title: "Hero Section",
-    type: "Hero Banner",
-    preview: "Discover timeless elegance with our curated collection of vintage-inspired accessories and apparel.",
-    content: "Discover timeless elegance with our curated collection of vintage-inspired accessories and apparel. Each piece tells a story of craftsmanship and style.",
-    icon: Layout,
-  },
-  {
-    id: "about-feature",
-    title: "About Page Intro",
-    type: "About Feature",
-    preview: "VintageCvunt was born from a passion for resurrecting the elegance of bygone eras...",
-    content: "VintageCvunt was born from a passion for resurrecting the elegance of bygone eras. We scour the globe for the finest materials and collaborate with master artisans who share our vision of timeless design. Every item in our collection is a testament to the art of slow, deliberate craftsmanship.",
-    icon: FileText,
-  },
-  {
-    id: "featured-quote",
-    title: "Home Quote",
-    type: "Featured Quote",
-    preview: "\"Style is a way to say who you are without having to speak.\" — Rachel Zoe",
-    content: "\"Style is a way to say who you are without having to speak.\" — Rachel Zoe",
-    icon: Quote,
-  },
-  {
-    id: "newsletter-cta",
-    title: "Newsletter",
-    type: "Newsletter CTA",
-    preview: "Subscribe to receive exclusive offers, early access to new collections, and style inspiration.",
-    content: "Subscribe to receive exclusive offers, early access to new collections, and style inspiration delivered to your inbox every week.",
-    icon: Mail,
-  },
-];
+const iconMap: Record<string, typeof FileText> = {
+  "hero-banner": Layout,
+  "hero": Layout,
+  "about-feature": FileText,
+  "about": FileText,
+  "featured-quote": Quote,
+  "quote": Quote,
+  "newsletter-cta": Mail,
+  "newsletter": Mail,
+};
 
 function Content() {
-  const [blocks, setBlocks] = useState(initialBlocks);
+  const contentBlocks = useQuery(api.content.list) ?? [];
+  const upsertContent = useMutation(api.content.upsert);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
 
-  function startEdit(block: ContentBlock) {
-    setEditingId(block.id);
+  function startEdit(block: (typeof contentBlocks)[0]) {
+    setEditingId(block._id);
     setEditValue(block.content);
   }
 
   function saveEdit(id: string) {
-    setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, content: editValue, preview: editValue.length > 80 ? editValue.slice(0, 80) + "..." : editValue } : b)));
+    const block = contentBlocks.find((b) => b._id === id);
+    if (block) {
+      upsertContent({ key: block.key, title: block.title, content: editValue, type: block.type });
+    }
     setEditingId(null);
     setEditValue("");
   }
@@ -84,12 +57,13 @@ function Content() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {blocks.map((block) => {
-            const Icon = block.icon;
-            const isEditing = editingId === block.id;
+          {contentBlocks.map((block) => {
+            const Icon = iconMap[block.key] || FileText;
+            const isEditing = editingId === block._id;
+            const preview = block.content.length > 80 ? block.content.slice(0, 80) + "..." : block.content;
 
             return (
-              <div key={block.id} className="bg-graphite border border-chrome/20 rounded-2xl p-5 space-y-4">
+              <div key={block._id} className="bg-graphite border border-chrome/20 rounded-2xl p-5 space-y-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-xl bg-chrome/10 flex items-center justify-center">
@@ -116,7 +90,7 @@ function Content() {
                       className="w-full rounded-xl border border-chrome/20 bg-background px-4 py-2.5 font-mono text-sm outline-none focus:border-chrome/50 resize-none"
                     />
                     <div className="flex items-center gap-2">
-                      <button onClick={() => saveEdit(block.id)} className="btn-chrome btn-chrome-inner rounded-lg px-4 py-2 inline-flex items-center gap-2">
+                      <button onClick={() => saveEdit(block._id)} className="btn-chrome btn-chrome-inner rounded-lg px-4 py-2 inline-flex items-center gap-2">
                         <Save size={14} />
                         <span className="btn-label">Save</span>
                       </button>
@@ -128,7 +102,7 @@ function Content() {
                   </div>
                 ) : (
                   <div className="bg-background/50 rounded-xl px-4 py-3 border border-chrome/10">
-                    <p className="font-mono text-[12px] text-foreground/70 leading-relaxed">{block.preview}</p>
+                    <p className="font-mono text-[12px] text-foreground/70 leading-relaxed">{preview}</p>
                   </div>
                 )}
               </div>

@@ -1,19 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import productRing from "@/assets/product-ring.jpg";
-import productRingWebp from "@/assets/product-ring.webp";
-import productJacket from "@/assets/product-jacket.jpg";
-import productJacketWebp from "@/assets/product-jacket.webp";
-import productChain from "@/assets/product-chain.jpg";
-import productChainWebp from "@/assets/product-chain.webp";
-import productBoots from "@/assets/product-boots.jpg";
-import productBootsWebp from "@/assets/product-boots.webp";
-import editorial1 from "@/assets/editorial-1.jpg";
-import editorial1Webp from "@/assets/editorial-1.webp";
-import editorial2 from "@/assets/editorial-2.jpg";
-import editorial2Webp from "@/assets/editorial-2.webp";
-import { OptimizedImage } from "@/components/OptimizedImage";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 
@@ -29,32 +18,6 @@ export const Route = createFileRoute("/shop")({
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-type Product = {
-  id: number;
-  name: string;
-  category: string;
-  price: number;
-  src: string;
-  webp: string;
-  num: string;
-  slug: string;
-};
-
-const allProducts: Product[] = [
-  { id: 1, name: "Meridian Coat", category: "Outerwear", price: 1284000, src: editorial1, webp: editorial1Webp, num: "No. 001", slug: "meridian-coat" },
-  { id: 2, name: "Thorn Signet, Silver", category: "Silverwork", price: 267000, src: productRing, webp: productRingWebp, num: "No. 007", slug: "thorn-signet-silver" },
-  { id: 3, name: "Papillon Chain", category: "Adornment", price: 402000, src: productChain, webp: productChainWebp, num: "No. 012", slug: "papillon-chain" },
-  { id: 4, name: "Reliquary Rider", category: "Outerwear", price: 1107000, src: productJacket, webp: productJacketWebp, num: "No. 021", slug: "reliquary-rider" },
-  { id: 5, name: "Ossuary Boot", category: "Footwear", price: 462000, src: productBoots, webp: productBootsWebp, num: "No. 034", slug: "ossuary-boot" },
-  { id: 6, name: "Argent Cross Pendant", category: "Adornment", price: 186000, src: productRing, webp: productRingWebp, num: "No. 046", slug: "argent-cross-pendant" },
-  { id: 7, name: "Basilica Trench, Onyx", category: "Outerwear", price: 1536000, src: editorial2, webp: editorial2Webp, num: "No. 047", slug: "basilica-trench-onyx" },
-  { id: 8, name: "Vesper Cuff, Brushed", category: "Silverwork", price: 234000, src: productChain, webp: productChainWebp, num: "No. 048", slug: "vesper-cuff-brushed" },
-  { id: 9, name: "Nave Boot, High", category: "Footwear", price: 564000, src: productBoots, webp: productBootsWebp, num: "No. 049", slug: "nave-boot-high" },
-  { id: 10, name: "Rosary of Iron", category: "Adornment", price: 282000, src: productRing, webp: productRingWebp, num: "No. 050", slug: "rosary-of-iron" },
-  { id: 11, name: "Chrome Signet Ring", category: "Silverwork", price: 320000, src: productRing, webp: productRingWebp, num: "No. 003", slug: "chrome-signet-ring" },
-  { id: 12, name: "Cathedral Scarf", category: "Outerwear", price: 185000, src: editorial1, webp: editorial1Webp, num: "No. 018", slug: "cathedral-scarf" },
-];
-
 const categories = ["All", "Outerwear", "Silverwork", "Footwear", "Adornment"];
 const priceRanges = [
   { label: "All Prices", min: 0, max: Infinity },
@@ -67,6 +30,7 @@ const sortOptions = ["Featured", "Newest", "Price: Low — High", "Price: High �
 const priceLabel = (p: number) => "PKR " + p.toLocaleString("en-PK");
 
 function Shop() {
+  const allProducts = useQuery(api.products.list) ?? [];
   const [catOpen, setCatOpen] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
@@ -83,10 +47,10 @@ function Shop() {
     switch (sort) {
       case "Price: Low — High": result = [...result].sort((a, b) => a.price - b.price); break;
       case "Price: High — Low": result = [...result].sort((a, b) => b.price - a.price); break;
-      case "Newest": result = [...result].sort((a, b) => b.id - a.id); break;
+      case "Newest": result = [...result].sort((a, b) => b._creationTime - a._creationTime); break;
     }
     return result;
-  }, [category, priceRange, sort]);
+  }, [allProducts, category, priceRange, sort]);
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
@@ -258,7 +222,7 @@ function Shop() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {filtered.map((product) => (
                 <Link
-                  key={product.id}
+                  key={product._id}
                   to="/products/$slug"
                   params={{ slug: product.slug }}
                 >
@@ -272,10 +236,12 @@ function Shop() {
                   >
                     <div className="relative overflow-hidden rounded-2xl border border-chrome bg-graphite" style={{ boxShadow: "var(--shadow-plate)" }}>
                       <div className="aspect-[4/5] overflow-hidden">
-                        <OptimizedImage webp={product.webp} fallback={product.src} alt={product.name} className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]" />
+                        <img
+                          src={product.images?.[0] || "/placeholder.svg"}
+                          alt={product.name}
+                          className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
+                        />
                       </div>
-                      <span className="absolute left-3 top-3 rounded-full border border-chrome bg-background/70 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.22em]">{product.num}</span>
-                      <span className="absolute right-3 top-3 h-6 w-6 rounded-full border border-chrome bg-graphite/60 backdrop-blur grid place-items-center text-[10px]">✦</span>
                     </div>
                     <div className="mt-4">
                       <p className="font-mono text-xs tracking-[0.14em] text-chrome">{priceLabel(product.price)}</p>

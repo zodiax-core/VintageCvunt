@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/about")({
   component: About,
@@ -15,14 +17,10 @@ export const Route = createFileRoute("/about")({
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-const milestones = [
-  { year: "MMXXI", title: "The Idea", desc: "A notebook sketch in a Milano café — a house that exists between chrome and shadow." },
-  { year: "MMXXII", title: "The Atelier", desc: "Founding of the Casa d'Argento atelier. First silver casts and leather samples." },
-  { year: "MMXXIV", title: "The Collection", desc: "Sixty-two objects completed over eighteen months of hand-finishing and iteration." },
-  { year: "MMXXVI", title: "Chapter I", desc: "Launch of the inaugural campaign. A gothic house rendered in liquid metal." },
-];
+
 
 function About() {
+  const milestones = useQuery(api.aboutMilestones.list) ?? [];
   return (
     <div className="relative min-h-screen bg-background text-foreground">
       <SiteNav />
@@ -95,7 +93,7 @@ function About() {
           <div className="space-y-10 md:space-y-20">
             {milestones.map((m, i) => (
               <motion.div
-                key={m.year}
+                key={m._id}
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
@@ -110,7 +108,7 @@ function About() {
                 </div>
                 <div className="min-w-0 md:col-span-8">
                   <h3 className="font-display text-xl md:text-4xl mb-2 md:mb-3">{m.title}</h3>
-                  <p className="text-sm md:text-base text-chrome-dim max-w-xl">{m.desc}</p>
+                  <p className="text-sm md:text-base text-chrome-dim max-w-xl">{m.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -128,7 +126,7 @@ function About() {
                 Hand-<span className="italic text-chrome-h">Finished</span>
               </h2>
               <div className="mt-8 space-y-4 text-sm text-chrome-dim leading-relaxed">
-                <p>Each object passes through twelve hands before it reaches its final form. Our atelier in Milano is a place of slow work — of burnishing, stitching, and patient assembly.</p>
+                <p>Each object passes through twelve hands before it reaches its final form. Our atelier in Karachi is a place of slow work — of burnishing, stitching, and patient assembly.</p>
                 <p>We source our leathers from a single tannery in Tuscany that has operated since 1872. Our silver is recycled from vintage ecclesiastical objects. Every chain is assembled link by link.</p>
               </div>
             </div>
@@ -137,7 +135,7 @@ function About() {
                 <div className="aspect-[4/5] bg-gradient-to-br from-graphite-2 via-graphite to-background flex items-center justify-center">
                   <div className="text-center p-8">
                     <div className="font-display text-7xl italic text-chrome-h opacity-30">✧</div>
-                    <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Casa d'Argento · Milano</div>
+                    <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Casa d'Argento · Karachi</div>
                     <div className="mt-2 font-mono text-[9px] uppercase tracking-[0.24em] text-chrome-dim/60">Est. MMXXII</div>
                   </div>
                 </div>

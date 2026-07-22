@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Upload, Save } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
+import { api } from "../../convex/_generated/api";
+import { useMutation } from "convex/react";
 
 export const Route = createFileRoute("/product/new")({
   component: AddProduct,
@@ -10,8 +12,14 @@ export const Route = createFileRoute("/product/new")({
   }),
 });
 
+const CATEGORIES = ["Outerwear", "Footwear", "Silverwork", "Adornment", "Tops", "Bottoms"];
+
 function AddProduct() {
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     name: "",
     slug: "",
@@ -23,22 +31,69 @@ function AddProduct() {
     materials: "",
     dimensions: "",
     stock: "",
-    status: "Draft",
+    status: "Draft" as "Active" | "Draft",
   });
+
+  const createProduct = useMutation(api.products.create);
+  const generateUploadUrl = useMutation(api.products.generateUploadUrl);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (field === "name") {
       setForm((prev) => ({ ...prev, slug: value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") }));
     }
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
   };
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const validate = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (!form.name.trim()) errs.name = "Required";
+    if (!form.category) errs.category = "Required";
+    if (!form.price || Number(form.price) <= 0) errs.price = "Required";
+    if (!form.stock || Number(form.stock) < 0) errs.stock = "Required";
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validate()) return;
+    setSaving(true);
+    try {
+      let images: string[] = [];
+      if (imageFile) {
+        const uploadUrl = await generateUploadUrl();
+        const result = await fetch(uploadUrl, { method: "POST", body: imageFile });
+        const { storageId } = await result.json();
+        images = [storageId];
+      }
+      await createProduct({
+        name: form.name.trim(),
+        slug: form.slug || form.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+        category: form.category,
+        price: Number(form.price),
+        compareAtPrice: form.comparePrice ? Number(form.comparePrice) : undefined,
+        description: form.description.trim(),
+        tags: [],
+        sizes: [],
+        colors: [],
+        inStock: Number(form.stock) > 0,
+        stockCount: Number(form.stock),
+        featured: false,
+        images,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error("Failed to create product", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const inputClass = "rounded-xl border border-chrome/20 bg-graphite px-4 py-2.5 font-mono text-sm outline-none focus:border-chrome/50 transition-colors w-full";
+  const inputErrorClass = "rounded-xl border border-red-500/50 bg-graphite px-4 py-2.5 font-mono text-sm outline-none focus:border-red-500/70 transition-colors w-full";
   const labelClass = "block font-mono text-[10px] uppercase tracking-[0.28em] text-chrome-dim mb-1.5";
 
   return (
@@ -52,13 +107,14 @@ function AddProduct() {
         <div className="lg:col-span-2 space-y-5">
           <div className="bg-graphite border border-chrome/20 rounded-2xl p-6 space-y-5">
             <div>
-              <label className={labelClass}>Product Name</label>
+              <label className={labelClass}>Product Name <span className="text-red-400">*</span></label>
               <input
                 value={form.name}
                 onChange={(e) => handleChange("name", e.target.value)}
                 placeholder="e.g. Obsidian Tailcoat"
-                className={inputClass}
+                className={errors.name ? inputErrorClass : inputClass}
               />
+              {errors.name && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.name}</p>}
             </div>
             <div>
               <label className={labelClass}>Slug</label>
@@ -70,31 +126,31 @@ function AddProduct() {
               />
             </div>
             <div>
-              <label className={labelClass}>Category</label>
+              <label className={labelClass}>Category <span className="text-red-400">*</span></label>
               <select
                 value={form.category}
                 onChange={(e) => handleChange("category", e.target.value)}
-                className={inputClass}
+                className={errors.category ? inputErrorClass : inputClass}
               >
                 <option value="">Select category</option>
-                <option value="Outerwear">Outerwear</option>
-                <option value="Footwear">Footwear</option>
-                <option value="Silverwork">Silverwork</option>
-                <option value="Adornment">Adornment</option>
-                <option value="Tops">Tops</option>
-                <option value="Bottoms">Bottoms</option>
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
               </select>
+              {errors.category && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.category}</p>}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Price ($)</label>
+                <label className={labelClass}>Price ($) <span className="text-red-400">*</span></label>
                 <input
                   value={form.price}
                   onChange={(e) => handleChange("price", e.target.value)}
                   type="number"
+                  step="0.01"
                   placeholder="0.00"
-                  className={inputClass}
+                  className={errors.price ? inputErrorClass : inputClass}
                 />
+                {errors.price && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.price}</p>}
               </div>
               <div>
                 <label className={labelClass}>Compare At Price ($)</label>
@@ -102,6 +158,7 @@ function AddProduct() {
                   value={form.comparePrice}
                   onChange={(e) => handleChange("comparePrice", e.target.value)}
                   type="number"
+                  step="0.01"
                   placeholder="0.00"
                   className={inputClass}
                 />
@@ -117,21 +174,21 @@ function AddProduct() {
               />
             </div>
             <div>
-              <label className={labelClass}>Details</label>
+              <label className={labelClass}>Details <span className="text-chrome-dim/50 font-normal normal-case">(one per line)</span></label>
               <textarea
                 value={form.details}
                 onChange={(e) => handleChange("details", e.target.value)}
-                placeholder="One detail per line..."
+                placeholder="Single-panel bonded leather construction&#10;Full-length centre-back seam&#10;Four concealed snap pockets"
                 className={`${inputClass} min-h-[120px] resize-none`}
               />
             </div>
             <div>
-              <label className={labelClass}>Materials</label>
-              <input
+              <label className={labelClass}>Materials <span className="text-chrome-dim/50 font-normal normal-case">(one per line)</span></label>
+              <textarea
                 value={form.materials}
                 onChange={(e) => handleChange("materials", e.target.value)}
-                placeholder="e.g. Bonded chrome leather (Italy)"
-                className={inputClass}
+                placeholder="Bonded chrome leather&#10;Horn buttons"
+                className={`${inputClass} min-h-[80px] resize-none`}
               />
             </div>
             <div>
@@ -150,21 +207,52 @@ function AddProduct() {
           <div className="bg-graphite border border-chrome/20 rounded-2xl p-6 space-y-5">
             <div>
               <label className={labelClass}>Image</label>
-              <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-chrome/20 bg-graphite-2/50 px-6 py-10 text-center cursor-pointer hover:border-chrome/50 transition-colors">
-                <Upload size={24} className="text-chrome-dim mb-3" />
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Click to upload</p>
-                <p className="font-mono text-[9px] text-chrome-dim/50 mt-1">PNG, JPG up to 10MB</p>
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-chrome/20 bg-graphite-2/50 px-6 py-10 text-center cursor-pointer hover:border-chrome/50 transition-colors"
+              >
+                {imageFile ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="h-16 w-16 rounded-lg overflow-hidden border border-chrome/30">
+                      <img src={URL.createObjectURL(imageFile)} alt="Preview" className="h-full w-full object-cover" />
+                    </div>
+                    <p className="font-mono text-[10px] text-chrome-dim">{imageFile.name}</p>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setImageFile(null); }}
+                      className="font-mono text-[9px] uppercase tracking-[0.2em] text-red-400 hover:text-red-300"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <Upload size={24} className="text-chrome-dim mb-3" />
+                    <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Click to upload</p>
+                    <p className="font-mono text-[9px] text-chrome-dim/50 mt-1">PNG, JPG up to 10MB</p>
+                  </>
+                )}
               </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  setImageFile(file);
+                }}
+              />
             </div>
             <div>
-              <label className={labelClass}>Stock</label>
+              <label className={labelClass}>Stock <span className="text-red-400">*</span></label>
               <input
                 value={form.stock}
                 onChange={(e) => handleChange("stock", e.target.value)}
                 type="number"
                 placeholder="0"
-                className={inputClass}
+                className={errors.stock ? inputErrorClass : inputClass}
               />
+              {errors.stock && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.stock}</p>}
             </div>
             <div>
               <label className={labelClass}>Status</label>
@@ -182,9 +270,13 @@ function AddProduct() {
       </div>
 
       <div className="mt-6">
-        <button onClick={handleSave} className="btn-chrome btn-chrome-inner w-full justify-center !py-3.5">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="btn-chrome btn-chrome-inner w-full justify-center !py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <Save size={16} />
-          <span className="btn-label">{saved ? "Saved ✓" : "Save Product"}</span>
+          <span className="btn-label">{saving ? "Saving..." : saved ? "Saved ✓" : "Save Product"}</span>
         </button>
       </div>
     </AdminLayout>

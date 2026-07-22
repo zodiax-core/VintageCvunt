@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import {
   DollarSign, ShoppingBag, Users, Package, TrendingUp, Percent,
@@ -12,6 +12,8 @@ import {
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/admin")({
   component: AdminDashboard,
@@ -29,45 +31,6 @@ const ranges: { key: Range; label: string }[] = [
   { key: "quarter", label: "This Quarter" },
 ];
 
-const todayData = [
-  { label: "9AM", revenue: 3200 }, { label: "10AM", revenue: 4800 },
-  { label: "11AM", revenue: 6100 }, { label: "12PM", revenue: 7400 },
-  { label: "1PM", revenue: 8200 }, { label: "2PM", revenue: 10300 },
-  { label: "3PM", revenue: 12100 }, { label: "4PM", revenue: 11400 },
-  { label: "5PM", revenue: 13800 }, { label: "6PM", revenue: 9600 },
-  { label: "7PM", revenue: 7800 }, { label: "8PM", revenue: 5200 },
-];
-
-const weekData = [
-  { label: "Mon", revenue: 12400 },
-  { label: "Tue", revenue: 18900 },
-  { label: "Wed", revenue: 15200 },
-  { label: "Thu", revenue: 22100 },
-  { label: "Fri", revenue: 18300 },
-  { label: "Sat", revenue: 25900 },
-  { label: "Sun", revenue: 11760 },
-];
-
-const monthData = [
-  { label: "Week 1", revenue: 84500 },
-  { label: "Week 2", revenue: 92300 },
-  { label: "Week 3", revenue: 101200 },
-  { label: "Week 4", revenue: 88700 },
-];
-
-const quarterData = [
-  { label: "Jan", revenue: 245000 },
-  { label: "Feb", revenue: 278000 },
-  { label: "Mar", revenue: 312000 },
-];
-
-const chartDataMap: Record<Range, { label: string; revenue: number }[]> = {
-  today: todayData,
-  week: weekData,
-  month: monthData,
-  quarter: quarterData,
-};
-
 const chartLabels: Record<Range, string> = {
   today: "Revenue (Today — Hourly)",
   week: "Revenue (This Week — Daily)",
@@ -75,30 +38,7 @@ const chartLabels: Record<Range, string> = {
   quarter: "Revenue (This Quarter — Monthly)",
 };
 
-const statCards = [
-  { label: "Total Revenue", value: "$124,560", trend: "+12.3%", up: true, icon: DollarSign },
-  { label: "Orders", value: "1,284", trend: "+8.1%", up: true, icon: ShoppingBag },
-  { label: "Customers", value: "892", trend: "+5.7%", up: true, icon: Users },
-  { label: "Products", value: "156", trend: "+3.2%", up: true, icon: Package },
-  { label: "Avg Order Value", value: "$97.20", trend: "-2.1%", up: false, icon: TrendingUp },
-  { label: "Conversion Rate", value: "3.24%", trend: "+0.8%", up: true, icon: Percent },
-];
-
-const recentOrders = [
-  { id: "#ORD-1001", customer: "Isabella Thorn", date: "2026-07-20", status: "Delivered", total: "$324.00" },
-  { id: "#ORD-1002", customer: "Marcus Blackwood", date: "2026-07-20", status: "Processing", total: "$567.50" },
-  { id: "#ORD-1003", customer: "Veronica Ashford", date: "2026-07-19", status: "Shipped", total: "$189.00" },
-  { id: "#ORD-1004", customer: "Sebastian Crowe", date: "2026-07-19", status: "Pending", total: "$432.80" },
-  { id: "#ORD-1005", customer: "Lilith Graves", date: "2026-07-18", status: "Cancelled", total: "$78.00" },
-];
-
-const topProducts = [
-  { rank: 1, name: "Obsidian Tailcoat", sales: 342 },
-  { rank: 2, name: "Argentine Cuff", sales: 289 },
-  { rank: 3, name: "Noir Leather Boots", sales: 256 },
-  { rank: 4, name: "Silver Mesh Veil", sales: 198 },
-  { rank: 5, name: "Chrome Signet Ring", sales: 174 },
-];
+const formatDate = (ts: number) => new Date(ts).toLocaleDateString("en-PK", { year: "numeric", month: "2-digit", day: "2-digit" });
 
 function statusBadge(status: string) {
   const base = "inline-flex items-center rounded-full px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.15em] border";
@@ -114,9 +54,58 @@ function statusBadge(status: string) {
 
 function AdminDashboard() {
   const [range, setRange] = useState<Range>("week");
+  const allOrders = useQuery(api.orders.list) ?? [];
 
-  const chartData = chartDataMap[range];
+  const stats = useMemo(() => {
+    const totalRevenue = allOrders.reduce((sum, o) => sum + o.total, 0);
+    const totalOrders = allOrders.length;
+    const pendingOrders = allOrders.filter((o) => o.status === "pending" || o.status === "processing").length;
+    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+    return { totalRevenue, totalOrders, pendingOrders, averageOrderValue };
+  }, [allOrders]);
+
+  const monthlyRevenue = useMemo(() => {
+    const byMonth: Record<string, number> = {};
+    for (const order of allOrders) {
+      const d = new Date(order.createdAt);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      byMonth[key] = (byMonth[key] || 0) + order.total;
+    }
+    return Object.entries(byMonth)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, revenue]) => ({ month, revenue }));
+  }, [allOrders]);
+
+  const recentOrders = allOrders.slice(0, 5).map((o) => ({
+    id: o.orderNumber,
+    customer: o.customerName,
+    date: formatDate(o.createdAt),
+    status: o.status.charAt(0).toUpperCase() + o.status.slice(1),
+    total: "PKR " + o.total.toLocaleString("en-PK"),
+  }));
+
+  const productSales: Record<string, number> = {};
+  for (const o of allOrders) {
+    for (const item of o.items) {
+      productSales[item.name] = (productSales[item.name] || 0) + item.quantity;
+    }
+  }
+  const topProducts = Object.entries(productSales)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
+    .map(([name, sales], i) => ({ rank: i + 1, name, sales }));
+
+  const chartData = monthlyRevenue.map((m) => ({ label: m.month, revenue: m.revenue }));
   const chartLabel = chartLabels[range];
+
+  const statCards = [
+    { label: "Total Revenue", value: stats ? `PKR ${stats.totalRevenue.toLocaleString("en-PK")}` : "PKR 0", trend: "+12.3%", up: true, icon: DollarSign },
+    { label: "Orders", value: stats ? stats.totalOrders.toLocaleString() : "0", trend: "+8.1%", up: true, icon: ShoppingBag },
+    { label: "Pending Orders", value: stats ? stats.pendingOrders.toLocaleString() : "0", trend: "+5.7%", up: true, icon: Package },
+    { label: "Avg Order Value", value: stats ? `PKR ${Math.round(stats.averageOrderValue).toLocaleString("en-PK")}` : "PKR 0", trend: "-2.1%", up: false, icon: TrendingUp },
+    { label: "Products", value: "156", trend: "+3.2%", up: true, icon: Users },
+    { label: "Conversion Rate", value: "3.24%", trend: "+0.8%", up: true, icon: Percent },
+  ];
 
   return (
     <AdminLayout>

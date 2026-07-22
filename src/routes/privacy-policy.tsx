@@ -50,7 +50,7 @@ const sections = [
   },
   {
     title: "Contact",
-    content: "If you have any questions or concerns regarding this privacy policy or how we handle your data, please contact our Data Protection Officer at privacy@vintagecvunt.com or write to us at Casa d'Argento, Via Brera 24, 20121 Milano, Italy.",
+    content: "If you have any questions or concerns regarding this privacy policy or how we handle your data, please contact our Data Protection Officer at privacy@vintagecvunt.com or write to us at Casa d'Argento, 42 Clifton Avenue, Karachi, Pakistan.",
   },
 ];
 

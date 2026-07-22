@@ -6,6 +6,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useQuery, useMutation } from "convex/react";
+import type { Id } from "../../convex/_generated/dataModel";
+import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/review")({
   component: Reviews,
@@ -15,19 +18,6 @@ export const Route = createFileRoute("/review")({
 });
 
 type ReviewStatus = "Approved" | "Pending" | "Rejected";
-
-const mockReviews = [
-  { id: 1, product: "Obsidian Tailcoat", customer: "Elena Voss", rating: 5, content: "Absolutely stunning piece. The tailoring is impeccable and the fabric feels luxurious. Worth every penny.", date: "2026-07-18", status: "Approved" as ReviewStatus },
-  { id: 2, product: "Argentine Cuff", customer: "Marcus Webb", rating: 4, content: "Beautiful craftsmanship. The silver detailing is exquisite. Slightly heavy on the wrist but overall a great accessory.", date: "2026-07-17", status: "Approved" as ReviewStatus },
-  { id: 3, product: "Noir Leather Boots", customer: "Clara Hemlock", rating: 5, content: "Most comfortable boots I've ever owned. Broke in after just a few wears. The leather is top quality.", date: "2026-07-16", status: "Pending" as ReviewStatus },
-  { id: 4, product: "Silver Mesh Veil", customer: "Julian Frost", rating: 3, content: "Looks great but the mesh is a bit delicate. Afraid it might tear with regular use. Good for special occasions.", date: "2026-07-15", status: "Approved" as ReviewStatus },
-  { id: 5, product: "Chrome Signet Ring", customer: "Sylvia Kaine", rating: 5, content: "Perfect fit and the engraving is razor sharp. My husband loved it. Will order more as gifts.", date: "2026-07-14", status: "Approved" as ReviewStatus },
-  { id: 6, product: "Obsidian Tailcoat", customer: "Dorian Ashford", rating: 4, content: "Great quality overall. The lining is beautiful. Only complaint is the sleeves were slightly long.", date: "2026-07-13", status: "Rejected" as ReviewStatus },
-  { id: 7, product: "Argentine Cuff", customer: "Priya Nair", rating: 5, content: "Exquisite design. Got so many compliments at the gala. The clasp mechanism is smooth and secure.", date: "2026-07-12", status: "Pending" as ReviewStatus },
-  { id: 8, product: "Noir Leather Boots", customer: "Leo Ventura", rating: 4, content: "Solid boots with great grip. Took a while to break in but now they fit like a glove. Would recommend.", date: "2026-07-11", status: "Approved" as ReviewStatus },
-  { id: 9, product: "Silver Mesh Veil", customer: "Wren Calloway", rating: 3, content: "Pretty but overpriced for what it is. The silver finish is starting to wear off after only a few uses.", date: "2026-07-10", status: "Pending" as ReviewStatus },
-  { id: 10, product: "Chrome Signet Ring", customer: "Morgan Thorne", rating: 5, content: "Perfect craftsmanship. The weight feels substantial and the chrome finish is flawless. My new favorite accessory.", date: "2026-07-09", status: "Approved" as ReviewStatus },
-];
 
 const statusStyles: Record<string, string> = {
   Approved: "bg-green-500/20 text-green-400 border-green-500/30",
@@ -47,25 +37,23 @@ function StarDisplay({ rating }: { rating: number }) {
 }
 
 function Reviews() {
-  const [reviews, setReviews] = useState(mockReviews);
+  const reviews = useQuery(api.reviews.list) ?? [];
+  const updateStatus = useMutation(api.reviews.updateStatus);
+  const removeReview = useMutation(api.reviews.remove);
   const [search, setSearch] = useState("");
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<ReviewStatus | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Id<"reviews"> | null>(null);
 
-  function updateStatus(id: number, status: ReviewStatus) {
-    setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
-  }
-
-  function handleDelete(id: number) {
-    setReviews((prev) => prev.filter((r) => r.id !== id));
+  function handleDelete(id: Id<"reviews">) {
+    removeReview({ id });
     setDeleteTarget(null);
   }
 
   const filtered = reviews.filter((r) => {
     const matchesSearch =
-      r.product.toLowerCase().includes(search.toLowerCase()) ||
-      r.customer.toLowerCase().includes(search.toLowerCase());
+      (r.productId ?? "").toLowerCase().includes(search.toLowerCase()) ||
+      r.customerName.toLowerCase().includes(search.toLowerCase());
     const matchesRating = ratingFilter === null || r.rating === ratingFilter;
     const matchesStatus = statusFilter === null || r.status === statusFilter;
     return matchesSearch && matchesRating && matchesStatus;
@@ -214,26 +202,26 @@ function Reviews() {
               </TableHeader>
               <TableBody>
                 {filtered.map((review) => (
-                  <TableRow key={review.id} className="border-chrome/10 hover:bg-chrome/5">
-                    <TableCell className="font-medium text-foreground">{review.product}</TableCell>
-                    <TableCell className="text-muted-foreground">{review.customer}</TableCell>
+                  <TableRow key={review._id} className="border-chrome/10 hover:bg-chrome/5">
+                    <TableCell className="font-medium text-foreground">{review.productId}</TableCell>
+                    <TableCell className="text-muted-foreground">{review.customerName}</TableCell>
                     <TableCell><StarDisplay rating={review.rating} /></TableCell>
-                    <TableCell className="text-muted-foreground max-w-[200px] truncate">{review.content}</TableCell>
-                    <TableCell className="text-muted-foreground">{review.date}</TableCell>
+                    <TableCell className="text-muted-foreground max-w-[200px] truncate">{review.comment}</TableCell>
+                    <TableCell className="text-muted-foreground">{new Date(review.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell><StatusBadge status={review.status} /></TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         {review.status !== "Approved" && (
-                          <button onClick={() => updateStatus(review.id, "Approved")} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-green-400">
+                          <button onClick={() => updateStatus({ id: review._id, status: "Approved" })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-green-400">
                             <Check className="h-4 w-4" />
                           </button>
                         )}
                         {review.status !== "Rejected" && (
-                          <button onClick={() => updateStatus(review.id, "Rejected")} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
+                          <button onClick={() => updateStatus({ id: review._id, status: "Rejected" })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
                             <X className="h-4 w-4" />
                           </button>
                         )}
-                        <button onClick={() => setDeleteTarget(review.id)} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
+                        <button onClick={() => setDeleteTarget(review._id)} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
@@ -247,27 +235,27 @@ function Reviews() {
 
         <div className="md:hidden space-y-3">
           {filtered.map((review) => (
-            <div key={review.id} className="bg-graphite border border-chrome/20 rounded-2xl p-4 space-y-3">
+            <div key={review._id} className="bg-graphite border border-chrome/20 rounded-2xl p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-medium text-foreground text-sm">{review.product}</span>
+                <span className="font-medium text-foreground text-sm">{review.productId}</span>
                 <StatusBadge status={review.status} />
               </div>
-              <div className="text-sm text-muted-foreground">{review.customer}</div>
+              <div className="text-sm text-muted-foreground">{review.customerName}</div>
               <StarDisplay rating={review.rating} />
-              <p className="text-sm text-muted-foreground line-clamp-2">{review.content}</p>
-              <div className="text-xs text-muted-foreground">{review.date}</div>
+              <p className="text-sm text-muted-foreground line-clamp-2">{review.comment}</p>
+              <div className="text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleDateString()}</div>
               <div className="flex items-center gap-2 pt-1">
                 {review.status !== "Approved" && (
-                  <button onClick={() => updateStatus(review.id, "Approved")} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-xs text-green-400">
+                  <button onClick={() => updateStatus({ id: review._id, status: "Approved" })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-xs text-green-400">
                     <Check className="h-3.5 w-3.5 mr-1 inline" /> Approve
                   </button>
                 )}
                 {review.status !== "Rejected" && (
-                  <button onClick={() => updateStatus(review.id, "Rejected")} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-xs text-red-400">
+                  <button onClick={() => updateStatus({ id: review._id, status: "Rejected" })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-xs text-red-400">
                     <X className="h-3.5 w-3.5 mr-1 inline" /> Reject
                   </button>
                 )}
-                <button onClick={() => setDeleteTarget(review.id)} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-xs text-red-400">
+                <button onClick={() => setDeleteTarget(review._id)} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-xs text-red-400">
                   <Trash2 className="h-3.5 w-3.5 mr-1 inline" /> Delete
                 </button>
               </div>

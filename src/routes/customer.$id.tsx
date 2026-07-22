@@ -4,6 +4,8 @@ import { ArrowLeft, ShoppingBag, DollarSign, Receipt, Calendar, Users, Download 
 import { AdminLayout } from "@/components/AdminLayout";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { generateCustomerProfilePDF } from "@/lib/pdf-utils";
+import { api } from "../../convex/_generated/api";
+import { useQuery } from "convex/react";
 
 export const Route = createFileRoute("/customer/$id")({
   component: CustomerDetail,
@@ -12,97 +14,7 @@ export const Route = createFileRoute("/customer/$id")({
   }),
 });
 
-const mockCustomers = [
-  { id: "CUST-001", name: "Elena Voss", email: "elena@example.com", orders: 8, totalSpent: 3840.0, joined: "2025-06-12", status: "Active" },
-  { id: "CUST-002", name: "Marcus Webb", email: "marcus@example.com", orders: 3, totalSpent: 520.0, joined: "2025-08-04", status: "Active" },
-  { id: "CUST-003", name: "Clara Hemlock", email: "clara@example.com", orders: 12, totalSpent: 8400.0, joined: "2025-03-19", status: "Active" },
-  { id: "CUST-004", name: "Julian Frost", email: "julian@example.com", orders: 1, totalSpent: 175.0, joined: "2026-01-22", status: "Inactive" },
-  { id: "CUST-005", name: "Sylvia Kaine", email: "sylvia@example.com", orders: 5, totalSpent: 2100.0, joined: "2025-09-10", status: "Active" },
-  { id: "CUST-006", name: "Dorian Ashford", email: "dorian@example.com", orders: 2, totalSpent: 1200.0, joined: "2025-11-05", status: "Inactive" },
-  { id: "CUST-007", name: "Priya Nair", email: "priya@example.com", orders: 9, totalSpent: 3650.0, joined: "2025-05-28", status: "Active" },
-  { id: "CUST-008", name: "Leo Ventura", email: "leo@example.com", orders: 4, totalSpent: 890.0, joined: "2025-10-14", status: "Active" },
-  { id: "CUST-009", name: "Wren Calloway", email: "wren@example.com", orders: 6, totalSpent: 2750.0, joined: "2025-07-01", status: "Active" },
-  { id: "CUST-010", name: "Morgan Thorne", email: "morgan@example.com", orders: 7, totalSpent: 4100.0, joined: "2025-04-16", status: "Inactive" },
-  { id: "CUST-011", name: "Ivy Castell", email: "ivy@example.com", orders: 11, totalSpent: 6200.0, joined: "2025-02-09", status: "Active" },
-  { id: "CUST-012", name: "Ronan Voss", email: "ronan@example.com", orders: 2, totalSpent: 120.0, joined: "2026-01-30", status: "Active" },
-];
 
-const claraDetail = {
-  id: "CUST-003",
-  name: "Clara Hemlock",
-  email: "clara@example.com",
-  phone: "+1 (555) 234-5678",
-  joined: "March 19, 2025",
-  status: "Active" as const,
-  totalOrders: 12,
-  totalSpent: 8400.0,
-  avgOrderValue: 700.0,
-  lastOrderDate: "March 14, 2026",
-  orders: [
-    { id: "ORD-1003", date: "2026-03-14", items: 5, total: 620.0, status: "Processing" },
-    { id: "ORD-0987", date: "2026-02-28", items: 3, total: 345.0, status: "Delivered" },
-    { id: "ORD-0942", date: "2026-01-15", items: 7, total: 1200.0, status: "Delivered" },
-    { id: "ORD-0891", date: "2025-12-20", items: 2, total: 180.0, status: "Delivered" },
-    { id: "ORD-0823", date: "2025-11-05", items: 4, total: 890.0, status: "Shipped" },
-    { id: "ORD-0765", date: "2025-09-12", items: 6, total: 1450.0, status: "Delivered" },
-    { id: "ORD-0701", date: "2025-07-30", items: 1, total: 75.0, status: "Cancelled" },
-  ],
-};
-
-const elenaDetail = {
-  id: "CUST-001",
-  name: "Elena Voss",
-  email: "elena@example.com",
-  phone: "+1 (555) 111-2222",
-  joined: "June 12, 2025",
-  status: "Active" as const,
-  totalOrders: 8,
-  totalSpent: 3840.0,
-  avgOrderValue: 480.0,
-  lastOrderDate: "March 15, 2026",
-  orders: [
-    { id: "ORD-1001", date: "2026-03-15", items: 3, total: 245.0, status: "Delivered" },
-    { id: "ORD-0963", date: "2026-02-10", items: 2, total: 180.0, status: "Delivered" },
-    { id: "ORD-0912", date: "2026-01-05", items: 4, total: 520.0, status: "Shipped" },
-    { id: "ORD-0876", date: "2025-11-22", items: 1, total: 95.0, status: "Delivered" },
-    { id: "ORD-0801", date: "2025-09-14", items: 5, total: 780.0, status: "Delivered" },
-    { id: "ORD-0734", date: "2025-07-08", items: 3, total: 420.0, status: "Cancelled" },
-    { id: "ORD-0655", date: "2025-05-01", items: 6, total: 1100.0, status: "Delivered" },
-  ],
-};
-
-function generateCustomerDetail(id: string) {
-  const c = mockCustomers.find((c) => c.id === id);
-  if (!c) return null;
-
-  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const d = new Date(c.joined);
-  const joinedDisplay = months[d.getMonth()] + " " + d.getDate() + ", " + d.getFullYear();
-
-  return {
-    id: c.id,
-    name: c.name,
-    email: c.email,
-    phone: "+1 (555) 000-0000",
-    joined: joinedDisplay,
-    status: c.status as "Active" | "Inactive",
-    totalOrders: c.orders,
-    totalSpent: c.totalSpent,
-    avgOrderValue: c.orders > 0 ? +(c.totalSpent / c.orders).toFixed(2) : 0,
-    lastOrderDate: "2026-03-15",
-    orders: [
-      { id: "ORD-" + (1000 + parseInt(id.slice(-3))), date: "2026-03-15", items: Math.ceil(c.orders / 2), total: +(c.totalSpent * 0.3).toFixed(2), status: "Delivered" },
-      { id: "ORD-" + (900 + parseInt(id.slice(-3))), date: "2026-02-01", items: Math.ceil(c.orders / 3), total: +(c.totalSpent * 0.25).toFixed(2), status: "Shipped" },
-      { id: "ORD-" + (800 + parseInt(id.slice(-3))), date: "2025-12-15", items: Math.max(1, c.orders - 3), total: +(c.totalSpent * 0.2).toFixed(2), status: "Delivered" },
-    ],
-  };
-}
-
-function getDetail(id: string) {
-  if (id === claraDetail.id) return claraDetail;
-  if (id === elenaDetail.id) return elenaDetail;
-  return generateCustomerDetail(id);
-}
 
 const statusColors: Record<string, string> = {
   Pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
@@ -114,9 +26,10 @@ const statusColors: Record<string, string> = {
 
 function CustomerDetail() {
   const { id } = Route.useParams();
-  const c = getDetail(id);
+  const customer = useQuery(api.customers.getById, { id });
+  const orders = useQuery(api.orders.getByEmail, { email: customer?.email ?? "" });
 
-  if (!c) {
+  if (!customer) {
     return (
       <AdminLayout>
         <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -131,7 +44,11 @@ function CustomerDetail() {
     );
   }
 
-  const initials = c.name.split(" ").map((n) => n[0]).join("");
+  const initials = customer.name.split(" ").map((n) => n[0]).join("");
+  const avgOrderValue = customer.totalOrders > 0 ? customer.totalSpent / customer.totalOrders : 0;
+  const lastOrderDate = orders && orders.length > 0
+    ? new Date(Math.max(...orders.map((o) => o.createdAt))).toLocaleDateString()
+    : "N/A";
 
   return (
     <AdminLayout>
@@ -144,7 +61,7 @@ function CustomerDetail() {
             <ArrowLeft className="h-4 w-4" /> Back to Customers
           </Link>
           <button
-            onClick={() => generateCustomerProfilePDF(c)}
+            onClick={() => generateCustomerProfilePDF(customer)}
             className="btn-chrome btn-chrome-inner inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm"
           >
             <Download className="h-4 w-4" /> Download Profile
@@ -158,21 +75,21 @@ function CustomerDetail() {
                 <span className="text-xl font-semibold text-foreground">{initials}</span>
               </div>
               <div className="space-y-1">
-                <h2 className="text-lg font-semibold text-foreground">{c.name}</h2>
-                <p className="text-sm text-muted-foreground">{c.email}</p>
-                <p className="text-sm text-muted-foreground">{c.phone}</p>
-                <p className="text-xs text-muted-foreground">Joined {c.joined}</p>
+                <h2 className="text-lg font-semibold text-foreground">{customer.name}</h2>
+                <p className="text-sm text-muted-foreground">{customer.email}</p>
+                <p className="text-sm text-muted-foreground">{customer.phone ?? ""}</p>
+                <p className="text-xs text-muted-foreground">Joined {new Date(customer.createdAt).toLocaleDateString()}</p>
               </div>
               <div>
                 <span
                   className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] ${
-                    c.status === "Active"
+                    customer.status === "Active"
                       ? "bg-green-500/20 text-green-400 border-green-500/30"
                       : "bg-gray-500/20 text-gray-400 border-gray-500/30"
                   }`}
                 >
                   <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                  {c.status}
+                  {customer.status}
                 </span>
               </div>
             </div>
@@ -181,10 +98,10 @@ function CustomerDetail() {
           <div className="lg:col-span-3 space-y-6">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { label: "Total Orders", value: c.totalOrders.toString(), icon: ShoppingBag },
-                { label: "Total Spent", value: "$" + c.totalSpent.toFixed(2), icon: DollarSign },
-                { label: "Avg Order Value", value: "$" + c.avgOrderValue.toFixed(2), icon: Receipt },
-                { label: "Last Order", value: c.lastOrderDate, icon: Calendar },
+                { label: "Total Orders", value: customer.totalOrders.toString(), icon: ShoppingBag },
+                { label: "Total Spent", value: "PKR " + customer.totalSpent.toFixed(2), icon: DollarSign },
+                { label: "Avg Order Value", value: "PKR " + avgOrderValue.toFixed(2), icon: Receipt },
+                { label: "Last Order", value: lastOrderDate, icon: Calendar },
               ].map((s) => (
                 <div
                   key={s.label}
@@ -218,20 +135,20 @@ function CustomerDetail() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {c.orders.map((o) => (
-                    <TableRow key={o.id} className="border-chrome/10 hover:bg-chrome/5">
+                  {(orders ?? []).map((o) => (
+                    <TableRow key={o._id} className="border-chrome/10 hover:bg-chrome/5">
                       <TableCell>
                         <Link
                           to="/order/$id"
-                          params={{ id: o.id }}
+                          params={{ id: o._id }}
                           className="font-medium text-foreground hover:text-blue-400 transition-colors"
                         >
-                          {o.id}
+                          {o.orderNumber}
                         </Link>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{o.date}</TableCell>
-                      <TableCell className="text-right text-muted-foreground">{o.items}</TableCell>
-                      <TableCell className="text-right text-foreground">${o.total.toFixed(2)}</TableCell>
+                      <TableCell className="text-muted-foreground">{new Date(o.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-right text-muted-foreground">{o.items.length}</TableCell>
+                      <TableCell className="text-right text-foreground">PKR {o.total.toFixed(2)}</TableCell>
                       <TableCell>
                         <span
                           className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] ${statusColors[o.status]}`}

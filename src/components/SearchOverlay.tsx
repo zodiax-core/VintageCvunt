@@ -1,50 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "@tanstack/react-router";
-import editorial1 from "@/assets/editorial-1.jpg";
-import editorial1Webp from "@/assets/editorial-1.webp";
-import editorial2 from "@/assets/editorial-2.jpg";
-import editorial2Webp from "@/assets/editorial-2.webp";
-import productRing from "@/assets/product-ring.jpg";
-import productRingWebp from "@/assets/product-ring.webp";
-import productJacket from "@/assets/product-jacket.jpg";
-import productJacketWebp from "@/assets/product-jacket.webp";
-import productChain from "@/assets/product-chain.jpg";
-import productChainWebp from "@/assets/product-chain.webp";
-import productBoots from "@/assets/product-boots.jpg";
-import productBootsWebp from "@/assets/product-boots.webp";
-import { OptimizedImage } from "@/components/OptimizedImage";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
-
-type SearchProduct = {
-  id: number;
-  name: string;
-  category: string;
-  price: number;
-  slug: string;
-  src: string;
-  webp: string;
-};
-
-const searchProducts: SearchProduct[] = [
-  { id: 1, name: "Meridian Coat", category: "Outerwear", price: 1284000, slug: "meridian-coat", src: editorial1, webp: editorial1Webp },
-  { id: 2, name: "Thorn Signet, Silver", category: "Silverwork", price: 267000, slug: "thorn-signet-silver", src: productRing, webp: productRingWebp },
-  { id: 3, name: "Papillon Chain", category: "Adornment", price: 402000, slug: "papillon-chain", src: productChain, webp: productChainWebp },
-  { id: 4, name: "Reliquary Rider", category: "Outerwear", price: 1107000, slug: "reliquary-rider", src: productJacket, webp: productJacketWebp },
-  { id: 5, name: "Ossuary Boot", category: "Footwear", price: 462000, slug: "ossuary-boot", src: productBoots, webp: productBootsWebp },
-  { id: 6, name: "Argent Cross Pendant", category: "Adornment", price: 186000, slug: "argent-cross-pendant", src: productRing, webp: productRingWebp },
-  { id: 7, name: "Basilica Trench, Onyx", category: "Outerwear", price: 1536000, slug: "basilica-trench-onyx", src: editorial2, webp: editorial2Webp },
-  { id: 8, name: "Vesper Cuff, Brushed", category: "Silverwork", price: 234000, slug: "vesper-cuff-brushed", src: productChain, webp: productChainWebp },
-  { id: 9, name: "Nave Boot, High", category: "Footwear", price: 564000, slug: "nave-boot-high", src: productBoots, webp: productBootsWebp },
-  { id: 10, name: "Rosary of Iron", category: "Adornment", price: 282000, slug: "rosary-of-iron", src: productRing, webp: productRingWebp },
-  { id: 11, name: "Chrome Signet Ring", category: "Silverwork", price: 320000, slug: "chrome-signet-ring", src: productRing, webp: productRingWebp },
-  { id: 12, name: "Cathedral Scarf", category: "Outerwear", price: 185000, slug: "cathedral-scarf", src: editorial1, webp: editorial1Webp },
-];
 
 const priceLabel = (p: number) => "PKR " + p.toLocaleString("en-PK");
 
 export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const allProducts = useQuery(api.products.list, open ? {} : "skip") ?? [];
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -53,11 +18,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
     if (open) {
       setQuery("");
       setTimeout(() => inputRef.current?.focus(), 100);
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
     }
-    return () => { document.body.style.overflow = ""; };
   }, [open]);
 
   useEffect(() => {
@@ -69,7 +30,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
   }, [open, onClose]);
 
   const filtered = query.trim()
-    ? searchProducts.filter((p) =>
+    ? allProducts.filter((p) =>
         p.name.toLowerCase().includes(query.toLowerCase())
       )
     : [];
@@ -154,12 +115,12 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
                 <div className="space-y-2">
                   {filtered.map((p) => (
                     <button
-                      key={p.id}
+                      key={p._id}
                       onClick={() => goToProduct(p.slug)}
                       className="flex items-center gap-4 w-full rounded-2xl border border-chrome/20 bg-graphite/60 hover:bg-graphite p-3 md:p-4 text-left transition-all group backdrop-blur"
                     >
                       <div className="h-14 w-14 md:h-16 md:w-16 shrink-0 overflow-hidden rounded-xl border border-chrome/30">
-                        <OptimizedImage webp={p.webp} fallback={p.src} alt={p.name} className="h-full w-full object-cover" />
+                        <img src={p.images?.[0] || "/placeholder.svg"} alt={p.name} className="h-full w-full object-cover" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-display text-lg md:text-xl text-foreground group-hover:text-chrome transition-colors truncate">{p.name}</p>

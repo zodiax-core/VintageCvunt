@@ -9,6 +9,9 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
   DialogFooter, DialogClose,
 } from "@/components/ui/dialog";
+import { useQuery, useMutation } from "convex/react";
+import type { Id } from "../../convex/_generated/dataModel";
+import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/coupon")({
   component: Coupons,
@@ -20,27 +23,7 @@ export const Route = createFileRoute("/coupon")({
 type DiscountType = "percentage" | "fixed" | "free_shipping";
 type CouponStatus = "Active" | "Expired" | "Scheduled";
 
-interface Coupon {
-  id: number;
-  code: string;
-  type: DiscountType;
-  value: string;
-  minOrder: string;
-  usage: string;
-  expiry: string;
-  status: CouponStatus;
-}
 
-const initialCoupons: Coupon[] = [
-  { id: 1, code: "WELCOME20", type: "percentage", value: "20%", minOrder: "$0", usage: "145/200", expiry: "2026-12-31", status: "Active" },
-  { id: 2, code: "SUMMER25", type: "fixed", value: "$25", minOrder: "$100", usage: "78/150", expiry: "2026-09-01", status: "Active" },
-  { id: 3, code: "VIP15", type: "percentage", value: "15%", minOrder: "$50", usage: "34/100", expiry: "2026-08-15", status: "Scheduled" },
-  { id: 4, code: "FREESHIP", type: "free_shipping", value: "Free", minOrder: "$75", usage: "203/500", expiry: "2026-12-31", status: "Active" },
-  { id: 5, code: "FLASH30", type: "percentage", value: "30%", minOrder: "$0", usage: "56/100", expiry: "2026-07-25", status: "Active" },
-  { id: 6, code: "BUNDLE10", type: "fixed", value: "$10", minOrder: "$60", usage: "22/50", expiry: "2026-10-01", status: "Scheduled" },
-  { id: 7, code: "LOYAL20", type: "percentage", value: "20%", minOrder: "$0", usage: "89/300", expiry: "2026-06-30", status: "Expired" },
-  { id: 8, code: "CLEAR50", type: "percentage", value: "50%", minOrder: "$150", usage: "12/50", expiry: "2026-08-20", status: "Active" },
-];
 
 const statusStyles: Record<string, string> = {
   Active: "bg-green-500/20 text-green-400 border-green-500/30",
@@ -63,19 +46,37 @@ const typeColors: Record<string, string> = {
 const emptyForm = { code: "", type: "percentage" as DiscountType, value: "", minOrder: "", usageLimit: "", expiry: "", status: "Active" as CouponStatus };
 
 function Coupons() {
-  const [coupons, setCoupons] = useState(initialCoupons);
+  const couponsData = useQuery(api.coupons.list) ?? [];
+  const createCoupon = useMutation(api.coupons.create);
+  const updateCoupon = useMutation(api.coupons.update);
+  const removeCoupon = useMutation(api.coupons.remove);
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Coupon | null>(null);
+  const [editingId, setEditingId] = useState<Id<"coupons"> | null>(null);
   const [form, setForm] = useState(emptyForm);
 
+  function displayCoupon(c: (typeof couponsData)[0]) {
+    return {
+      _id: c._id,
+      code: c.code,
+      type: c.type as DiscountType,
+      value: c.type === "percentage" ? `${c.value}%` : c.type === "fixed" ? `$${c.value}` : "Free",
+      minOrder: c.minPurchase ? `$${c.minPurchase}` : "$0",
+      usage: `${c.usedCount}/${c.maxUses ?? "∞"}`,
+      expiry: new Date(c.expiresAt).toISOString().split("T")[0],
+      status: (c.isActive ? "Active" : "Expired") as CouponStatus,
+    };
+  }
+
+  const coupons = couponsData.map(displayCoupon);
+
   function openAdd() {
-    setEditing(null);
+    setEditingId(null);
     setForm(emptyForm);
     setOpen(true);
   }
 
-  function openEdit(coupon: Coupon) {
-    setEditing(coupon);
+  function openEdit(coupon: ReturnType<typeof displayCoupon>) {
+    setEditingId(coupon._id);
     setForm({
       code: coupon.code,
       type: coupon.type,
@@ -89,34 +90,35 @@ function Coupons() {
   }
 
   function handleSave() {
-    if (editing) {
-      setCoupons((prev) => prev.map((c) => (c.id === editing.id ? {
-        ...c,
-        code: form.code,
-        type: form.type,
-        value: form.type === "percentage" ? `${form.value}%` : form.type === "fixed" ? `$${form.value}` : "Free",
-        minOrder: `$${form.minOrder || "0"}`,
-        usage: `${c.usage.split("/")[0]}/${form.usageLimit}`,
-        expiry: form.expiry,
-        status: form.status,
-      } : c)));
+    if (editingId) {
+      updateCoupon({
+        id: editingId,
+        ...(form.code !== undefined && { code: form.code }),
+        ...(form.type !== undefined && { type: form.type }),
+        ...(form.type !== "free_shipping" && form.value ? { value: Number(form.value) } : {}),
+        ...(form.minOrder ? { minPurchase: Number(form.minOrder) } : {}),
+        ...(form.usageLimit ? { maxUses: Number(form.usageLimit) } : {}),
+        ...(form.expiry ? { expiresAt: new Date(form.expiry).getTime() } : {}),
+        ...{ isActive: form.status === "Active" },
+      });
     } else {
-      setCoupons((prev) => [...prev, {
-        id: Math.max(...prev.map((c) => c.id)) + 1,
+      const expiresAt = form.expiry ? new Date(form.expiry).getTime() : Date.now() + 365 * 24 * 60 * 60 * 1000;
+      createCoupon({
         code: form.code,
         type: form.type,
-        value: form.type === "percentage" ? `${form.value}%` : form.type === "fixed" ? `$${form.value}` : "Free",
-        minOrder: `$${form.minOrder || "0"}`,
-        usage: `0/${form.usageLimit}`,
-        expiry: form.expiry,
-        status: form.status,
-      }]);
+        value: form.type !== "free_shipping" ? Number(form.value) : 0,
+        usedCount: 0,
+        ...(form.minOrder ? { minPurchase: Number(form.minOrder) } : {}),
+        ...(form.usageLimit ? { maxUses: Number(form.usageLimit) } : {}),
+        expiresAt,
+        isActive: form.status === "Active",
+      });
     }
     setOpen(false);
   }
 
-  function handleDelete(id: number) {
-    setCoupons((prev) => prev.filter((c) => c.id !== id));
+  function handleDelete(id: Id<"coupons">) {
+    removeCoupon({ id });
   }
 
   function StatusBadge({ status }: { status: string }) {
@@ -169,7 +171,7 @@ function Coupons() {
               </TableHeader>
               <TableBody>
                 {coupons.map((coupon) => (
-                  <TableRow key={coupon.id} className="border-chrome/10 hover:bg-chrome/5">
+                  <TableRow key={coupon._id} className="border-chrome/10 hover:bg-chrome/5">
                     <TableCell className="font-mono text-[11px] font-medium text-foreground">{coupon.code}</TableCell>
                     <TableCell><TypeBadge type={coupon.type} /></TableCell>
                     <TableCell className="text-foreground">{coupon.value}</TableCell>
@@ -182,7 +184,7 @@ function Coupons() {
                         <button onClick={() => openEdit(coupon)} className="btn-chrome btn-chrome-inner p-2 rounded-lg">
                           <Pencil className="h-4 w-4" />
                         </button>
-                        <button onClick={() => handleDelete(coupon.id)} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
+                        <button onClick={() => handleDelete(coupon._id)} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
@@ -196,7 +198,7 @@ function Coupons() {
 
         <div className="md:hidden space-y-3">
           {coupons.map((coupon) => (
-            <div key={coupon.id} className="bg-graphite border border-chrome/20 rounded-2xl p-4 space-y-3">
+            <div key={coupon._id} className="bg-graphite border border-chrome/20 rounded-2xl p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[13px] font-medium text-foreground">{coupon.code}</span>
                 <StatusBadge status={coupon.status} />
@@ -214,7 +216,7 @@ function Coupons() {
                 <button onClick={() => openEdit(coupon)} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-xs">
                   <Pencil className="h-3.5 w-3.5 mr-1 inline" /> Edit
                 </button>
-                <button onClick={() => handleDelete(coupon.id)} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-xs text-red-400">
+                <button onClick={() => handleDelete(coupon._id)} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-xs text-red-400">
                   <Trash2 className="h-3.5 w-3.5 mr-1 inline" /> Delete
                 </button>
               </div>
@@ -225,9 +227,9 @@ function Coupons() {
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent className="bg-background border border-chrome/20">
             <DialogHeader>
-              <DialogTitle>{editing ? "Edit Coupon" : "Add Coupon"}</DialogTitle>
+              <DialogTitle>{editingId ? "Edit Coupon" : "Add Coupon"}</DialogTitle>
               <DialogDescription className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">
-                {editing ? "Update coupon details" : "Create a new discount coupon"}
+                {editingId ? "Update coupon details" : "Create a new discount coupon"}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-2">
@@ -317,7 +319,7 @@ function Coupons() {
                 disabled={!form.code || (!form.value && form.type !== "free_shipping")}
                 className="btn-chrome btn-chrome-inner rounded-lg px-4 py-2 disabled:opacity-30"
               >
-                <span className="btn-label">{editing ? "Update" : "Create"}</span>
+                <span className="btn-label">{editingId ? "Update" : "Create"}</span>
               </button>
             </DialogFooter>
           </DialogContent>

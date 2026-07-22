@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useCartContext } from "@/lib/cart-context";
-import { OptimizedImage } from "@/components/OptimizedImage";
 
 export const Route = createFileRoute("/checkout")({
   component: Checkout,
@@ -61,7 +62,10 @@ function Checkout() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const createOrder = useMutation(api.orders.create);
+  const generateUploadUrl = useMutation(api.products.generateUploadUrl);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
     setErrors(errs);
@@ -72,11 +76,55 @@ function Checkout() {
     if (Object.keys(errs).length > 0) return;
 
     setSubmitting(true);
-    const orderId = "VC-" + String(Math.floor(100000 + Math.random() * 900000));
-    setTimeout(() => {
+    try {
+      let screenshotId: string | undefined;
+      if (screenshot) {
+        const uploadUrl = await generateUploadUrl();
+        const result = await fetch(uploadUrl, { method: "POST", body: screenshot });
+        const { storageId } = await result.json();
+        screenshotId = storageId;
+      }
+
+      const orderNumber = "VC-" + String(Math.floor(100000 + Math.random() * 900000));
+      await createOrder({
+        orderNumber,
+        customerName: billing.name,
+        customerEmail: billing.email,
+        items: cart.items.map((item) => ({
+          productId: String(item.id),
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+        subtotal: cartTotal,
+        shipping: 0,
+        tax: 0,
+        total: cartTotal,
+        status: "pending",
+        paymentMethod: "Bank Transfer",
+        billingAddress: {
+          street: billing.address,
+          city: billing.city,
+          state: "",
+          zip: billing.zip,
+          country: "Pakistan",
+        },
+        shippingAddress: {
+          street: billing.address,
+          city: billing.city,
+          state: "",
+          zip: billing.zip,
+          country: "Pakistan",
+        },
+        screenshot: screenshotId,
+      });
+
       clearCart();
-      navigate({ to: "/order-confirmed", search: { orderId } });
-    }, 800);
+      navigate({ to: "/order-confirmed", search: { orderId: orderNumber } });
+    } catch (err) {
+      console.error("Order submission failed", err);
+      setSubmitting(false);
+    }
   };
 
   if (cart.items.length === 0 && !submitting) {
@@ -196,20 +244,13 @@ function Checkout() {
                       </div>
                       <div>
                         <label className="block font-mono text-[10px] uppercase tracking-[0.24em] text-chrome-dim mb-2">Country *</label>
-                        <select
-                          value={billing.country}
-                          onChange={(e) => setBilling({ ...billing, country: e.target.value })}
-                          onBlur={() => handleBlur("country")}
-                          className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm text-chrome-dim outline-none transition-colors appearance-none ${touched.country && errors.country ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
-                        >
-                          <option value="">Select country</option>
-                          <option value="PK">Pakistan</option>
-                          <option value="IT">Italy</option>
-                          <option value="US">United States</option>
-                          <option value="UK">United Kingdom</option>
-                          <option value="AE">UAE</option>
-                          <option value="JP">Japan</option>
-                        </select>
+                          <input
+                            type="text"
+                            value="Pakistan"
+                            disabled
+                            className="w-full rounded-xl border border-chrome/20 bg-graphite/50 px-4 py-3 font-mono text-sm text-chrome-dim/60 outline-none cursor-not-allowed"
+                          />
+                          <input type="hidden" value="PK" />
                         {touched.country && errors.country && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.country}</p>}
                       </div>
                       <div>
@@ -290,8 +331,8 @@ function Checkout() {
                   <div className="space-y-3">
                     {cart.items.map((item) => (
                       <div key={item.id} className="flex items-center gap-3">
-                        <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden border border-chrome/30">
-                          <OptimizedImage webp={item.webp} fallback={item.src} alt={item.name} className="h-full w-full object-cover" />
+                        <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden border border-chrome/30 bg-graphite-2 grid place-items-center font-mono text-xs text-chrome-dim">
+                          {item.name.charAt(0)}
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="font-mono text-[11px] text-chrome-dim truncate">{item.name}</p>

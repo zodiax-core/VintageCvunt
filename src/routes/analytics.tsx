@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { DollarSign, ShoppingBag, Users, TrendingUp, ArrowUpRight } from "lucide-react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   ResponsiveContainer, Tooltip, AreaChart, Area,
 } from "recharts";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/analytics")({
   component: Analytics,
@@ -16,38 +18,6 @@ export const Route = createFileRoute("/analytics")({
 
 type Range = "7D" | "30D" | "12M";
 const ranges: Range[] = ["7D", "30D", "12M"];
-
-const dailyRevenue = [
-  { day: "Mon", revenue: 3200, orders: 24, customers: 18 },
-  { day: "Tue", revenue: 2800, orders: 21, customers: 15 },
-  { day: "Wed", revenue: 4100, orders: 31, customers: 23 },
-  { day: "Thu", revenue: 3600, orders: 27, customers: 20 },
-  { day: "Fri", revenue: 5200, orders: 39, customers: 29 },
-  { day: "Sat", revenue: 4800, orders: 36, customers: 26 },
-  { day: "Sun", revenue: 3900, orders: 29, customers: 22 },
-];
-
-const weeklyRevenue = [
-  { week: "Week 1", revenue: 22300, orders: 172, customers: 124 },
-  { week: "Week 2", revenue: 24800, orders: 191, customers: 138 },
-  { week: "Week 3", revenue: 23500, orders: 180, customers: 131 },
-  { week: "Week 4", revenue: 26700, orders: 205, customers: 147 },
-];
-
-const monthlyRevenue = [
-  { month: "Aug", revenue: 18200, orders: 142, customers: 98 },
-  { month: "Sep", revenue: 21400, orders: 168, customers: 115 },
-  { month: "Oct", revenue: 19800, orders: 155, customers: 107 },
-  { month: "Nov", revenue: 25600, orders: 201, customers: 142 },
-  { month: "Dec", revenue: 31200, orders: 245, customers: 176 },
-  { month: "Jan", revenue: 22800, orders: 178, customers: 124 },
-  { month: "Feb", revenue: 19500, orders: 152, customers: 108 },
-  { month: "Mar", revenue: 24100, orders: 189, customers: 133 },
-  { month: "Apr", revenue: 26300, orders: 207, customers: 148 },
-  { month: "May", revenue: 28900, orders: 228, customers: 162 },
-  { month: "Jun", revenue: 27400, orders: 215, customers: 154 },
-  { month: "Jul", revenue: 30100, orders: 238, customers: 170 },
-];
 
 const products7D = [
   { name: "Obsidian Tailcoat", sales: 48 },
@@ -73,12 +43,6 @@ const products12M = [
   { name: "Chrome Signet Ring", sales: 1140 },
 ];
 
-const chartDataMap: Record<Range, { data: Record<string, unknown>[]; labelKey: string }> = {
-  "7D": { data: dailyRevenue, labelKey: "day" },
-  "30D": { data: weeklyRevenue, labelKey: "week" },
-  "12M": { data: monthlyRevenue, labelKey: "month" },
-};
-
 const productsMap: Record<Range, { name: string; sales: number }[]> = {
   "7D": products7D,
   "30D": products30D,
@@ -87,13 +51,33 @@ const productsMap: Record<Range, { name: string; sales: number }[]> = {
 
 function Analytics() {
   const [range, setRange] = useState<Range>("30D");
+  const allOrders = useQuery(api.orders.list) ?? [];
 
-  const { data: chartData, labelKey } = chartDataMap[range];
+  const globalStats = useMemo(() => {
+    const totalRevenue = allOrders.reduce((sum, o) => sum + o.total, 0);
+    const totalOrders = allOrders.length;
+    return { totalRevenue, totalOrders };
+  }, [allOrders]);
+
+  const monthlyRevenue = useMemo(() => {
+    const byMonth: Record<string, number> = {};
+    for (const order of allOrders) {
+      const d = new Date(order.createdAt);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      byMonth[key] = (byMonth[key] || 0) + order.total;
+    }
+    return Object.entries(byMonth)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, revenue]) => ({ month, revenue }));
+  }, [allOrders]);
+
+  const chartData = monthlyRevenue.map((m) => ({ month: m.month, revenue: m.revenue, orders: 0, customers: 0 }));
+  const labelKey = "month";
   const products = productsMap[range];
 
   const kpis = [
-    { label: "Revenue", value: "$124,560", icon: DollarSign },
-    { label: "Orders", value: "1,284", icon: ShoppingBag },
+    { label: "Revenue", value: globalStats ? `$${globalStats.totalRevenue.toLocaleString()}` : "$0", icon: DollarSign },
+    { label: "Orders", value: globalStats ? globalStats.totalOrders.toLocaleString() : "0", icon: ShoppingBag },
     { label: "Customers", value: "892", icon: Users },
     { label: "Conversion", value: "3.24%", icon: TrendingUp },
   ];
