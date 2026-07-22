@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { Plus, Search, Edit3, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
@@ -52,6 +52,7 @@ function statusBadge(status: string) {
 }
 
 function Products() {
+  const { pathname } = useLocation();
   const isMobile = useIsMobile();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
@@ -68,6 +69,14 @@ function Products() {
 
   const totalPages = Math.ceil(filtered.length / perPage);
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+
+  if (pathname !== "/product") {
+    return (
+      <AdminLayout>
+        <Outlet />
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
