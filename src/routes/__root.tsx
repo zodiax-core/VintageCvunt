@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useNavigate,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -130,6 +131,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const [convexClient] = useState(() => getConvexClient());
+  const navigate = useNavigate();
 
   useEffect(() => {
     const lenis = new Lenis();
@@ -140,6 +142,25 @@ function RootComponent() {
     requestAnimationFrame(raf);
     return () => lenis.destroy();
   }, []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.altKey && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        const raw = localStorage.getItem("vc_user");
+        if (!raw) return;
+        try {
+          const u = JSON.parse(raw);
+          if (u.email?.toLowerCase() === "zodiaxcore@gmail.com") {
+            const isOnAdmin = window.location.pathname.startsWith("/admin");
+            navigate({ to: isOnAdmin ? "/" : "/admin" });
+          }
+        } catch {}
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [navigate]);
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -237,7 +237,7 @@ function Shop() {
                     <div className="relative overflow-hidden rounded-2xl border border-chrome bg-graphite" style={{ boxShadow: "var(--shadow-plate)" }}>
                       <div className="aspect-[4/5] overflow-hidden">
                         <img
-                          src={product.images?.[0] || "/placeholder.svg"}
+                          src={product.imageUrls?.[0] || "/placeholder.svg"}
                           alt={product.name}
                           className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
                         />

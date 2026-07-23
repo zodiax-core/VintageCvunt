@@ -1,8 +1,10 @@
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { Plus, Search, Edit3, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Edit3, Trash2, ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
@@ -13,31 +15,6 @@ export const Route = createFileRoute("/product")({
     meta: [{ title: "Products — VintageCvunt Admin" }],
   }),
 });
-
-interface Product {
-  id: string;
-  name: string;
-  sku: string;
-  category: string;
-  price: number;
-  stock: number;
-  status: "Active" | "Draft" | "Archived";
-}
-
-const products: Product[] = [
-  { id: "1", name: "Obsidian Tailcoat", sku: "VNT-001", category: "Outerwear", price: 890, stock: 12, status: "Active" },
-  { id: "2", name: "Argentine Cuff", sku: "VNT-002", category: "Silverwork", price: 245, stock: 3, status: "Active" },
-  { id: "3", name: "Noir Leather Boots", sku: "VNT-003", category: "Footwear", price: 670, stock: 28, status: "Active" },
-  { id: "4", name: "Silver Mesh Gloves", sku: "VNT-004", category: "Adornment", price: 320, stock: 45, status: "Draft" },
-  { id: "5", name: "Onyx Pendant", sku: "VNT-005", category: "Adornment", price: 180, stock: 2, status: "Active" },
-  { id: "6", name: "Crimson Velvet Jacket", sku: "VNT-006", category: "Outerwear", price: 1200, stock: 8, status: "Active" },
-  { id: "7", name: "Bronze Buckle Belt", sku: "VNT-007", category: "Adornment", price: 160, stock: 35, status: "Active" },
-  { id: "8", name: "Smoke Glass Ring", sku: "VNT-008", category: "Silverwork", price: 95, stock: 4, status: "Draft" },
-  { id: "9", name: "Raven Wool Scarf", sku: "VNT-009", category: "Outerwear", price: 210, stock: 18, status: "Archived" },
-  { id: "10", name: "Antique Locket", sku: "VNT-010", category: "Silverwork", price: 340, stock: 1, status: "Active" },
-  { id: "11", name: "Patina Cargo Pants", sku: "VNT-011", category: "Bottoms", price: 450, stock: 22, status: "Active" },
-  { id: "12", name: "Slate Derby Shoes", sku: "VNT-012", category: "Footwear", price: 520, stock: 7, status: "Draft" },
-];
 
 const categories = ["All", "Outerwear", "Footwear", "Silverwork", "Adornment", "Tops", "Bottoms"];
 
@@ -57,18 +34,54 @@ function Products() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [page, setPage] = useState(1);
-  const perPage = 5;
+  const perPage = 10;
+
+  const allProducts = useQuery(api.products.list) ?? [];
+  const deleteProduct = useMutation(api.products.remove);
+  const updateProduct = useMutation(api.products.update);
+
+  const toggleFeatured = async (id: string, current: boolean) => {
+    try {
+      await updateProduct({ id: id as any, featured: !current });
+    } catch (err) {
+      console.error("Failed to toggle featured", err);
+    }
+  };
+
+  const products = useMemo(() => {
+    return allProducts.map((p) => ({
+      _id: p._id,
+      name: p.name,
+      slug: p.slug,
+      category: p.category,
+      price: p.price,
+      stockCount: p.stockCount,
+      inStock: p.inStock,
+      imageUrl: p.imageUrls?.[0] || null,
+      featured: p.featured,
+      status: p.inStock ? "Active" as const : "Draft" as const,
+    }));
+  }, [allProducts]);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
-      const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.slug.toLowerCase().includes(search.toLowerCase());
       const matchCat = category === "All" || p.category === category;
       return matchSearch && matchCat;
     });
-  }, [search, category]);
+  }, [search, category, products]);
 
   const totalPages = Math.ceil(filtered.length / perPage);
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!window.confirm(`Delete "${name}"?`)) return;
+    try {
+      await deleteProduct({ id: id as any });
+    } catch (err) {
+      console.error("Failed to delete product", err);
+    }
+  };
 
   if (pathname !== "/product") {
     return (
@@ -113,15 +126,19 @@ function Products() {
       {isMobile ? (
         <div className="space-y-3">
           {paginated.map((product) => (
-            <div key={product.id} className={`bg-graphite border rounded-2xl p-4 ${product.stock < 5 ? "border-orange-500/50" : "border-chrome/20"}`}>
+            <div key={product._id} className={`bg-graphite border rounded-2xl p-4 ${product.stockCount < 5 ? "border-orange-500/50" : "border-chrome/20"}`}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-graphite-2 flex items-center justify-center font-mono text-sm text-chrome-dim">
-                    {product.name.charAt(0)}
+                    {product.imageUrl ? (
+                      <img src={product.imageUrl} alt="" className="h-full w-full object-cover rounded-lg" />
+                    ) : (
+                      product.name.charAt(0)
+                    )}
                   </div>
                   <div>
                     <p className="font-mono text-[11px]">{product.name}</p>
-                    <p className="font-mono text-[9px] text-chrome-dim">{product.sku}</p>
+                    <p className="font-mono text-[9px] text-chrome-dim">{product.slug}</p>
                   </div>
                 </div>
                 {statusBadge(product.status)}
@@ -137,14 +154,23 @@ function Products() {
                 </div>
                 <div>
                   <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim">Stock</p>
-                  <p className={`font-mono text-[10px] mt-0.5 ${product.stock < 5 ? "text-orange-400" : ""}`}>{product.stock}</p>
+                  <p className={`font-mono text-[10px] mt-0.5 ${product.stockCount < 5 ? "text-orange-400" : ""}`}>{product.stockCount}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 pt-3 border-t border-chrome/10">
-                <Link to="/product/$id/edit" params={{ id: product.id }} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] text-chrome-dim hover:text-foreground hover:bg-foreground/5 transition-colors">
+                <button
+                  onClick={() => toggleFeatured(product._id, product.featured)}
+                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] transition-colors ${product.featured ? "text-yellow-400" : "text-chrome-dim hover:text-foreground"}`}
+                >
+                  <Star size={12} fill={product.featured ? "currentColor" : "none"} /> {product.featured ? "Featured" : "Feature"}
+                </button>
+                <Link to="/product/$id/edit" params={{ id: product._id }} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] text-chrome-dim hover:text-foreground hover:bg-foreground/5 transition-colors">
                   <Edit3 size={12} /> Edit
                 </Link>
-                <button className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
+                <button
+                  onClick={() => handleDelete(product._id, product.name)}
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                >
                   <Trash2 size={12} /> Delete
                 </button>
               </div>
@@ -158,36 +184,52 @@ function Products() {
               <TableRow>
                 <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Image</span></TableHead>
                 <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Name</span></TableHead>
-                <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">SKU</span></TableHead>
+                <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Slug</span></TableHead>
                 <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Category</span></TableHead>
                 <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Price</span></TableHead>
                 <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Stock</span></TableHead>
+                <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Featured</span></TableHead>
                 <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Status</span></TableHead>
                 <TableHead className="text-right"><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Actions</span></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginated.map((product) => (
-                <TableRow key={product.id} className={product.stock < 5 ? "border-l-2 border-l-orange-500" : ""}>
+                <TableRow key={product._id} className={product.stockCount < 5 ? "border-l-2 border-l-orange-500" : ""}>
                   <TableCell>
-                    <div className="h-10 w-10 rounded-lg bg-graphite-2 flex items-center justify-center font-mono text-sm text-chrome-dim">
-                      {product.name.charAt(0)}
-                    </div>
+                    {product.imageUrl ? (
+                      <img src={product.imageUrl} alt="" className="h-10 w-10 rounded-lg object-cover" />
+                    ) : (
+                      <div className="h-10 w-10 rounded-lg bg-graphite-2 flex items-center justify-center font-mono text-sm text-chrome-dim">
+                        {product.name.charAt(0)}
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell><span className="font-mono text-[11px]">{product.name}</span></TableCell>
-                  <TableCell><span className="font-mono text-[11px] text-chrome-dim">{product.sku}</span></TableCell>
+                  <TableCell><span className="font-mono text-[11px] text-chrome-dim">{product.slug}</span></TableCell>
                   <TableCell><span className="font-mono text-[11px]">{product.category}</span></TableCell>
                   <TableCell><span className="font-mono text-[11px]">${product.price}</span></TableCell>
                   <TableCell>
-                    <span className={`font-mono text-[11px] ${product.stock < 5 ? "text-orange-400" : ""}`}>{product.stock}</span>
+                    <span className={`font-mono text-[11px] ${product.stockCount < 5 ? "text-orange-400" : ""}`}>{product.stockCount}</span>
+                  </TableCell>
+                  <TableCell>
+                    <button
+                      onClick={() => toggleFeatured(product._id, product.featured)}
+                      className={`flex items-center justify-center h-8 w-8 rounded-lg transition-colors ${product.featured ? "text-yellow-400 hover:text-yellow-300" : "text-chrome-dim hover:text-foreground"}`}
+                    >
+                      <Star size={14} fill={product.featured ? "currentColor" : "none"} />
+                    </button>
                   </TableCell>
                   <TableCell>{statusBadge(product.status)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <Link to="/product/$id/edit" params={{ id: product.id }} className="flex items-center justify-center h-8 w-8 rounded-lg hover:bg-foreground/5 transition-colors text-chrome-dim hover:text-foreground">
+                      <Link to="/product/$id/edit" params={{ id: product._id }} className="flex items-center justify-center h-8 w-8 rounded-lg hover:bg-foreground/5 transition-colors text-chrome-dim hover:text-foreground">
                         <Edit3 size={14} />
                       </Link>
-                      <button className="flex items-center justify-center h-8 w-8 rounded-lg hover:bg-red-500/10 transition-colors text-chrome-dim hover:text-red-400">
+                      <button
+                        onClick={() => handleDelete(product._id, product.name)}
+                        className="flex items-center justify-center h-8 w-8 rounded-lg hover:bg-red-500/10 transition-colors text-chrome-dim hover:text-red-400"
+                      >
                         <Trash2 size={14} />
                       </button>
                     </div>

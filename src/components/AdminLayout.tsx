@@ -18,6 +18,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { to: "/order", label: "Orders", icon: ShoppingBag },
   { to: "/product", label: "Products", icon: Package },
+  { to: "/collection", label: "Collections", icon: FileText },
   { to: "/customer", label: "Customers", icon: Users },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/message", label: "Messages", icon: MessageSquare },

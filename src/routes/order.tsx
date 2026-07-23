@@ -138,16 +138,16 @@ function Orders() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => generateOrdersPDF(filtered)}
-              className="btn-chrome btn-chrome-inner"
+              className="btn-chrome btn-chrome-inner btn-chrome-sm"
             >
-              <FileText size={14} />
+              <FileText size={12} />
               <span className="btn-label">Download PDF</span>
             </button>
             <button
               onClick={() => setShowMobileFilters(!showMobileFilters)}
-              className="md:hidden btn-chrome btn-chrome-inner"
+              className="md:hidden btn-chrome btn-chrome-inner btn-chrome-sm"
             >
-              <SlidersHorizontal size={14} />
+              <SlidersHorizontal size={12} />
               <span className="btn-label">{showMobileFilters ? "Hide Filters" : "Show Filters"}</span>
             </button>
           </div>
@@ -282,9 +282,9 @@ function Orders() {
                 <Link
                   to="/order/$id"
                   params={{ id: o._id }}
-                  className="btn-chrome btn-chrome-inner p-2 rounded-lg text-xs"
+                  className="btn-chrome btn-chrome-inner btn-chrome-sm"
                 >
-                  <Eye className="h-3.5 w-3.5 mr-1 inline" /> View
+                  <Eye className="h-3 w-3" /> View
                 </Link>
 
               </div>

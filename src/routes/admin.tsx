@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import {
@@ -16,6 +16,16 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/admin")({
+  beforeLoad: () => {
+    const raw = localStorage.getItem("vc_user");
+    if (!raw) throw notFound();
+    try {
+      const user = JSON.parse(raw);
+      if (user.email?.toLowerCase() !== "zodiaxcore@gmail.com") throw notFound();
+    } catch {
+      throw notFound();
+    }
+  },
   component: AdminDashboard,
   head: () => ({
     meta: [{ title: "Dashboard — VintageCvunt Admin" }],
@@ -55,6 +65,7 @@ function statusBadge(status: string) {
 function AdminDashboard() {
   const [range, setRange] = useState<Range>("week");
   const allOrders = useQuery(api.orders.list) ?? [];
+  const allProducts = useQuery(api.products.list) ?? [];
 
   const stats = useMemo(() => {
     const totalRevenue = allOrders.reduce((sum, o) => sum + o.total, 0);
@@ -103,7 +114,7 @@ function AdminDashboard() {
     { label: "Orders", value: stats ? stats.totalOrders.toLocaleString() : "0", trend: "+8.1%", up: true, icon: ShoppingBag },
     { label: "Pending Orders", value: stats ? stats.pendingOrders.toLocaleString() : "0", trend: "+5.7%", up: true, icon: Package },
     { label: "Avg Order Value", value: stats ? `PKR ${Math.round(stats.averageOrderValue).toLocaleString("en-PK")}` : "PKR 0", trend: "-2.1%", up: false, icon: TrendingUp },
-    { label: "Products", value: "156", trend: "+3.2%", up: true, icon: Users },
+    { label: "Products", value: allProducts.length.toLocaleString(), trend: "+3.2%", up: true, icon: Users },
     { label: "Conversion Rate", value: "3.24%", trend: "+0.8%", up: true, icon: Percent },
   ];
 

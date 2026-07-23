@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import butterflyAsset from "@/assets/butterfly-img.png";
 import butterflyWebp from "@/assets/butterfly-img.webp";
 import sculptureAsset from "@/assets/sculpture.png";
@@ -8,15 +10,6 @@ import sculptureWebp from "@/assets/sculpture.webp";
 import editorial1 from "@/assets/editorial-1.jpg";
 import editorial1Webp from "@/assets/editorial-1.webp";
 import editorial2 from "@/assets/editorial-2.jpg";
-import editorial2Webp from "@/assets/editorial-2.webp";
-import productRing from "@/assets/product-ring.jpg";
-import productRingWebp from "@/assets/product-ring.webp";
-import productJacket from "@/assets/product-jacket.jpg";
-import productJacketWebp from "@/assets/product-jacket.webp";
-import productChain from "@/assets/product-chain.jpg";
-import productChainWebp from "@/assets/product-chain.webp";
-import productBoots from "@/assets/product-boots.jpg";
-import productBootsWebp from "@/assets/product-boots.webp";
 import { ChromeCursor } from "@/components/ChromeCursor";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { SiteNav } from "@/components/SiteNav";
@@ -37,6 +30,7 @@ export const Route = createFileRoute("/")({
 });
 
 const EASE = [0.16, 1, 0.3, 1] as const;
+const priceLabel = (p: number) => "PKR " + p.toLocaleString("en-PK");
 
 function Home() {
   return (
@@ -61,16 +55,13 @@ function Hero() {
   const heroY = useTransform(scrollYProgress, [0, 0.2], [0, -80]);
   return (
     <section className="relative min-h-screen w-full overflow-hidden pt-32">
-      {/* Architectural grid */}
       <div className="pointer-events-none absolute inset-0 opacity-[0.06]" style={{
         backgroundImage: "linear-gradient(to right, oklch(0.9 0 0 / 0.4) 1px, transparent 1px), linear-gradient(to bottom, oklch(0.9 0 0 / 0.4) 1px, transparent 1px)",
         backgroundSize: "88px 88px",
       }} />
-      {/* Corner tribal SVG ornaments */}
       <CornerOrnament className="absolute top-24 left-6 h-24 w-24 opacity-40" />
       <CornerOrnament className="absolute top-24 right-6 h-24 w-24 opacity-40 -scale-x-100" />
 
-      {/* Butterfly — one-time intro reveal, then still */}
       <motion.div
         style={{ y: heroY }}
         initial={{ scale: 0.6, clipPath: "inset(50% 0 50% 0)" }}
@@ -88,11 +79,9 @@ function Hero() {
           className="h-[55vh] sm:h-[52vh] md:h-[62vh] w-full object-contain max-w-none select-none"
           style={{ filter: "drop-shadow(0 25px 55px oklch(0.7 0.008 240 / 0.25))" }}
           draggable={false}
-         
         />
       </motion.div>
 
-      {/* Vertical side rails */}
       <div className="pointer-events-none absolute left-6 top-40 bottom-16 hidden md:flex flex-col items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">
         <span className="[writing-mode:vertical-rl] rotate-180">N 24°51′ · E 67°00′</span>
         <div className="h-40 w-px bg-brushed opacity-60" />
@@ -104,7 +93,6 @@ function Hero() {
         <span className="[writing-mode:vertical-rl]">Objects / Chrome / Bone</span>
       </div>
 
-      {/* Copy */}
       <div className="relative z-10 flex flex-col md:flex-row min-h-[76vh] w-full items-end justify-between gap-10 px-8 md:px-16 lg:px-24 pb-16">
         <div className="max-w-3xl w-full md:w-auto text-center md:text-left">
           <motion.p
@@ -135,7 +123,6 @@ function Hero() {
         </div>
       </div>
 
-      {/* Bottom ticker */}
       <div className="relative z-10 border-y border-chrome bg-background/60 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-8 px-6 py-3 font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">
           <span>001 / 062 objects</span>
@@ -202,6 +189,35 @@ function Marquee() {
 
 /* ---------------- FEATURED ---------------- */
 function Featured() {
+  const featured = useQuery(api.products.getFeatured) ?? [];
+
+  if (featured.length === 0) {
+    return (
+      <section id="collection" className="relative border-b border-chrome py-28 md:py-40">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mb-16 grid grid-cols-12 items-end gap-6">
+            <div className="col-span-12 md:col-span-6">
+              <SectionTag>§ Featured · Chapter I</SectionTag>
+              <h2 className="mt-4 font-display text-4xl sm:text-5xl md:text-8xl leading-[0.9] tracking-tight">
+                <span className="italic text-chrome-h">The First</span><br />
+                Seventeen Objects
+              </h2>
+            </div>
+          </div>
+          <div className="divider-chrome mb-16" />
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <p className="font-display text-3xl text-chrome-dim italic">No featured products</p>
+            <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.24em] text-chrome-dim">Mark products as featured in the admin panel</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const items = featured.slice(0, 3);
+  const first = items[0];
+  const rest = items.slice(1);
+
   return (
     <section id="collection" className="relative border-b border-chrome py-28 md:py-40">
       <div className="mx-auto max-w-7xl px-6">
@@ -221,15 +237,26 @@ function Featured() {
         </div>
         <div className="divider-chrome mb-16" />
         <div className="grid grid-cols-12 gap-6">
-          <Link to="/products/$slug" params={{ slug: "meridian-coat" }} className="col-span-12 md:col-span-7 md:row-span-2">
-            <ProductCase span="" src={editorial1} webp={editorial1Webp} number="No. 001" name="Meridian Coat" price="PKR 1,284,000" tall priority={true} />
+          <Link to="/products/$slug" params={{ slug: first.slug }} className="col-span-12 md:col-span-7 md:row-span-2">
+            <ProductCase
+              imageUrl={first.imageUrls?.[0] || "/placeholder.svg"}
+              number="No. 001"
+              name={first.name}
+              price={priceLabel(first.price)}
+              tall
+              priority
+            />
           </Link>
-          <Link to="/products/$slug" params={{ slug: "thorn-signet-silver" }} className="col-span-12 md:col-span-5">
-            <ProductCase span="" src={productRing} webp={productRingWebp} number="No. 007" name="Thorn Signet, Silver" price="PKR 267,000" />
-          </Link>
-          <Link to="/products/$slug" params={{ slug: "papillon-chain" }} className="col-span-12 md:col-span-5">
-            <ProductCase span="" src={productChain} webp={productChainWebp} number="No. 012" name="Papillon Chain" price="PKR 402,000" />
-          </Link>
+          {rest.map((p) => (
+            <Link key={p._id} to="/products/$slug" params={{ slug: p.slug }} className="col-span-12 md:col-span-5">
+              <ProductCase
+                imageUrl={p.imageUrls?.[0] || "/placeholder.svg"}
+                number=""
+                name={p.name}
+                price={priceLabel(p.price)}
+              />
+            </Link>
+          ))}
         </div>
       </div>
     </section>
@@ -240,7 +267,7 @@ function SectionTag({ children }: { children: React.ReactNode }) {
   return <span className="font-mono text-[10px] uppercase tracking-[0.32em] text-chrome-dim">{children}</span>;
 }
 
-function ProductCase({ span, src, webp, number, name, price, tall, priority }: { span: string; src: string; webp: string; number: string; name: string; price: string; tall?: boolean, priority?: boolean }) {
+function ProductCase({ imageUrl, number, name, price, tall, priority }: { imageUrl: string; number: string; name: string; price: string; tall?: boolean; priority?: boolean }) {
   return (
     <motion.div
       data-cursor="hover"
@@ -248,19 +275,22 @@ function ProductCase({ span, src, webp, number, name, price, tall, priority }: {
       whileInView={{ clipPath: "inset(0% 0 0 0)" }}
       viewport={{ once: true, margin: "0px" }}
       transition={{ duration: 1.3, ease: EASE }}
-      className={`${span} group relative overflow-hidden rounded-3xl border border-chrome bg-graphite`}
+      className="group relative overflow-hidden rounded-3xl border border-chrome bg-graphite"
       style={{ boxShadow: "var(--shadow-plate)" }}
     >
       <div className={`relative overflow-hidden ${tall ? "aspect-[3/4] md:aspect-auto md:h-[820px]" : "aspect-[3/4] md:aspect-[4/5]"}`}>
-        <OptimizedImage webp={webp} fallback={src} alt={name} className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 group-hover:rotate-[1deg]" />
+        <img
+          src={imageUrl}
+          alt={name}
+          className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 group-hover:rotate-[1deg]"
+        />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-background/30" />
-        <span className="absolute left-5 top-5 font-mono text-[10px] uppercase tracking-[0.3em] text-chrome">{number}</span>
+        {number && <span className="absolute left-5 top-5 font-mono text-[10px] uppercase tracking-[0.3em] text-chrome">{number}</span>}
         <span className="absolute right-5 top-5 h-6 w-6 rounded-full border border-chrome bg-graphite/60 backdrop-blur grid place-items-center text-[10px]">✦</span>
       </div>
       <div className="px-6 py-5">
         <p className="font-mono text-sm tracking-[0.14em] text-chrome">{price}</p>
       </div>
-      {/* draw-in border */}
     </motion.div>
   );
 }
@@ -274,14 +304,13 @@ function SculptureSection() {
   }, []);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const x = useSpring(useTransform(scrollYProgress, [0, 1], ["-30%", "40%"]), { stiffness: 60, damping: 20 });
-  const scaleRange = isDesktop ? [1.4, 2.4, 3.2] : [1.1, 1.55, 1.9];
+  const scaleRange = isDesktop ? [1.2, 3.2, 3.2] : [1.1, 1.55, 1.9];
   const scale = useSpring(useTransform(scrollYProgress, [0, 0.5, 1], scaleRange), { stiffness: 60, damping: 22 });
   const rot = useTransform(scrollYProgress, [0, 1], [-6, 4]);
   const wordX = useTransform(scrollYProgress, [0, 1], ["20%", "-40%"]);
 
   return (
     <section ref={ref} className="relative overflow-hidden border-b border-chrome bg-background py-20 md:py-56 mt-20 md:mt-0">
-      {/* Giant chrome word + subtitle floating opposite direction */}
       <motion.div style={{ x: wordX }} className="pointer-events-none absolute inset-x-0 top-[55%] md:top-1/2 -translate-y-1/2 whitespace-nowrap text-center">
         <div className="font-display italic text-[22vw] leading-none text-chrome-h opacity-[0.14]">
           Ars · Chroma · Corpus
@@ -310,7 +339,6 @@ function SculptureSection() {
               <img src={sculptureAsset} alt="Chrome sculpture" fetchPriority="high" className="h-full w-full object-cover md:object-contain" draggable={false} />
             </picture>
           </motion.div>
-          {/* Editorial captions */}
           <div className="absolute bottom-6 left-0 max-w-xs font-mono text-[10px] uppercase tracking-[0.28em] text-chrome-dim">
             <p>Fig. 04 — Argenta<br />sculpture in motion</p>
           </div>
@@ -325,33 +353,40 @@ function SculptureSection() {
 
 /* ---------------- BEST SELLERS ---------------- */
 function BestSellers() {
-  const items: { src: string; webp: string; name: string; num: string; price: string; slug: string }[] = [
-    { src: productJacket, webp: productJacketWebp, name: "Reliquary Rider", num: "No. 021", price: "PKR 1,107,000", slug: "reliquary-rider" },
-    { src: productBoots, webp: productBootsWebp, name: "Ossuary Boot", num: "No. 034", price: "PKR 462,000", slug: "ossuary-boot" },
-    { src: productRing, webp: productRingWebp, name: "Thorn Signet", num: "No. 007", price: "PKR 267,000", slug: "thorn-signet-silver" },
-    { src: productChain, webp: productChainWebp, name: "Papillon Chain", num: "No. 012", price: "PKR 402,000", slug: "papillon-chain" },
-  ];
+  const allProducts = useQuery(api.products.list) ?? [];
+
   return (
     <section className="relative border-b border-chrome py-28 md:py-40">
       <div className="mx-auto max-w-7xl px-6">
         <div className="mb-14 flex flex-wrap items-end justify-between gap-6">
           <h2 className="font-display text-4xl sm:text-5xl md:text-7xl leading-none">Most Coveted</h2>
-          <a href="#" className="font-mono text-[11px] uppercase tracking-[0.28em] text-chrome-dim hover:text-foreground transition">View all 62 objects ↗</a>
+          <Link to="/shop" className="font-mono text-[11px] uppercase tracking-[0.28em] text-chrome-dim hover:text-foreground transition">View all objects ↗</Link>
         </div>
         <div className="divider-chrome mb-14" />
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-          {items.map((it, i) => (
-            <Link key={i} to="/products/$slug" params={{ slug: it.slug }}>
-              <SmallCase {...it} />
-            </Link>
-          ))}
-        </div>
+        {allProducts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <p className="font-display text-3xl text-chrome-dim italic">No products added</p>
+            <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.24em] text-chrome-dim">Add products in the admin panel</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+            {allProducts.slice(0, 4).map((p) => (
+              <Link key={p._id} to="/products/$slug" params={{ slug: p.slug }}>
+                <SmallCase
+                  imageUrl={p.imageUrls?.[0] || "/placeholder.svg"}
+                  name={p.name}
+                  price={priceLabel(p.price)}
+                />
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
 }
 
-function SmallCase({ src, webp, name, num, price }: { src: string; webp: string; name: string; num: string; price: string }) {
+function SmallCase({ imageUrl, name, price }: { imageUrl: string; name: string; price: string }) {
   return (
     <motion.div
       data-cursor="hover"
@@ -363,9 +398,12 @@ function SmallCase({ src, webp, name, num, price }: { src: string; webp: string;
     >
       <div className="relative overflow-hidden rounded-2xl border border-chrome bg-graphite" style={{ boxShadow: "var(--shadow-plate)" }}>
         <div className="aspect-[4/5] overflow-hidden">
-          <OptimizedImage webp={webp} fallback={src} alt={name} className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06] group-hover:rotate-[1deg]" />
+          <img
+            src={imageUrl}
+            alt={name}
+            className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06] group-hover:rotate-[1deg]"
+          />
         </div>
-        <span className="absolute left-3 top-3 rounded-full border border-chrome bg-background/70 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.22em]">{num}</span>
       </div>
       <div className="mt-4">
         <p className="font-mono text-xs tracking-[0.14em] text-chrome">{price}</p>
@@ -374,14 +412,34 @@ function SmallCase({ src, webp, name, num, price }: { src: string; webp: string;
   );
 }
 
-/* ---------------- CATEGORIES ---------------- */
+/* ---------------- COLLECTIONS / CATEGORIES ---------------- */
 function Categories() {
-  const cats = [
-    { name: "Outerwear", count: "18 pieces", img: editorial1, webp: editorial1Webp },
-    { name: "Silverwork", count: "22 pieces", img: productRing, webp: productRingWebp },
-    { name: "Footwear", count: "9 pieces", img: productBoots, webp: productBootsWebp },
-    { name: "Adornment", count: "13 pieces", img: productChain, webp: productChainWebp },
-  ];
+  const collections = useQuery(api.collections.list) ?? [];
+  const allProducts = useQuery(api.products.list) ?? [];
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of allProducts) {
+      counts[p.category] = (counts[p.category] || 0) + 1;
+    }
+    return counts;
+  }, [allProducts]);
+
+  const cats = useMemo(() => {
+    if (collections.length > 0) {
+      return collections.filter((c) => c.isActive).map((c) => ({
+        name: c.name,
+        count: `${c.productIds.length} piece${c.productIds.length !== 1 ? "s" : ""}`,
+        link: "/shop",
+      }));
+    }
+    return Object.entries(categoryCounts).map(([name, count]) => ({
+      name,
+      count: `${count} piece${count !== 1 ? "s" : ""}`,
+      link: "/shop",
+    }));
+  }, [collections, categoryCounts]);
+
   return (
     <section id="archive" className="relative border-b border-chrome py-28 md:py-40">
       <div className="mx-auto max-w-7xl px-6">
@@ -393,83 +451,28 @@ function Categories() {
           <p className="max-w-sm text-sm text-chrome-dim">Enter each atelier — outerwear, silverwork, footwear and adornment — assembled by dedicated master craftsmen.</p>
         </div>
         <div className="divider-chrome mb-14" />
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {cats.map((c, i) => (
-            <a key={i} href="#" data-cursor="hover" className="group relative block overflow-hidden rounded-3xl border border-chrome">
-              <div className="aspect-[3/4] overflow-hidden">
-                <OptimizedImage webp={c.webp} fallback={c.img} alt={c.name} className="h-full w-full object-cover transition-transform duration-[1400ms] group-hover:scale-110" />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-6">
-                <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-chrome-dim">{c.count}</p>
-                <h3 className="mt-1 font-display text-3xl">{c.name}</h3>
-                <div className="mt-4 h-px w-0 bg-chrome transition-all duration-700 group-hover:w-full" />
-              </div>
-            </a>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------------- NEW ARRIVALS ---------------- */
-function NewArrivals() {
-  const rows = [
-    { num: "046", name: "Argent Cross Pendant", cat: "Adornment", price: "PKR 186,000" },
-    { num: "047", name: "Basilica Trench, Onyx", cat: "Outerwear", price: "PKR 1,536,000" },
-    { num: "048", name: "Vesper Cuff, Brushed", cat: "Silverwork", price: "PKR 234,000" },
-    { num: "049", name: "Nave Boot, High", cat: "Footwear", price: "PKR 564,000" },
-    { num: "050", name: "Rosary of Iron", cat: "Adornment", price: "PKR 282,000" },
-  ];
-  return (
-    <section className="relative border-b border-chrome py-28 md:py-40">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <SectionTag>§ New Arrivals · Week 42</SectionTag>
-            <h2 className="mt-4 font-display text-4xl sm:text-5xl md:text-7xl leading-none italic">Just Cast</h2>
+        {cats.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <p className="font-display text-3xl text-chrome-dim italic">No collections yet</p>
+            <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.24em] text-chrome-dim">Create collections in the admin panel</p>
           </div>
-          <button className="btn-chrome btn-chrome-inner"><span className="btn-label">Enter Archive</span></button>
-        </div>
-        <div className="divider-chrome" />
-        <ul>
-          {rows.map((r, i) => (
-            <li key={i}>
-              <a href="#" data-cursor="hover" className="group grid grid-cols-12 items-center gap-4 py-6 md:py-8 border-b border-chrome transition-colors hover:bg-graphite">
-                <span className="col-span-2 md:col-span-1 font-mono text-xs text-chrome-dim">No. {r.num}</span>
-                <span className="col-span-6 md:col-span-5 font-display text-2xl md:text-4xl transition-transform duration-700 group-hover:translate-x-3">{r.name}</span>
-                <span className="col-span-4 md:col-span-4 font-mono text-[11px] uppercase tracking-[0.24em] text-chrome-dim">{r.cat}</span>
-                <span className="col-span-12 md:col-span-2 md:text-right font-mono text-sm text-chrome">{r.price}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  );
-}
-
-/* ---------------- INSTAGRAM GRID ---------------- */
-function InstagramGrid() {
-  const imgs = [editorial1, productChain, editorial2, productRing, productJacket, productBoots];
-  return (
-    <section id="journal" className="relative border-b border-chrome py-28 md:py-40">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <SectionTag>§ Journal · @vintagecvunt</SectionTag>
-            <h2 className="mt-4 font-display text-4xl sm:text-5xl md:text-7xl leading-none">From the <span className="italic">Corridors</span></h2>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {cats.map((c, i) => (
+              <Link key={i} to={c.link} data-cursor="hover" className="group relative block overflow-hidden rounded-3xl border border-chrome">
+                <div className="aspect-[3/4] overflow-hidden bg-graphite-2 flex items-center justify-center">
+                  <div className="font-display text-6xl text-chrome-dim/20 italic">{c.name.charAt(0)}</div>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-6">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-chrome-dim">{c.count}</p>
+                  <h3 className="mt-1 font-display text-3xl">{c.name}</h3>
+                  <div className="mt-4 h-px w-0 bg-chrome transition-all duration-700 group-hover:w-full" />
+                </div>
+              </Link>
+            ))}
           </div>
-          <a href="#" className="font-mono text-[11px] uppercase tracking-[0.28em] text-chrome-dim hover:text-foreground">Follow ↗</a>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-          {imgs.map((img, i) => (
-            <a key={i} href="#" data-cursor="hover" className="group relative aspect-square overflow-hidden rounded-2xl border border-chrome">
-              <img src={img} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-[1400ms] group-hover:scale-110" />
-            </a>
-          ))}
-        </div>
+        )}
       </div>
     </section>
   );
@@ -503,5 +506,3 @@ function Newsletter() {
     </section>
   );
 }
-
-

@@ -1,47 +1,74 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 
+async function resolveImages(ctx: any, images: string[]): Promise<string[]> {
+  const resolved: string[] = [];
+  for (const id of images) {
+    if (!id) continue;
+    const url = await ctx.storage.getUrl(id as any);
+    resolved.push(url ?? id);
+  }
+  return resolved;
+}
+
+async function enrichProduct(ctx: any, product: any) {
+  if (!product) return null;
+  return {
+    ...product,
+    imageUrls: await resolveImages(ctx, product.images ?? []),
+  };
+}
+
+async function enrichProducts(ctx: any, products: any[]) {
+  return Promise.all(products.map((p) => enrichProduct(ctx, p)));
+}
+
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("products").order("desc").collect();
+    const products = await ctx.db.query("products").order("desc").collect();
+    return await enrichProducts(ctx, products);
   },
 });
 
 export const getBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const product = await ctx.db
       .query("products")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .first();
+    return await enrichProduct(ctx, product);
   },
 });
 
 export const getById = query({
   args: { id: v.id("products") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const product = await ctx.db.get(args.id);
+    return await enrichProduct(ctx, product);
   },
 });
 
 export const getFeatured = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db
+    const products = await ctx.db
       .query("products")
       .withIndex("by_featured", (q) => q.eq("featured", true))
       .collect();
+    return await enrichProducts(ctx, products);
   },
 });
 
 export const getByCategory = query({
   args: { category: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const products = await ctx.db
       .query("products")
       .withIndex("by_category", (q) => q.eq("category", args.category))
       .collect();
+    return await enrichProducts(ctx, products);
   },
 });
 
@@ -50,13 +77,14 @@ export const search = query({
   handler: async (ctx, args) => {
     const products = await ctx.db.query("products").collect();
     const q = args.query.toLowerCase();
-    return products.filter(
+    const filtered = products.filter(
       (p) =>
         p.name.toLowerCase().includes(q) ||
         p.description.toLowerCase().includes(q) ||
         p.category.toLowerCase().includes(q) ||
         p.tags.some((t) => t.toLowerCase().includes(q))
     );
+    return await enrichProducts(ctx, filtered);
   },
 });
 
@@ -125,5 +153,12 @@ export const remove = mutation({
 export const generateUploadUrl = mutation({
   handler: async (ctx) => {
     return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const getImageUrl = query({
+  args: { storageId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.storage.getUrl(args.storageId as any);
   },
 });

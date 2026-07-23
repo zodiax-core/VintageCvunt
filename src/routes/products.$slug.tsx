@@ -32,12 +32,6 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 
 const priceLabel = (p: number) => "PKR " + p.toLocaleString("en-PK");
 
-const storageUrl = (storageId: string) => {
-  if (!storageId) return "/placeholder.svg";
-  const base = import.meta.env.VITE_CONVEX_URL;
-  return `${base}/api/storage/${storageId}`;
-};
-
 function ProductPage() {
   const { slug } = Route.useParams();
   const product = useQuery(api.products.getBySlug, { slug }) ?? null;
@@ -113,7 +107,7 @@ function ProductPage() {
                 style={{ boxShadow: "var(--shadow-plate)" }}
               >
                 <div className="aspect-[4/5]">
-                   <img src={storageUrl(product.images?.[0] ?? "")} alt={product.name} className="h-full w-full object-cover" />
+                   <img src={product.imageUrls?.[0] || "/placeholder.svg"} alt={product.name} className="h-full w-full object-cover" />
                 </div>
                 <button className="absolute right-3 md:right-4 top-3 md:top-4 h-8 w-8 md:h-9 md:w-9 rounded-full border border-chrome bg-graphite/60 backdrop-blur grid place-items-center text-sm transition-colors hover:bg-chrome hover:text-background">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
@@ -145,8 +139,8 @@ function ProductPage() {
                       id: product._id,
                       name: product.name,
                       slug: product.slug,
-                      src: storageUrl(product.images?.[0] ?? ""),
-                      webp: storageUrl(product.images?.[0] ?? ""),
+                      src: product.imageUrls?.[0] || "/placeholder.svg",
+                      webp: product.imageUrls?.[0] || "/placeholder.svg",
                       price: product.price,
                     });
                     setAddedToCart(true);
@@ -361,7 +355,7 @@ function ProductPage() {
 }
 
 function RelatedProductCard({ product, index }: { product: any; index: number }) {
-  const imgUrl = storageUrl(product.images?.[0] ?? "");
+  const imgUrl = product.imageUrls?.[0] || "/placeholder.svg";
   return (
     <Link
       to="/products/$slug"

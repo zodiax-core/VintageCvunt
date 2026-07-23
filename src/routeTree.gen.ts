@@ -16,6 +16,7 @@ import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as CollectionRouteImport } from './routes/collection'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ContentRouteImport } from './routes/content'
 import { Route as CouponRouteImport } from './routes/coupon'
@@ -71,6 +72,11 @@ const CartRoute = CartRouteImport.update({
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CollectionRoute = CollectionRouteImport.update({
+  id: '/collection',
+  path: '/collection',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/collection': typeof CollectionRoute
   '/contact': typeof ContactRoute
   '/content': typeof ContentRoute
   '/coupon': typeof CouponRoute
@@ -217,6 +224,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/collection': typeof CollectionRoute
   '/contact': typeof ContactRoute
   '/content': typeof ContentRoute
   '/coupon': typeof CouponRoute
@@ -248,6 +256,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/collection': typeof CollectionRoute
   '/contact': typeof ContactRoute
   '/content': typeof ContentRoute
   '/coupon': typeof CouponRoute
@@ -280,6 +289,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cart'
     | '/checkout'
+    | '/collection'
     | '/contact'
     | '/content'
     | '/coupon'
@@ -310,6 +320,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cart'
     | '/checkout'
+    | '/collection'
     | '/contact'
     | '/content'
     | '/coupon'
@@ -340,6 +351,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cart'
     | '/checkout'
+    | '/collection'
     | '/contact'
     | '/content'
     | '/coupon'
@@ -371,6 +383,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
+  CollectionRoute: typeof CollectionRoute
   ContactRoute: typeof ContactRoute
   ContentRoute: typeof ContentRoute
   CouponRoute: typeof CouponRoute
@@ -439,6 +452,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout'
       fullPath: '/checkout'
       preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/collection': {
+      id: '/collection'
+      path: '/collection'
+      fullPath: '/collection'
+      preLoaderRoute: typeof CollectionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -634,6 +654,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
+  CollectionRoute: CollectionRoute,
   ContactRoute: ContactRoute,
   ContentRoute: ContentRoute,
   CouponRoute: CouponRoute,

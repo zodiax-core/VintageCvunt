@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef } from "react";
 import { Upload, Save } from "lucide-react";
-import { AdminLayout } from "@/components/AdminLayout";
+import { toWebP } from "@/lib/image-utils";
 import { api } from "../../convex/_generated/api";
 import { useMutation } from "convex/react";
 
@@ -63,9 +63,12 @@ function AddProduct() {
     try {
       let images: string[] = [];
       if (imageFile) {
+        const webpFile = await toWebP(imageFile);
         const uploadUrl = await generateUploadUrl();
-        const result = await fetch(uploadUrl, { method: "POST", body: imageFile });
+        const result = await fetch(uploadUrl, { method: "POST", body: webpFile });
+        if (!result.ok) throw new Error(`Upload failed: ${result.status}`);
         const { storageId } = await result.json();
+        if (!storageId) throw new Error("No storageId in upload response");
         images = [storageId];
       }
       await createProduct({
@@ -97,188 +100,188 @@ function AddProduct() {
   const labelClass = "block font-mono text-[10px] uppercase tracking-[0.28em] text-chrome-dim mb-1.5";
 
   return (
-    <AdminLayout>
-      <div className="mb-6 flex flex-col gap-1">
-        <h1 className="text-xl md:text-2xl font-display">Add Product</h1>
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Create a new product listing</p>
-      </div>
+    <>
+    <div className="mb-6 flex flex-col gap-1">
+      <h1 className="text-xl md:text-2xl font-display">Add Product</h1>
+      <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Create a new product listing</p>
+    </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-5">
-          <div className="bg-graphite border border-chrome/20 rounded-2xl p-6 space-y-5">
-            <div>
-              <label className={labelClass}>Product Name <span className="text-red-400">*</span></label>
-              <input
-                value={form.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                placeholder="e.g. Obsidian Tailcoat"
-                className={errors.name ? inputErrorClass : inputClass}
-              />
-              {errors.name && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.name}</p>}
-            </div>
-            <div>
-              <label className={labelClass}>Slug</label>
-              <input
-                value={form.slug}
-                onChange={(e) => handleChange("slug", e.target.value)}
-                placeholder="auto-generated"
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Category <span className="text-red-400">*</span></label>
-              <select
-                value={form.category}
-                onChange={(e) => handleChange("category", e.target.value)}
-                className={errors.category ? inputErrorClass : inputClass}
-              >
-                <option value="">Select category</option>
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-              {errors.category && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.category}</p>}
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>Price ($) <span className="text-red-400">*</span></label>
-                <input
-                  value={form.price}
-                  onChange={(e) => handleChange("price", e.target.value)}
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  className={errors.price ? inputErrorClass : inputClass}
-                />
-                {errors.price && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.price}</p>}
-              </div>
-              <div>
-                <label className={labelClass}>Compare At Price ($)</label>
-                <input
-                  value={form.comparePrice}
-                  onChange={(e) => handleChange("comparePrice", e.target.value)}
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  className={inputClass}
-                />
-              </div>
-            </div>
-            <div>
-              <label className={labelClass}>Description</label>
-              <textarea
-                value={form.description}
-                onChange={(e) => handleChange("description", e.target.value)}
-                placeholder="Product description..."
-                className={`${inputClass} min-h-[120px] resize-none`}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Details <span className="text-chrome-dim/50 font-normal normal-case">(one per line)</span></label>
-              <textarea
-                value={form.details}
-                onChange={(e) => handleChange("details", e.target.value)}
-                placeholder="Single-panel bonded leather construction&#10;Full-length centre-back seam&#10;Four concealed snap pockets"
-                className={`${inputClass} min-h-[120px] resize-none`}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Materials <span className="text-chrome-dim/50 font-normal normal-case">(one per line)</span></label>
-              <textarea
-                value={form.materials}
-                onChange={(e) => handleChange("materials", e.target.value)}
-                placeholder="Bonded chrome leather&#10;Horn buttons"
-                className={`${inputClass} min-h-[80px] resize-none`}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Dimensions</label>
-              <input
-                value={form.dimensions}
-                onChange={(e) => handleChange("dimensions", e.target.value)}
-                placeholder="e.g. Length: 142cm · Chest: 112cm"
-                className={inputClass}
-              />
-            </div>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-2 space-y-5">
+        <div className="bg-graphite border border-chrome/20 rounded-2xl p-6 space-y-5">
+          <div>
+            <label className={labelClass}>Product Name <span className="text-red-400">*</span></label>
+            <input
+              value={form.name}
+              onChange={(e) => handleChange("name", e.target.value)}
+              placeholder="e.g. Obsidian Tailcoat"
+              className={errors.name ? inputErrorClass : inputClass}
+            />
+            {errors.name && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.name}</p>}
           </div>
-        </div>
-
-        <div className="space-y-5">
-          <div className="bg-graphite border border-chrome/20 rounded-2xl p-6 space-y-5">
+          <div>
+            <label className={labelClass}>Slug</label>
+            <input
+              value={form.slug}
+              onChange={(e) => handleChange("slug", e.target.value)}
+              placeholder="auto-generated"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Category <span className="text-red-400">*</span></label>
+            <select
+              value={form.category}
+              onChange={(e) => handleChange("category", e.target.value)}
+              className={errors.category ? inputErrorClass : inputClass}
+            >
+              <option value="">Select category</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            {errors.category && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.category}</p>}
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Image</label>
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-chrome/20 bg-graphite-2/50 px-6 py-10 text-center cursor-pointer hover:border-chrome/50 transition-colors"
-              >
-                {imageFile ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="h-16 w-16 rounded-lg overflow-hidden border border-chrome/30">
-                      <img src={URL.createObjectURL(imageFile)} alt="Preview" className="h-full w-full object-cover" />
-                    </div>
-                    <p className="font-mono text-[10px] text-chrome-dim">{imageFile.name}</p>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setImageFile(null); }}
-                      className="font-mono text-[9px] uppercase tracking-[0.2em] text-red-400 hover:text-red-300"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <Upload size={24} className="text-chrome-dim mb-3" />
-                    <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Click to upload</p>
-                    <p className="font-mono text-[9px] text-chrome-dim/50 mt-1">PNG, JPG up to 10MB</p>
-                  </>
-                )}
-              </div>
+              <label className={labelClass}>Price ($) <span className="text-red-400">*</span></label>
               <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null;
-                  setImageFile(file);
-                }}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Stock <span className="text-red-400">*</span></label>
-              <input
-                value={form.stock}
-                onChange={(e) => handleChange("stock", e.target.value)}
+                value={form.price}
+                onChange={(e) => handleChange("price", e.target.value)}
                 type="number"
-                placeholder="0"
-                className={errors.stock ? inputErrorClass : inputClass}
+                step="0.01"
+                placeholder="0.00"
+                className={errors.price ? inputErrorClass : inputClass}
               />
-              {errors.stock && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.stock}</p>}
+              {errors.price && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.price}</p>}
             </div>
             <div>
-              <label className={labelClass}>Status</label>
-              <select
-                value={form.status}
-                onChange={(e) => handleChange("status", e.target.value)}
+              <label className={labelClass}>Compare At Price ($)</label>
+              <input
+                value={form.comparePrice}
+                onChange={(e) => handleChange("comparePrice", e.target.value)}
+                type="number"
+                step="0.01"
+                placeholder="0.00"
                 className={inputClass}
-              >
-                <option value="Active">Active</option>
-                <option value="Draft">Draft</option>
-              </select>
+              />
             </div>
+          </div>
+          <div>
+            <label className={labelClass}>Description</label>
+            <textarea
+              value={form.description}
+              onChange={(e) => handleChange("description", e.target.value)}
+              placeholder="Product description..."
+              className={`${inputClass} min-h-[120px] resize-none`}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Details <span className="text-chrome-dim/50 font-normal normal-case">(one per line)</span></label>
+            <textarea
+              value={form.details}
+              onChange={(e) => handleChange("details", e.target.value)}
+              placeholder="Single-panel bonded leather construction&#10;Full-length centre-back seam&#10;Four concealed snap pockets"
+              className={`${inputClass} min-h-[120px] resize-none`}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Materials <span className="text-chrome-dim/50 font-normal normal-case">(one per line)</span></label>
+            <textarea
+              value={form.materials}
+              onChange={(e) => handleChange("materials", e.target.value)}
+              placeholder="Bonded chrome leather&#10;Horn buttons"
+              className={`${inputClass} min-h-[80px] resize-none`}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Dimensions</label>
+            <input
+              value={form.dimensions}
+              onChange={(e) => handleChange("dimensions", e.target.value)}
+              placeholder="e.g. Length: 142cm · Chest: 112cm"
+              className={inputClass}
+            />
           </div>
         </div>
       </div>
 
-      <div className="mt-6">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="btn-chrome btn-chrome-inner w-full justify-center !py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Save size={16} />
-          <span className="btn-label">{saving ? "Saving..." : saved ? "Saved ✓" : "Save Product"}</span>
-        </button>
+      <div className="space-y-5">
+        <div className="bg-graphite border border-chrome/20 rounded-2xl p-6 space-y-5">
+          <div>
+            <label className={labelClass}>Image</label>
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-chrome/20 bg-graphite-2/50 px-6 py-10 text-center cursor-pointer hover:border-chrome/50 transition-colors"
+            >
+              {imageFile ? (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="h-16 w-16 rounded-lg overflow-hidden border border-chrome/30">
+                    <img src={URL.createObjectURL(imageFile)} alt="Preview" className="h-full w-full object-cover" />
+                  </div>
+                  <p className="font-mono text-[10px] text-chrome-dim">{imageFile.name}</p>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setImageFile(null); }}
+                    className="font-mono text-[9px] uppercase tracking-[0.2em] text-red-400 hover:text-red-300"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <Upload size={24} className="text-chrome-dim mb-3" />
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Click to upload</p>
+                  <p className="font-mono text-[9px] text-chrome-dim/50 mt-1">PNG, JPG up to 10MB</p>
+                </>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null;
+                setImageFile(file);
+              }}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Stock <span className="text-red-400">*</span></label>
+            <input
+              value={form.stock}
+              onChange={(e) => handleChange("stock", e.target.value)}
+              type="number"
+              placeholder="0"
+              className={errors.stock ? inputErrorClass : inputClass}
+            />
+            {errors.stock && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.stock}</p>}
+          </div>
+          <div>
+            <label className={labelClass}>Status</label>
+            <select
+              value={form.status}
+              onChange={(e) => handleChange("status", e.target.value)}
+              className={inputClass}
+            >
+              <option value="Active">Active</option>
+              <option value="Draft">Draft</option>
+            </select>
+          </div>
+        </div>
       </div>
-    </AdminLayout>
+    </div>
+
+    <div className="mt-6">
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="btn-chrome btn-chrome-inner w-full justify-center !py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <Save size={16} />
+        <span className="btn-label">{saving ? "Saving..." : saved ? "Saved ✓" : "Save Product"}</span>
+      </button>
+    </div>
+    </>
   );
 }

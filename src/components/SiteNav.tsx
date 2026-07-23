@@ -57,7 +57,6 @@ export function SiteNav() {
             <Link to="/shop" className="relative transition-colors hover:text-black">Shop</Link>
             <Link to="/about" className="relative transition-colors hover:text-black">About Us</Link>
             <Link to="/contact" className="relative transition-colors hover:text-black">Contact</Link>
-            <Link to="/admin" className="relative transition-colors hover:text-black/40">Admin</Link>
           </nav>
 
           <div className="flex items-center justify-end gap-5 font-mono text-[11px] uppercase tracking-[0.24em] text-black">
@@ -118,7 +117,6 @@ export function SiteNav() {
                   <Link to="/shop" onClick={() => setMenuOpen(false)} className="hover:text-black transition-colors">Shop</Link>
                   <Link to="/about" onClick={() => setMenuOpen(false)} className="hover:text-black transition-colors">About Us</Link>
                   <Link to="/contact" onClick={() => setMenuOpen(false)} className="hover:text-black transition-colors">Contact</Link>
-                  <Link to="/admin" onClick={() => setMenuOpen(false)} className="hover:text-black/40 transition-colors">Admin</Link>
                 </nav>
                 <div className="h-px w-full bg-black/10" />
                 <div className="flex flex-col gap-4 font-mono text-[11px] uppercase tracking-[0.24em] text-black/70">

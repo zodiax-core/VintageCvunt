@@ -57,3 +57,9 @@ export const remove = mutation({
     await ctx.db.delete(args.id);
   },
 });
+
+export const generateUploadUrl = mutation({
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});

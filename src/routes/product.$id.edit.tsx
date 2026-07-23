@@ -1,7 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { Save, Upload } from "lucide-react";
-import { AdminLayout } from "@/components/AdminLayout";
+import { toWebP } from "@/lib/image-utils";
 import { api } from "../../convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
 
@@ -16,6 +16,7 @@ const CATEGORIES = ["Outerwear", "Footwear", "Silverwork", "Adornment", "Tops", 
 
 function EditProduct() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
   const product = useQuery(api.products.getById, { id: id as any });
 
   const [saved, setSaved] = useState(false);
@@ -85,9 +86,12 @@ function EditProduct() {
     try {
       let images: string[] | undefined;
       if (imageFile) {
+        const webpFile = await toWebP(imageFile);
         const uploadUrl = await generateUploadUrl();
-        const result = await fetch(uploadUrl, { method: "POST", body: imageFile });
+        const result = await fetch(uploadUrl, { method: "POST", body: webpFile });
+        if (!result.ok) throw new Error(`Upload failed: ${result.status}`);
         const { storageId } = await result.json();
+        if (!storageId) throw new Error("No storageId in upload response");
         images = [storageId];
       }
       await updateProduct({
@@ -102,8 +106,7 @@ function EditProduct() {
         stockCount: Number(form.stock),
         images,
       });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      navigate({ to: "/product" });
     } catch (err) {
       console.error("Failed to update product", err);
     } finally {
@@ -117,20 +120,18 @@ function EditProduct() {
 
   if (!product) {
     return (
-      <AdminLayout>
-        <div className="flex flex-col items-center justify-center py-20">
-          <h2 className="font-display text-2xl text-chrome-dim">Product not found</h2>
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim mt-2">The product you are looking for does not exist.</p>
-          <Link to="/product" className="btn-chrome btn-chrome-inner mt-6">
-            <span className="btn-label">Back to Products</span>
-          </Link>
-        </div>
-      </AdminLayout>
+      <div className="flex flex-col items-center justify-center py-20">
+        <h2 className="font-display text-2xl text-chrome-dim">Product not found</h2>
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim mt-2">The product you are looking for does not exist.</p>
+        <Link to="/product" className="btn-chrome btn-chrome-inner mt-6">
+          <span className="btn-label">Back to Products</span>
+        </Link>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
+    <>
       <div className="mb-6 flex flex-col gap-1">
         <h1 className="text-xl md:text-2xl font-display">Edit Product</h1>
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">{product.name}</p>
@@ -250,12 +251,20 @@ function EditProduct() {
                       Remove
                     </button>
                   </div>
+                ) : product.imageUrls?.[0] ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="h-20 w-20 rounded-xl overflow-hidden border border-chrome/30">
+                      <img src={product.imageUrls[0]} alt={product.name} className="h-full w-full object-cover" />
+                    </div>
+                    <p className="font-mono text-[10px] text-chrome-dim">Current image</p>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Click to replace</p>
+                  </div>
                 ) : (
                   <>
                     <div className="h-12 w-12 rounded-xl bg-graphite-2 flex items-center justify-center font-mono text-lg text-chrome-dim mb-3">
                       {product.name.charAt(0)}
                     </div>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Click to replace</p>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Click to upload</p>
                     <p className="font-mono text-[9px] text-chrome-dim/50 mt-1">PNG, JPG up to 10MB</p>
                   </>
                 )}
@@ -310,6 +319,6 @@ function EditProduct() {
           <span className="btn-label">Cancel</span>
         </Link>
       </div>
-    </AdminLayout>
+    </>
   );
 }
