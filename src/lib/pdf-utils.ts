@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+// ─── Brand Config ─────────────────────────────────────────────────────────────
 interface BrandInfo {
   name: string;
   tagline: string;
@@ -11,171 +12,160 @@ interface BrandInfo {
 
 const defaultBrand: BrandInfo = {
   name: "VintageCvunt",
-  tagline: "Modern Gothic Luxury",
+  tagline: "Objects / Chrome / Bone",
   address: "42 Clifton Avenue, Karachi, Pakistan",
   phone: "+92 21 1123 4567",
   email: "studio@vintagecvunt.com",
 };
 
-function addFooter(doc: jsPDF, page?: number, total?: number) {
-  const pw = doc.internal.pageSize.width;
-  const ph = doc.internal.pageSize.height;
-  doc.setFontSize(8);
-  doc.setTextColor(180, 180, 190);
-  doc.text("VintageCvunt", pw / 2, ph - 14, { align: "center" });
-  if (page && total) {
-    doc.text("Page " + page + " of " + total, pw / 2, ph - 8, { align: "center" });
-  }
+// ─── Color Palette ────────────────────────────────────────────────────────────
+const C = {
+  BLACK: [8, 8, 8] as [number, number, number],
+  DARK: [14, 14, 14] as [number, number, number],
+  PANEL: [18, 18, 18] as [number, number, number],
+  BORDER: [30, 30, 30] as [number, number, number],
+  DIM: [50, 50, 50] as [number, number, number],
+  MUTED: [100, 100, 100] as [number, number, number],
+  CHROME: [160, 160, 160] as [number, number, number],
+  LIGHT: [200, 200, 200] as [number, number, number],
+  WHITE: [232, 232, 227] as [number, number, number],
+  STATUS: {
+    Pending: [234, 179, 8] as [number, number, number],
+    Processing: [99, 179, 237] as [number, number, number],
+    Shipped: [167, 139, 250] as [number, number, number],
+    Delivered: [74, 222, 128] as [number, number, number],
+    Cancelled: [248, 113, 113] as [number, number, number],
+  } as Record<string, [number, number, number]>,
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function fmt(n: number): string {
+  return "$" + n.toFixed(2);
 }
 
-function addPageNumbersFooter(doc: jsPDF) {
-  const total = doc.getNumberOfPages();
-  for (let p = 1; p <= total; p++) {
-    doc.setPage(p);
-    addFooter(doc, p, total);
-  }
+function fmtDate(ts?: number | string): string {
+  if (!ts) return "—";
+  const d = new Date(typeof ts === "number" ? ts : ts);
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
-function addBrandBar(doc: jsPDF, yEnd: number) {
-  const pw = doc.internal.pageSize.width;
-  doc.setFillColor(20, 20, 30);
-  doc.rect(0, 0, pw, yEnd, "F");
+function setFont(doc: jsPDF, weight: "normal" | "bold" = "normal", size = 9) {
+  doc.setFont("helvetica", weight);
+  doc.setFontSize(size);
 }
 
-function drawHr(doc: jsPDF, y: number) {
+function mono(doc: jsPDF, text: string, x: number, y: number, opts?: { align?: "left" | "center" | "right" }) {
+  // simulate mono by using bold helvetica with wide letter-spacing
+  setFont(doc, "bold", doc.getFontSize());
+  doc.text(text, x, y, opts);
+}
+
+// Draw a filled rectangle with rounded corners utility
+function filledRect(doc: jsPDF, x: number, y: number, w: number, h: number, color: [number, number, number]) {
+  doc.setFillColor(...color);
+  doc.rect(x, y, w, h, "F");
+}
+
+// Thin rule
+function rule(doc: jsPDF, y: number, color: [number, number, number] = C.BORDER) {
   const pw = doc.internal.pageSize.width;
-  doc.setDrawColor(220, 220, 225);
-  doc.setLineWidth(0.3);
+  doc.setDrawColor(...color);
+  doc.setLineWidth(0.2);
   doc.line(14, y, pw - 14, y);
 }
 
-function drawStatusBadge(doc: jsPDF, status: string, x: number, y: number, align: "left" | "right" = "left") {
-  const colors: Record<string, number[]> = {
-    Pending: [234, 179, 8],
-    Processing: [59, 130, 246],
-    Shipped: [147, 51, 234],
-    Delivered: [34, 197, 94],
-    Cancelled: [239, 68, 68],
-  };
-  const c = colors[status] || [150, 150, 160];
-  doc.setFillColor(c[0], c[1], c[2]);
-  const dotR = 1.5;
-  const textX = align === "right" ? x : x;
-  const dotX = align === "right" ? x - doc.getTextWidth(status) - 5 : x;
-  doc.setDrawColor(c[0], c[1], c[2]);
-  doc.circle(dotX + dotR, y - dotR, dotR, "F");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.setTextColor(c[0], c[1], c[2]);
-  doc.text(status, dotX + 5, y);
+// Label above value (small caps style)
+function labelValue(doc: jsPDF, label: string, value: string, x: number, y: number, color: [number, number, number] = C.WHITE) {
+  setFont(doc, "normal", 7);
+  doc.setTextColor(...C.MUTED);
+  doc.text(label.toUpperCase(), x, y);
+  setFont(doc, "bold", 9);
+  doc.setTextColor(...color);
+  doc.text(value, x, y + 6);
 }
 
-export function generateOrdersPDF(
-  orders: Array<{ id: string; customer: string; email: string; date: string; items: number; total: number; status: string }>,
-  brand: BrandInfo = defaultBrand,
-) {
-  const doc = new jsPDF();
+// Status badge (pill)
+function statusBadge(doc: jsPDF, status: string, x: number, y: number) {
+  const color = C.STATUS[status] || C.CHROME;
+  const label = status.toUpperCase();
+  setFont(doc, "bold", 6.5);
+  doc.setTextColor(...color);
+  const tw = doc.getTextWidth(label);
+  const padX = 4;
+  const padY = 2;
+  doc.setDrawColor(...color);
+  doc.setFillColor(color[0] * 0.08 + 8, color[1] * 0.08 + 8, color[2] * 0.08 + 8);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(x, y - 5, tw + padX * 2, 7, 1.5, 1.5, "FD");
+  doc.text(label, x + padX, y);
+}
+
+// Page header — full-width dark band
+function pageHeader(doc: jsPDF, brand: BrandInfo, right?: { label: string; value: string }) {
   const pw = doc.internal.pageSize.width;
+  filledRect(doc, 0, 0, pw, 36, C.BLACK);
 
-  addBrandBar(doc, 80);
+  // Brand dot
+  doc.setFillColor(...C.WHITE);
+  doc.circle(14 + 3, 14, 2.5, "F");
 
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(26);
-  doc.setFont("helvetica", "bold");
-  doc.text(brand.name.toUpperCase(), pw / 2, 32, { align: "center" });
+  // Brand name
+  setFont(doc, "bold", 10);
+  doc.setTextColor(...C.WHITE);
+  doc.text(brand.name.toUpperCase(), 14 + 9, 16);
 
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(200, 200, 215);
-  doc.text(brand.tagline, pw / 2, 45, { align: "center" });
+  // Tagline
+  setFont(doc, "normal", 7);
+  doc.setTextColor(...C.MUTED);
+  doc.text(brand.tagline, 14 + 9, 24);
 
-  doc.setFontSize(8);
-  doc.text(brand.address, pw / 2, 58, { align: "center" });
-  doc.text(brand.phone + "  |  " + brand.email, pw / 2, 68, { align: "center" });
-
-  doc.setTextColor(50, 50, 60);
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.text("ORDERS REPORT", pw / 2, 112, { align: "center" });
-
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(120, 120, 130);
-  const now = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  doc.text("Generated: " + now, pw / 2, 128, { align: "center" });
-  doc.text("Total Orders: " + orders.length, pw / 2, 139, { align: "center" });
-
-  drawHr(doc, 155);
-
-  let pageNum = 1;
-  for (let i = 0; i < orders.length; i += 3) {
-    if (i > 0) {
-      doc.addPage();
-      pageNum++;
-    }
-    const pageOrders = orders.slice(i, i + 3);
-    let startY = 20;
-
-    for (const order of pageOrders) {
-      const cardW = pw - 28;
-      const cardH = 52;
-
-      doc.setDrawColor(200, 200, 210);
-      doc.setLineWidth(0.3);
-      doc.roundedRect(14, startY, cardW, cardH, 2, 2, "S");
-
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(40, 40, 50);
-      doc.text(order.id, 22, startY + 10);
-
-      const statusColors: Record<string, number[]> = {
-        Pending: [234, 179, 8],
-        Processing: [59, 130, 246],
-        Shipped: [147, 51, 234],
-        Delivered: [34, 197, 94],
-        Cancelled: [239, 68, 68],
-      };
-      const sc = statusColors[order.status] || [150, 150, 160];
-      doc.setFillColor(sc[0], sc[1], sc[2]);
-      doc.circle(pw - 14 - 14 - doc.getTextWidth(order.status) - 5, startY + 6, 1.5, "F");
-      doc.setFontSize(7);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(sc[0], sc[1], sc[2]);
-      doc.text(order.status, pw - 14 - 14 - doc.getTextWidth(order.status), startY + 6);
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(80, 80, 90);
-      doc.text(order.customer, 22, startY + 22);
-
-      doc.setFontSize(7);
-      doc.setTextColor(140, 140, 150);
-      doc.text(order.email, 22, startY + 30);
-
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(40, 40, 50);
-      const totalStr = "$" + order.total.toFixed(2);
-      doc.text(totalStr, pw - 14 - 14 - doc.getTextWidth(totalStr), startY + 22);
-
-      doc.setFontSize(7);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(140, 140, 150);
-      doc.text(order.date + "  ·  " + order.items + " items", 22, startY + 40);
-
-      startY += cardH + 8;
-    }
+  // Right side info
+  if (right) {
+    setFont(doc, "normal", 7);
+    doc.setTextColor(...C.MUTED);
+    doc.text(right.label.toUpperCase(), pw - 14, 14, { align: "right" });
+    setFont(doc, "bold", 9);
+    doc.setTextColor(...C.WHITE);
+    doc.text(right.value, pw - 14, 22, { align: "right" });
   }
 
-  addPageNumbersFooter(doc);
-  doc.save("orders-report.pdf");
+  // Bottom micro-line accent
+  doc.setDrawColor(40, 40, 40);
+  doc.setLineWidth(0.4);
+  doc.line(0, 36, pw, 36);
 }
 
+// Page footer
+function pageFooter(doc: jsPDF, brand: BrandInfo) {
+  const pw = doc.internal.pageSize.width;
+  const ph = doc.internal.pageSize.height;
+  filledRect(doc, 0, ph - 16, pw, 16, C.BLACK);
+  setFont(doc, "normal", 7);
+  doc.setTextColor(...C.DIM);
+  doc.text(
+    `${brand.name.toUpperCase()} · ${brand.address} · ${brand.email}`,
+    pw / 2,
+    ph - 6,
+    { align: "center" }
+  );
+}
+
+function addPageNumbers(doc: jsPDF, brand: BrandInfo) {
+  const total = doc.getNumberOfPages();
+  for (let p = 1; p <= total; p++) {
+    doc.setPage(p);
+    pageFooter(doc, brand);
+    if (total > 1) {
+      const pw = doc.internal.pageSize.width;
+      const ph = doc.internal.pageSize.height;
+      setFont(doc, "normal", 6.5);
+      doc.setTextColor(...C.DIM);
+      doc.text(`${p} / ${total}`, pw - 14, ph - 5, { align: "right" });
+    }
+  }
+}
+
+// ─── Receipt PDF ──────────────────────────────────────────────────────────────
 export function generateReceiptPDF(
   order: {
     id: string;
@@ -193,180 +183,319 @@ export function generateReceiptPDF(
   },
   brand: BrandInfo = defaultBrand,
 ) {
-  const doc = new jsPDF();
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pw = doc.internal.pageSize.width;
 
-  addBrandBar(doc, 42);
+  // ── Header ──
+  pageHeader(doc, brand, { label: "Invoice", value: order.id });
 
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.text(brand.name.toUpperCase(), 14, 17);
+  // ── Document title ──
+  let y = 46;
+  setFont(doc, "normal", 7);
+  doc.setTextColor(...C.MUTED);
+  doc.text("— TAX INVOICE / RECEIPT", 14, y);
 
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(180, 180, 195);
-  doc.text(brand.tagline, 14, 26);
-  doc.text(brand.address + "  |  " + brand.phone, 14, 35);
+  y += 6;
+  setFont(doc, "bold", 22);
+  doc.setTextColor(...C.WHITE);
+  doc.text("Order Receipt", 14, y);
 
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(255, 255, 255);
-  doc.text("INVOICE", pw - 14, 17, { align: "right" });
+  y += 4;
+  rule(doc, y + 4, C.DIM);
+  y += 12;
 
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(200, 200, 215);
-  doc.text(order.id, pw - 14, 27, { align: "right" });
-  doc.text(order.date, pw - 14, 36, { align: "right" });
+  // ── Meta strip ──
+  const metaItems = [
+    { label: "Date", value: order.date },
+    { label: "Order", value: order.id },
+    { label: "Status", value: order.status, isStatus: true },
+    { label: "Payment", value: order.paymentMethod || "Credit Card" },
+  ];
+  const colW = (pw - 28) / metaItems.length;
+  metaItems.forEach((m, i) => {
+    const mx = 14 + i * colW;
+    setFont(doc, "normal", 6.5);
+    doc.setTextColor(...C.MUTED);
+    doc.text(m.label.toUpperCase(), mx, y);
+    if ((m as any).isStatus) {
+      statusBadge(doc, m.value, mx, y + 8);
+    } else {
+      setFont(doc, "bold", 8.5);
+      doc.setTextColor(...C.LIGHT);
+      doc.text(m.value, mx, y + 7);
+    }
+  });
 
-  drawHr(doc, 52);
+  y += 18;
+  rule(doc, y, C.BORDER);
+  y += 10;
 
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(40, 40, 50);
-  doc.text("BILL TO", 14, 64);
+  // ── Bill to / Ship to ──
+  const halfW = (pw - 28) / 2 - 4;
+  // Left: Bill To
+  filledRect(doc, 14, y, halfW, 38, C.PANEL);
+  doc.setDrawColor(...C.BORDER);
+  doc.setLineWidth(0.2);
+  doc.rect(14, y, halfW, 38, "S");
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(80, 80, 90);
+  setFont(doc, "bold", 6.5);
+  doc.setTextColor(...C.MUTED);
+  doc.text("BILL TO", 20, y + 8);
+  setFont(doc, "bold", 9);
+  doc.setTextColor(...C.WHITE);
+  doc.text(order.customer, 20, y + 16);
+  setFont(doc, "normal", 7.5);
+  doc.setTextColor(...C.CHROME);
+  doc.text(order.email, 20, y + 23);
+  doc.text(order.phone, 20, y + 30);
 
-  const addrLines = order.address.split(", ");
-  let addrY = 73;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(60, 60, 70);
-  doc.text(order.customer, 14, addrY);
-  addrY += 7;
-  doc.text(order.email, 14, addrY);
-  addrY += 7;
-  doc.text(order.phone, 14, addrY);
-  addrY += 7;
-  for (const line of addrLines) {
-    doc.text(line, 14, addrY);
-    addrY += 7;
-  }
+  // Right: Ship To
+  const rx = 14 + halfW + 8;
+  filledRect(doc, rx, y, halfW, 38, C.PANEL);
+  doc.setDrawColor(...C.BORDER);
+  doc.rect(rx, y, halfW, 38, "S");
 
-  const infoLeftX = 115;
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(40, 40, 50);
-  doc.text("ORDER INFO", infoLeftX, 64);
+  setFont(doc, "bold", 6.5);
+  doc.setTextColor(...C.MUTED);
+  doc.text("SHIP TO", rx + 6, y + 8);
+  setFont(doc, "normal", 7.5);
+  doc.setTextColor(...C.CHROME);
+  const addrLines = order.address.split(", ").join("\n");
+  const splitAddr = doc.splitTextToSize(addrLines, halfW - 14);
+  let lineY = y + 16;
+  splitAddr.forEach((line: string) => {
+    doc.text(line, rx + 6, lineY);
+    lineY += 6;
+  });
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(80, 80, 90);
-  let infoY = 73;
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(60, 60, 70);
-  doc.text("Status:", infoLeftX, infoY);
-  doc.setFont("helvetica", "normal");
-  const statusColors: Record<string, number[]> = {
-    Pending: [234, 179, 8],
-    Processing: [59, 130, 246],
-    Shipped: [147, 51, 234],
-    Delivered: [34, 197, 94],
-    Cancelled: [239, 68, 68],
-  };
-  const sc = statusColors[order.status] || [150, 150, 160];
-  doc.setTextColor(sc[0], sc[1], sc[2]);
-  doc.text(order.status, infoLeftX + 40, infoY);
+  y += 46;
 
-  infoY += 8;
-  doc.setTextColor(80, 80, 90);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(60, 60, 70);
-  doc.text("Items:", infoLeftX, infoY);
-  doc.setFont("helvetica", "normal");
-  doc.text(String(order.items.length), infoLeftX + 40, infoY);
-
-  infoY += 8;
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(60, 60, 70);
-  doc.text("Payment:", infoLeftX, infoY);
-  doc.setFont("helvetica", "normal");
-  doc.text(order.paymentMethod || "Credit Card", infoLeftX + 40, infoY);
-
-  infoY += 8;
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(60, 60, 70);
-  doc.text("Shipping:", infoLeftX, infoY);
-  doc.setFont("helvetica", "normal");
-  doc.text(order.shippingMethod || "Standard", infoLeftX + 40, infoY);
-
-  drawHr(doc, addrY + 10);
-
-  const tableY = addrY + 16;
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(40, 40, 50);
-  doc.text("ITEMS", 14, tableY);
+  // ── Items table ──
+  setFont(doc, "bold", 7);
+  doc.setTextColor(...C.MUTED);
+  doc.text("ITEMS ORDERED", 14, y);
+  y += 4;
 
   const subtotal = order.items.reduce((s, i) => s + i.subtotal, 0);
   const total = subtotal + order.shipping + order.tax;
 
   autoTable(doc, {
-    startY: tableY + 5,
-    head: [["#", "Product", "SKU", "Qty", "Unit Price", "Subtotal"]],
+    startY: y,
+    head: [["#", "Product", "SKU / Reference", "Qty", "Unit Price", "Total"]],
     body: order.items.map((item, idx) => [
       String(idx + 1),
       item.product,
       item.sku,
       String(item.qty),
-      "$" + item.price.toFixed(2),
-      "$" + item.subtotal.toFixed(2),
+      fmt(item.price),
+      fmt(item.subtotal),
     ]),
-    foot: [
-      ["", "", "", "", "Subtotal", "$" + subtotal.toFixed(2)],
-      ["", "", "", "", "Shipping", "$" + order.shipping.toFixed(2)],
-      ["", "", "", "", "Tax", "$" + order.tax.toFixed(2)],
-      ["", "", "", "", "Total", "$" + total.toFixed(2)],
-    ],
-    headStyles: { fillColor: [20, 20, 30], textColor: [255, 255, 255], fontSize: 7, fontStyle: "bold" },
-    bodyStyles: { fontSize: 7, textColor: [60, 60, 70] },
-    footStyles: { fontSize: 7, fontStyle: "bold" },
-    theme: "grid",
+    headStyles: {
+      fillColor: C.BLACK,
+      textColor: C.WHITE,
+      fontSize: 7,
+      fontStyle: "bold",
+      cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
+    },
+    bodyStyles: {
+      fontSize: 8,
+      textColor: C.CHROME,
+      cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
+      fillColor: C.DARK,
+    },
+    alternateRowStyles: { fillColor: C.PANEL },
+    theme: "plain",
     margin: { left: 14, right: 14 },
     styles: {
-      cellPadding: { top: 2, bottom: 2, left: 3, right: 3 },
-      lineColor: [200, 200, 210],
-      lineWidth: 0.1,
+      lineColor: C.BORDER,
+      lineWidth: 0.15,
+      overflow: "linebreak",
     },
     columnStyles: {
-      0: { halign: "center", cellWidth: 10 },
-      1: { cellWidth: 50 },
-      2: { cellWidth: 24 },
+      0: { halign: "center", cellWidth: 10, textColor: C.MUTED },
+      1: { cellWidth: "auto" },
+      2: { cellWidth: 36, textColor: C.MUTED },
       3: { halign: "center", cellWidth: 12 },
       4: { halign: "right", cellWidth: 24 },
-      5: { halign: "right", cellWidth: 24 },
+      5: { halign: "right", cellWidth: 26, textColor: C.WHITE, fontStyle: "bold" },
     },
-    footStyles: {
-      fillColor: [248, 248, 252],
-      textColor: [40, 40, 50],
-      fontStyle: "bold",
+  });
+
+  y = (doc as any).lastAutoTable.finalY + 8;
+
+  // ── Summary panel ──
+  const sumW = 80;
+  const sumX = pw - 14 - sumW;
+
+  filledRect(doc, sumX, y, sumW, 52, C.PANEL);
+  doc.setDrawColor(...C.BORDER);
+  doc.setLineWidth(0.2);
+  doc.rect(sumX, y, sumW, 52, "S");
+
+  const rows = [
+    { label: "Subtotal", value: fmt(subtotal) },
+    { label: "Shipping", value: order.shipping === 0 ? "Free" : fmt(order.shipping) },
+    { label: "Tax", value: fmt(order.tax) },
+  ];
+
+  let ry = y + 8;
+  rows.forEach((row) => {
+    setFont(doc, "normal", 7.5);
+    doc.setTextColor(...C.MUTED);
+    doc.text(row.label, sumX + 6, ry);
+    doc.setTextColor(...C.CHROME);
+    doc.text(row.value, pw - 14 - 6, ry, { align: "right" });
+    ry += 8;
+  });
+
+  // Total separator
+  doc.setDrawColor(...C.DIM);
+  doc.setLineWidth(0.3);
+  doc.line(sumX + 4, ry, pw - 14 - 4, ry);
+  ry += 7;
+
+  setFont(doc, "bold", 10);
+  doc.setTextColor(...C.WHITE);
+  doc.text("Total", sumX + 6, ry);
+  doc.text(fmt(total), pw - 14 - 6, ry, { align: "right" });
+
+  // ── Thank you ──
+  y = (doc as any).lastAutoTable.finalY + 70;
+  if (y > 250) {
+    doc.addPage();
+    y = 20;
+  }
+
+  rule(doc, y - 8, C.DIM);
+  setFont(doc, "normal", 9);
+  doc.setTextColor(...C.MUTED);
+  doc.text("Thank you for shopping with VintageCvunt.", 14, y);
+  setFont(doc, "normal", 7.5);
+  doc.setTextColor(...C.DIM);
+  doc.text(`For support or returns: ${brand.email}`, 14, y + 7);
+
+  addPageNumbers(doc, brand);
+  doc.save(`VC-Receipt-${order.id}.pdf`);
+}
+
+// ─── Orders Report PDF ────────────────────────────────────────────────────────
+export function generateOrdersPDF(
+  orders: Array<{
+    id: string;
+    customer: string;
+    email: string;
+    date: string;
+    items: number;
+    total: number;
+    status: string;
+  }>,
+  brand: BrandInfo = defaultBrand,
+) {
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const pw = doc.internal.pageSize.width;
+  const now = fmtDate(Date.now());
+
+  // ── Header ──
+  pageHeader(doc, brand, { label: "Generated", value: now });
+
+  let y = 46;
+  setFont(doc, "normal", 7);
+  doc.setTextColor(...C.MUTED);
+  doc.text("— MANAGEMENT REPORT", 14, y);
+  y += 6;
+  setFont(doc, "bold", 22);
+  doc.setTextColor(...C.WHITE);
+  doc.text("Orders Summary", 14, y);
+  y += 4;
+  rule(doc, y + 4, C.DIM);
+  y += 14;
+
+  // ── Summary stats ──
+  const totalRev = orders.reduce((s, o) => s + o.total, 0);
+  const delivered = orders.filter((o) => o.status === "Delivered").length;
+  const pending = orders.filter((o) => o.status === "Pending" || o.status === "Processing").length;
+
+  const stats = [
+    { label: "Total Orders", value: String(orders.length) },
+    { label: "Total Revenue", value: fmt(totalRev) },
+    { label: "Delivered", value: String(delivered) },
+    { label: "Pending / Processing", value: String(pending) },
+  ];
+
+  const cardW = (pw - 28 - 9) / 4;
+  stats.forEach((s, i) => {
+    const cx = 14 + i * (cardW + 3);
+    filledRect(doc, cx, y, cardW, 22, C.PANEL);
+    doc.setDrawColor(...C.BORDER);
+    doc.setLineWidth(0.2);
+    doc.rect(cx, y, cardW, 22, "S");
+    setFont(doc, "normal", 6.5);
+    doc.setTextColor(...C.MUTED);
+    doc.text(s.label.toUpperCase(), cx + 5, y + 7);
+    setFont(doc, "bold", 11);
+    doc.setTextColor(...C.WHITE);
+    doc.text(s.value, cx + 5, y + 17);
+  });
+
+  y += 30;
+  rule(doc, y, C.BORDER);
+  y += 6;
+
+  // ── Table ──
+  autoTable(doc, {
+    startY: y,
+    head: [["Order ID", "Customer", "Email", "Date", "Items", "Total", "Status"]],
+    body: orders.map((o) => [
+      o.id,
+      o.customer,
+      o.email,
+      o.date,
+      String(o.items),
+      fmt(o.total),
+      o.status,
+    ]),
+    headStyles: {
+      fillColor: C.BLACK,
+      textColor: C.WHITE,
       fontSize: 7,
+      fontStyle: "bold",
+      cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
     },
-    didParseCell: function (data) {
-      if (data.section === "foot" && data.row.index === data.table.foot.length - 1) {
-        data.cell.styles.fontSize = 9;
-        data.cell.styles.textColor = [40, 40, 50];
+    bodyStyles: {
+      fontSize: 7.5,
+      textColor: C.CHROME,
+      fillColor: C.DARK,
+      cellPadding: { top: 3.5, bottom: 3.5, left: 4, right: 4 },
+    },
+    alternateRowStyles: { fillColor: C.PANEL },
+    theme: "plain",
+    margin: { left: 14, right: 14 },
+    styles: { lineColor: C.BORDER, lineWidth: 0.15 },
+    columnStyles: {
+      0: { textColor: C.WHITE, fontStyle: "bold", cellWidth: 28 },
+      1: { cellWidth: 28 },
+      2: { cellWidth: 38, textColor: C.MUTED },
+      3: { cellWidth: 24, halign: "center" },
+      4: { cellWidth: 12, halign: "center" },
+      5: { halign: "right", cellWidth: 20, textColor: C.WHITE, fontStyle: "bold" },
+      6: { halign: "center", cellWidth: 22 },
+    },
+    // Color the status column text
+    didParseCell(data) {
+      if (data.column.index === 6 && data.section === "body") {
+        const status = data.cell.raw as string;
+        const color = C.STATUS[status] || C.CHROME;
+        data.cell.styles.textColor = color;
+        data.cell.styles.fontStyle = "bold";
       }
     },
   });
 
-  const finalY = (doc as any).lastAutoTable.finalY + 18;
-
-  drawHr(doc, finalY - 8);
-
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(120, 120, 130);
-  doc.text("Thank you for your purchase!", pw / 2, finalY, { align: "center" });
-
-  addPageNumbersFooter(doc);
-  doc.save("receipt-" + order.id + ".pdf");
+  addPageNumbers(doc, brand);
+  doc.save("VC-Orders-Report.pdf");
 }
 
+// ─── Customer Profile PDF ─────────────────────────────────────────────────────
 export function generateCustomerProfilePDF(
   customer: {
     id: string;
@@ -383,131 +512,128 @@ export function generateCustomerProfilePDF(
   },
   brand: BrandInfo = defaultBrand,
 ) {
-  const doc = new jsPDF();
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pw = doc.internal.pageSize.width;
 
-  addBrandBar(doc, 38);
+  // ── Header ──
+  pageHeader(doc, brand, { label: "Customer ID", value: customer.id });
 
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text(brand.name.toUpperCase(), 14, 16);
+  let y = 46;
+  setFont(doc, "normal", 7);
+  doc.setTextColor(...C.MUTED);
+  doc.text("— CUSTOMER PROFILE", 14, y);
+  y += 6;
+  setFont(doc, "bold", 22);
+  doc.setTextColor(...C.WHITE);
+  doc.text(customer.name, 14, y);
+  y += 4;
+  rule(doc, y + 4, C.DIM);
+  y += 12;
 
-  doc.setFontSize(7);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(180, 180, 195);
-  doc.text(brand.address, 14, 26);
-  doc.text(brand.phone + "  |  " + brand.email, 14, 34);
+  // ── Contact info ──
+  filledRect(doc, 14, y, pw - 28, 28, C.PANEL);
+  doc.setDrawColor(...C.BORDER);
+  doc.setLineWidth(0.2);
+  doc.rect(14, y, pw - 28, 28, "S");
 
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(255, 255, 255);
-  doc.text("CUSTOMER PROFILE", pw - 14, 16, { align: "right" });
+  const contactItems = [
+    { label: "Email", value: customer.email },
+    { label: "Phone", value: customer.phone },
+    { label: "Joined", value: customer.joined },
+    { label: "Status", value: customer.status, isStatus: true },
+  ];
 
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(200, 200, 215);
-  doc.text(customer.id, pw - 14, 26, { align: "right" });
+  const cw = (pw - 28) / contactItems.length;
+  contactItems.forEach((c, i) => {
+    const cx = 14 + i * cw;
+    setFont(doc, "normal", 6.5);
+    doc.setTextColor(...C.MUTED);
+    doc.text(c.label.toUpperCase(), cx + 6, y + 8);
+    if ((c as any).isStatus) {
+      statusBadge(doc, c.value, cx + 6, y + 20);
+    } else {
+      setFont(doc, "bold", 8.5);
+      doc.setTextColor(...C.LIGHT);
+      doc.text(c.value, cx + 6, y + 19);
+    }
+  });
 
-  drawHr(doc, 48);
+  y += 36;
 
-  const avatarR = 12;
-  const avatarX = 24;
-  const avatarY = 66;
-  doc.setFillColor(20, 20, 30);
-  doc.circle(avatarX, avatarY, avatarR, "F");
-  const initials = customer.name.split(" ").map((n) => n[0]).join("").slice(0, 2);
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(255, 255, 255);
-  doc.text(initials, avatarX, avatarY + 3.5, { align: "center" });
-
-  const infoX = 44;
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(40, 40, 50);
-  doc.text(customer.name, infoX, avatarY - 3);
-
-  doc.setFontSize(7);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(120, 120, 130);
-  doc.text(customer.email + "  ·  " + customer.phone, infoX, avatarY + 5);
-
-  doc.setFontSize(7);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(140, 140, 150);
-  doc.text("Joined " + customer.joined, infoX, avatarY + 12);
-
-  const statusColors: Record<string, number[]> = {
-    Active: [34, 197, 94],
-    Inactive: [150, 150, 160],
-  };
-  const sc = statusColors[customer.status] || [150, 150, 160];
-  doc.setFillColor(sc[0], sc[1], sc[2]);
-  const statusW = doc.getTextWidth(customer.status);
-  doc.circle(pw - 14 - statusW - 8, avatarY - 3, 1.5, "F");
-  doc.setFontSize(7);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(sc[0], sc[1], sc[2]);
-  doc.text(customer.status, pw - 14 - statusW, avatarY - 3);
-
-  drawHr(doc, avatarY + 22);
-
+  // ── Stats ──
   const stats = [
     { label: "Total Orders", value: String(customer.totalOrders) },
-    { label: "Total Spent", value: "$" + customer.totalSpent.toFixed(2) },
-    { label: "Avg Order Value", value: "$" + customer.avgOrderValue.toFixed(2) },
+    { label: "Total Spent", value: fmt(customer.totalSpent) },
+    { label: "Avg Order Value", value: fmt(customer.avgOrderValue) },
     { label: "Last Order", value: customer.lastOrderDate },
   ];
 
-  const statsY = avatarY + 32;
-  stats.forEach((stat, idx) => {
-    const col = idx % 2;
-    const row = Math.floor(idx / 2);
-    const sx = 14 + col * 90;
-    const sy = statsY + row * 32;
-
-    doc.setDrawColor(220, 220, 225);
+  const cardW = (pw - 28 - 6) / 4;
+  stats.forEach((s, i) => {
+    const cx = 14 + i * (cardW + 2);
+    filledRect(doc, cx, y, cardW, 24, C.PANEL);
+    doc.setDrawColor(...C.BORDER);
     doc.setLineWidth(0.2);
-    doc.roundedRect(sx, sy, 82, 24, 2, 2, "S");
-
-    doc.setFontSize(7);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(120, 120, 130);
-    doc.text(stat.label, sx + 10, sy + 9);
-
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(40, 40, 50);
-    doc.text(stat.value, sx + 10, sy + 21);
+    doc.rect(cx, y, cardW, 24, "S");
+    // Top accent line per stat
+    doc.setDrawColor(...C.CHROME);
+    doc.setLineWidth(0.8);
+    doc.line(cx, y, cx + cardW * 0.35, y);
+    setFont(doc, "normal", 6.5);
+    doc.setTextColor(...C.MUTED);
+    doc.text(s.label.toUpperCase(), cx + 5, y + 9);
+    setFont(doc, "bold", 11);
+    doc.setTextColor(...C.WHITE);
+    doc.text(s.value, cx + 5, y + 19);
   });
 
-  const tableY = statsY + 68;
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(40, 40, 50);
-  doc.text("ORDER HISTORY", 14, tableY);
+  y += 32;
+  rule(doc, y, C.BORDER);
+  y += 8;
+
+  // ── Order history table ──
+  setFont(doc, "bold", 7);
+  doc.setTextColor(...C.MUTED);
+  doc.text("ORDER HISTORY", 14, y);
+  y += 4;
 
   autoTable(doc, {
-    startY: tableY + 5,
+    startY: y,
     head: [["Order ID", "Date", "Items", "Total", "Status"]],
-    body: customer.orders.map((o) => [o.id, o.date, String(o.items), "$" + o.total.toFixed(2), o.status]),
-    headStyles: { fillColor: [20, 20, 30], textColor: [255, 255, 255], fontSize: 7, fontStyle: "bold" },
-    bodyStyles: { fontSize: 7, textColor: [60, 60, 70] },
-    theme: "grid",
-    margin: { left: 14, right: 14 },
-    styles: {
-      cellPadding: { top: 2, bottom: 2, left: 3, right: 3 },
-      lineColor: [200, 200, 210],
-      lineWidth: 0.1,
+    body: customer.orders.map((o) => [o.id, o.date, String(o.items), fmt(o.total), o.status]),
+    headStyles: {
+      fillColor: C.BLACK,
+      textColor: C.WHITE,
+      fontSize: 7,
+      fontStyle: "bold",
+      cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
     },
+    bodyStyles: {
+      fontSize: 8,
+      textColor: C.CHROME,
+      fillColor: C.DARK,
+      cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
+    },
+    alternateRowStyles: { fillColor: C.PANEL },
+    theme: "plain",
+    margin: { left: 14, right: 14 },
+    styles: { lineColor: C.BORDER, lineWidth: 0.15 },
     columnStyles: {
+      0: { textColor: C.WHITE, fontStyle: "bold" },
       2: { halign: "center" },
-      3: { halign: "right" },
+      3: { halign: "right", textColor: C.WHITE, fontStyle: "bold" },
       4: { halign: "center" },
+    },
+    didParseCell(data) {
+      if (data.column.index === 4 && data.section === "body") {
+        const status = data.cell.raw as string;
+        const color = C.STATUS[status] || C.CHROME;
+        data.cell.styles.textColor = color;
+        data.cell.styles.fontStyle = "bold";
+      }
     },
   });
 
-  addPageNumbersFooter(doc);
-  doc.save("profile-" + customer.name.toLowerCase().replace(/\s+/g, "-") + ".pdf");
+  addPageNumbers(doc, brand);
+  doc.save(`VC-Customer-${customer.name.toLowerCase().replace(/\s+/g, "-")}.pdf`);
 }

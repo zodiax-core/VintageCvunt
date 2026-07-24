@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
-import { api } from "./_generated/api";
+import { internal } from "./_generated/api";
 
 async function hashPassword(password: string, salt?: string): Promise<{ hash: string; salt: string }> {
   const encoder = new TextEncoder();
@@ -139,7 +139,7 @@ export const register = mutation({
       });
 
       if (!isAdmin) {
-        await ctx.scheduler.runAfter(0, api.email.sendEmail, {
+        await ctx.scheduler.runAfter(0, internal.email.sendEmail, {
           email: normalizedEmail,
           otp,
           type: "verification",
@@ -173,7 +173,7 @@ export const register = mutation({
     });
 
     if (!isAdmin) {
-      await ctx.scheduler.runAfter(0, api.email.sendEmail, {
+      await ctx.scheduler.runAfter(0, internal.email.sendEmail, {
         email: normalizedEmail,
         otp,
         type: "verification",
@@ -428,7 +428,7 @@ export const requestPasswordReset = mutation({
       updatedAt: Date.now(),
     });
 
-    await ctx.scheduler.runAfter(0, api.email.sendEmail, {
+    await ctx.scheduler.runAfter(0, internal.email.sendEmail, {
       email: normalizedEmail,
       otp,
       type: "reset",

@@ -1,4 +1,4 @@
-import { action } from "./_generated/server";
+import { internalAction } from "./_generated/server";
 import { v } from "convex/values";
 
 // ─── Shared Design System ────────────────────────────────────────────────────
@@ -367,7 +367,7 @@ function orderConfirmationTemplate(order: {
 
 // ─── Actions ─────────────────────────────────────────────────────────────────
 
-export const sendEmail = action({
+export const sendEmail = internalAction({
   args: {
     email: v.string(),
     otp: v.string(),
@@ -423,7 +423,7 @@ export const sendEmail = action({
   },
 });
 
-export const sendOrderConfirmation = action({
+export const sendOrderConfirmation = internalAction({
   args: {
     email: v.string(),
     customerName: v.string(),
