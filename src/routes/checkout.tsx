@@ -257,11 +257,10 @@ function Checkout() {
                         <label className="block font-mono text-[10px] uppercase tracking-[0.24em] text-chrome-dim mb-2">Country *</label>
                           <input
                             type="text"
-                            value="Pakistan"
+                            value={billing.country}
                             disabled
                             className="w-full rounded-xl border border-chrome/20 bg-graphite/50 px-4 py-3 font-mono text-sm text-chrome-dim/60 outline-none cursor-not-allowed"
                           />
-                          <input type="hidden" value="PK" />
                         {touched.country && errors.country && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.country}</p>}
                       </div>
                       <div>
