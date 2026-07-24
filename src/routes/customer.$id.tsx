@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowLeft, ShoppingBag, DollarSign, Receipt, Calendar, Users, Download } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Id } from "../../convex/_generated/dataModel";
 import { generateCustomerProfilePDF } from "@/lib/pdf-utils";
 import { api } from "../../convex/_generated/api";
 import { useQuery } from "convex/react";
@@ -27,7 +28,7 @@ const statusColors: Record<string, string> = {
 
 function CustomerDetail() {
   const { id } = Route.useParams();
-  const customer = useQuery(api.customers.getById, { id });
+  const customer = useQuery(api.customers.getById, { id: id as Id<"customers"> });
   const orders = useQuery(api.orders.getByEmail, { email: customer?.email ?? "" });
 
   if (!customer) {
@@ -62,7 +63,25 @@ function CustomerDetail() {
             <ArrowLeft className="h-4 w-4" /> Back to Customers
           </Link>
           <button
-            onClick={() => generateCustomerProfilePDF(customer)}
+            onClick={() => generateCustomerProfilePDF({
+              id: customer._id,
+              name: customer.name,
+              email: customer.email,
+              phone: customer.phone || "N/A",
+              joined: new Date(customer._creationTime).toLocaleDateString(),
+              status: customer.status || "Active",
+              totalOrders: customer.totalOrders || 0,
+              totalSpent: customer.totalSpent || 0,
+              avgOrderValue: (customer.totalSpent || 0) / Math.max(1, customer.totalOrders || 1),
+              lastOrderDate: "Recent", // Optional placeholder
+              orders: orders?.map(o => ({
+                id: o._id,
+                date: new Date(o._creationTime).toLocaleDateString(),
+                items: o.items.reduce((acc: any, i: any) => acc + i.quantity, 0),
+                total: o.total,
+                status: o.status
+              })) || []
+            })}
             className="btn-chrome btn-chrome-inner inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm"
           >
             <Download className="h-4 w-4" /> Download Profile

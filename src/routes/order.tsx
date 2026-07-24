@@ -4,6 +4,7 @@ import { Eye, ChevronLeft, ChevronRight, Search, FileText, SlidersHorizontal, X 
 import { AdminLayout } from "@/components/AdminLayout";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { generateOrdersPDF } from "@/lib/pdf-utils";
+import { Id } from "../../convex/_generated/dataModel";
 import { api } from "../../convex/_generated/api";
 import { useQuery } from "convex/react";
 
@@ -138,7 +139,16 @@ function Orders() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => generateOrdersPDF(filtered)}
+              onClick={() => generateOrdersPDF(filtered.map(o => ({
+                id: o._id,
+                orderNumber: o.orderNumber,
+                customer: o.customerName || "Customer",
+                email: o.customerEmail,
+                date: new Date(o.createdAt).toLocaleDateString(),
+                items: o.items.reduce((acc: any, i: any) => acc + i.quantity, 0),
+                total: o.total,
+                status: o.status
+              })))}
               className="btn-chrome btn-chrome-inner btn-chrome-sm"
             >
               <FileText size={12} />

@@ -4,6 +4,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Package, Receipt, Trash2 } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Id } from "../../convex/_generated/dataModel";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { generateReceiptPDF } from "@/lib/pdf-utils";
 import { api } from "../../convex/_generated/api";
@@ -29,7 +30,7 @@ function OrderDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
 
-  const order = useQuery(api.orders.getById, { id });
+  const order = useQuery(api.orders.getById, { id: id as Id<"orders"> });
 
   const [status, setStatus] = useState(order?.status ?? "");
   const [showSuccess, setShowSuccess] = useState(false);
@@ -72,7 +73,10 @@ function OrderDetail() {
             <ArrowLeft className="h-4 w-4" /> Back to Orders
           </Link>
           <button
-            onClick={() => generateReceiptPDF(order)}
+            onClick={() => generateReceiptPDF({
+              ...order,
+              id: order._id
+            } as any)}
             className="btn-chrome btn-chrome-inner inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm"
           >
             <Receipt className="h-4 w-4" /> Download Receipt

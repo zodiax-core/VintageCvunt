@@ -44,7 +44,7 @@ function AddProduct() {
       setForm((prev) => ({ ...prev, slug: value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") }));
     }
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 

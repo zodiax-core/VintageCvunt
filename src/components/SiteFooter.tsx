@@ -12,12 +12,14 @@ export function SiteFooter() {
         </div>
         <div className="divider-chrome my-14" />
         <div className="grid grid-cols-2 gap-10 md:grid-cols-4 text-sm">
-          {[
-            { h: "Brand", l: [{ n: "About", to: "/about" }, { n: "Contact", to: "/contact" }, { n: "FAQ", to: "/faq" }] },
+          {(
+            [
+              { h: "Brand", l: [{ n: "About", to: "/about" }, { n: "Contact", to: "/contact" }, { n: "FAQ", to: "/faq" }] },
             { h: "Shop", l: [{ n: "All Objects", to: "/shop" }, { n: "Outerwear", to: "/shop" }, { n: "Footwear", to: "/shop" }, { n: "Silverwork", to: "/shop" }, { n: "Adornment", to: "/shop" }] },
             { h: "Service", l: [{ n: "Shipping & Returns", to: "/shipping-returns" }, { n: "Size Guide", to: "/size-guide" }, { n: "Privacy Policy", to: "/privacy-policy" }, { n: "Terms & Conditions", to: "/terms-conditions" }] },
-            { h: "Follow", l: [{ n: "Instagram", to: "#", ext: true }, { n: "Pinterest", to: "#", ext: true }, { n: "Discord", to: "#", ext: true }] },
-          ].map((c) => (
+            { h: "Follow", l: [{ n: "Instagram", to: "https://instagram.com", ext: true }, { n: "Twitter", to: "https://twitter.com", ext: true }, { n: "Email", to: "mailto:studio@vintagecvunt.com", ext: true }] },
+            ] as Array<{ h: string; l: Array<{ n: string; to: string; ext?: boolean }> }>
+          ).map((c) => (
             <div key={c.h}>
               <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">{c.h}</div>
               <ul className="mt-4 space-y-2 font-display text-lg">
