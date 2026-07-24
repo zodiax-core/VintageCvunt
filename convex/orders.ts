@@ -110,6 +110,7 @@ export const create = mutation({
     }
 
     // Send order confirmation email
+    // @ts-ignore: Stale convex types might type internal.email.sendOrderConfirmation as {}
     await ctx.scheduler.runAfter(0, internal.email.sendOrderConfirmation, {
       email: args.customerEmail,
       customerName: args.customerName,

@@ -139,6 +139,7 @@ export const register = mutation({
       });
 
       if (!isAdmin) {
+        // @ts-ignore: Stale convex types
         await ctx.scheduler.runAfter(0, internal.email.sendEmail, {
           email: normalizedEmail,
           otp,
@@ -173,6 +174,7 @@ export const register = mutation({
     });
 
     if (!isAdmin) {
+      // @ts-ignore: Stale convex types
       await ctx.scheduler.runAfter(0, internal.email.sendEmail, {
         email: normalizedEmail,
         otp,
