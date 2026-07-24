@@ -7,7 +7,7 @@ let convexClient: ConvexReactClient | null = null;
 function getConvexClient(): ConvexReactClient {
   if (!convexClient) {
     convexClient = new ConvexReactClient(CONVEX_URL, {
-      skipConvexDeploymentCheck: typeof window === "undefined",
+      skipConvexDeploymentUrlCheck: typeof window === "undefined",
     });
   }
   return convexClient;

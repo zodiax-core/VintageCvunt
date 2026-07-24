@@ -430,6 +430,7 @@ export const requestPasswordReset = mutation({
       updatedAt: Date.now(),
     });
 
+    // @ts-ignore: Stale convex types
     await ctx.scheduler.runAfter(0, internal.email.sendEmail, {
       email: normalizedEmail,
       otp,
