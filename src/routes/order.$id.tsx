@@ -10,6 +10,7 @@ import { api } from "../../convex/_generated/api";
 import { useQuery } from "convex/react";
 
 export const Route = createFileRoute("/order/$id")({
+  beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
   component: OrderDetail,
   head: () => ({
     meta: [{ title: "Order Detail — VintageCvunt Admin" }],

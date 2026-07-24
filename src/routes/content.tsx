@@ -6,6 +6,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/content")({
+  beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
   component: Content,
   head: () => ({
     meta: [{ title: "Content — VintageCvunt Admin" }],

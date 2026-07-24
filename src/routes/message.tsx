@@ -13,6 +13,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/message")({
+  beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
   component: Messages,
   head: () => ({
     meta: [{ title: "Messages — VintageCvunt Admin" }],

@@ -18,6 +18,17 @@ export const getByProductId = query({
   },
 });
 
+export const getByCustomerEmail = query({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("reviews")
+      .filter((q) => q.eq(q.field("customerEmail"), args.email.toLowerCase().trim()))
+      .order("desc")
+      .collect();
+  },
+});
+
 export const create = mutation({
   args: {
     productId: v.string(),

@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/table";
 
 export const Route = createFileRoute("/setting")({
+  beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
   component: Settings,
   head: () => ({
     meta: [{ title: "Settings — VintageCvunt Admin" }],

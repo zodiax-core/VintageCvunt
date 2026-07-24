@@ -76,9 +76,9 @@ export function SiteNav() {
                 Admin
               </Link>
             ) : user ? (
-              <span className="hidden md:inline font-mono text-[11px] text-chrome truncate max-w-[100px]">
+              <Link to="/account" className="hidden md:inline hover:opacity-70 transition-opacity font-mono text-[11px]">
                 {user.name.split(" ")[0]}
-              </span>
+              </Link>
             ) : (
               <Link to="/auth" className="hidden md:inline hover:opacity-70 transition-opacity">Account</Link>
             )}
@@ -121,7 +121,11 @@ export function SiteNav() {
                 <div className="h-px w-full bg-black/10" />
                 <div className="flex flex-col gap-4 font-mono text-[11px] uppercase tracking-[0.24em] text-black/70">
                   <button className="text-left hover:text-black transition-colors" onClick={() => { setMenuOpen(false); setSearchOpen(true); }}>Search</button>
-                  <Link to="/auth" onClick={() => setMenuOpen(false)} className="hover:text-black transition-colors">Account</Link>
+                  {user ? (
+                    <Link to="/account" onClick={() => setMenuOpen(false)} className="hover:text-black transition-colors">Account</Link>
+                  ) : (
+                    <Link to="/auth" onClick={() => setMenuOpen(false)} className="hover:text-black transition-colors">Account</Link>
+                  )}
                   <button className="text-left hover:text-black transition-colors" onClick={() => { setMenuOpen(false); handleCartClick(); }}>Cart ({cartCount})</button>
                 </div>
               </div>

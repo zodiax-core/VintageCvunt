@@ -6,6 +6,7 @@ import { api } from "../../convex/_generated/api";
 import { useMutation } from "convex/react";
 
 export const Route = createFileRoute("/product/new")({
+  beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
   component: AddProduct,
   head: () => ({
     meta: [{ title: "Add Product — VintageCvunt Admin" }],

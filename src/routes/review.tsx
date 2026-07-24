@@ -11,6 +11,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/review")({
+  beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
   component: Reviews,
   head: () => ({
     meta: [{ title: "Reviews — VintageCvunt Admin" }],

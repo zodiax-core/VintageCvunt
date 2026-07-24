@@ -13,7 +13,9 @@ const AuthContext = createContext<{
   user: AuthUser | null;
   login: (user: AuthUser) => void;
   logout: () => void;
+  updateUser: (updates: Partial<AuthUser>) => void;
   isAdmin: boolean;
+  isCustomer: boolean;
 } | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -25,7 +27,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && parsed.email) {
-          // If email is zodiaxcore@gmail.com ensure role is admin
           if (parsed.email.toLowerCase() === "zodiaxcore@gmail.com") {
             parsed.role = "admin";
           }
@@ -50,10 +51,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(STORAGE_KEY);
   };
 
+  const updateUser = (updates: Partial<AuthUser>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...updates };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const isAdmin = Boolean(user && (user.role === "admin" || user.email.toLowerCase() === "zodiaxcore@gmail.com"));
+  const isCustomer = Boolean(user && user.role === "customer");
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAdmin }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, isAdmin, isCustomer }}>
       {children}
     </AuthContext.Provider>
   );

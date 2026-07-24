@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import {
@@ -16,16 +16,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/admin")({
-  beforeLoad: () => {
-    const raw = localStorage.getItem("vc_user");
-    if (!raw) throw notFound();
-    try {
-      const user = JSON.parse(raw);
-      if (user.email?.toLowerCase() !== "zodiaxcore@gmail.com") throw notFound();
-    } catch {
-      throw notFound();
-    }
-  },
+  beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
   component: AdminDashboard,
   head: () => ({
     meta: [{ title: "Dashboard — VintageCvunt Admin" }],

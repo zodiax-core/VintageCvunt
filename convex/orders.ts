@@ -25,9 +25,21 @@ export const getByEmail = query({
   },
 });
 
+export const getByCustomerId = query({
+  args: { customerId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("orders")
+      .filter((q) => q.eq(q.field("customerId"), args.customerId))
+      .order("desc")
+      .collect();
+  },
+});
+
 export const create = mutation({
   args: {
     orderNumber: v.string(),
+    customerId: v.optional(v.string()),
     customerName: v.string(),
     customerEmail: v.string(),
     items: v.array(
@@ -66,11 +78,25 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    return await ctx.db.insert("orders", {
+    const orderId = await ctx.db.insert("orders", {
       ...args,
       createdAt: now,
       updatedAt: now,
     });
+    if (args.customerId) {
+      const customer = await ctx.db
+        .query("customers")
+        .filter((q) => q.eq(q.field("_id"), args.customerId!))
+        .first();
+      if (customer) {
+        await ctx.db.patch(customer._id, {
+          totalOrders: (customer.totalOrders || 0) + 1,
+          totalSpent: (customer.totalSpent || 0) + args.total,
+          updatedAt: now,
+        });
+      }
+    }
+    return orderId;
   },
 });
 

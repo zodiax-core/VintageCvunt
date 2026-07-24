@@ -6,6 +6,7 @@ import { api } from "../../convex/_generated/api";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useCartContext } from "@/lib/cart-context";
+import { useAuthContext } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/checkout")({
   component: Checkout,
@@ -22,9 +23,18 @@ const priceLabel = (p: number) => "PKR " + p.toLocaleString("en-PK");
 
 function Checkout() {
   const { cart, cartTotal, cartCount, clearCart } = useCartContext();
+  const { user } = useAuthContext();
   const navigate = useNavigate();
 
-  const [billing, setBilling] = useState({ name: "", email: "", phone: "", address: "", city: "", country: "", zip: "" });
+  const [billing, setBilling] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: "",
+    address: "",
+    city: "",
+    country: "Pakistan",
+    zip: "",
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [screenshot, setScreenshot] = useState<File | null>(null);
@@ -88,6 +98,7 @@ function Checkout() {
       const orderNumber = "VC-" + String(Math.floor(100000 + Math.random() * 900000));
       await createOrder({
         orderNumber,
+        customerId: user?.id || undefined,
         customerName: billing.name,
         customerEmail: billing.email,
         items: cart.items.map((item) => ({

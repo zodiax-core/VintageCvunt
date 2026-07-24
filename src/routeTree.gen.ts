@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -28,13 +29,17 @@ import { Route as OrderConfirmedRouteImport } from './routes/order-confirmed'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as ProductRouteImport } from './routes/product'
 import { Route as ReviewRouteImport } from './routes/review'
+import { Route as ReviewsRouteImport } from './routes/reviews'
 import { Route as SettingRouteImport } from './routes/setting'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ShippingReturnsRouteImport } from './routes/shipping-returns'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as SizeGuideRouteImport } from './routes/size-guide'
 import { Route as TermsConditionsRouteImport } from './routes/terms-conditions'
 import { Route as CustomerIdRouteImport } from './routes/customer.$id'
 import { Route as OrderIdRouteImport } from './routes/order.$id'
+import { Route as OrdersIndexRouteImport } from './routes/orders.index'
+import { Route as OrdersIdRouteImport } from './routes/orders.$id'
 import { Route as ProductNewRouteImport } from './routes/product.new'
 import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
 import { Route as ProductIdEditRouteImport } from './routes/product.$id.edit'
@@ -47,6 +52,11 @@ const IndexRoute = IndexRouteImport.update({
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -134,9 +144,19 @@ const ReviewRoute = ReviewRouteImport.update({
   path: '/review',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReviewsRoute = ReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingRoute = SettingRouteImport.update({
   id: '/setting',
   path: '/setting',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShippingReturnsRoute = ShippingReturnsRouteImport.update({
@@ -169,6 +189,16 @@ const OrderIdRoute = OrderIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => OrderRoute,
 } as any)
+const OrdersIndexRoute = OrdersIndexRouteImport.update({
+  id: '/orders/',
+  path: '/orders/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrdersIdRoute = OrdersIdRouteImport.update({
+  id: '/orders/$id',
+  path: '/orders/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductNewRoute = ProductNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -188,6 +218,7 @@ const ProductIdEditRoute = ProductIdEditRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
@@ -205,20 +236,25 @@ export interface FileRoutesByFullPath {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/product': typeof ProductRouteWithChildren
   '/review': typeof ReviewRoute
+  '/reviews': typeof ReviewsRoute
   '/setting': typeof SettingRoute
+  '/settings': typeof SettingsRoute
   '/shipping-returns': typeof ShippingReturnsRoute
   '/shop': typeof ShopRoute
   '/size-guide': typeof SizeGuideRoute
   '/terms-conditions': typeof TermsConditionsRoute
   '/customer/$id': typeof CustomerIdRoute
   '/order/$id': typeof OrderIdRoute
+  '/orders/$id': typeof OrdersIdRoute
   '/product/new': typeof ProductNewRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/orders/': typeof OrdersIndexRoute
   '/product/$id/edit': typeof ProductIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
@@ -236,21 +272,26 @@ export interface FileRoutesByTo {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/product': typeof ProductRouteWithChildren
   '/review': typeof ReviewRoute
+  '/reviews': typeof ReviewsRoute
   '/setting': typeof SettingRoute
+  '/settings': typeof SettingsRoute
   '/shipping-returns': typeof ShippingReturnsRoute
   '/shop': typeof ShopRoute
   '/size-guide': typeof SizeGuideRoute
   '/terms-conditions': typeof TermsConditionsRoute
   '/customer/$id': typeof CustomerIdRoute
   '/order/$id': typeof OrderIdRoute
+  '/orders/$id': typeof OrdersIdRoute
   '/product/new': typeof ProductNewRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/orders': typeof OrdersIndexRoute
   '/product/$id/edit': typeof ProductIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
@@ -268,15 +309,19 @@ export interface FileRoutesById {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/product': typeof ProductRouteWithChildren
   '/review': typeof ReviewRoute
+  '/reviews': typeof ReviewsRoute
   '/setting': typeof SettingRoute
+  '/settings': typeof SettingsRoute
   '/shipping-returns': typeof ShippingReturnsRoute
   '/shop': typeof ShopRoute
   '/size-guide': typeof SizeGuideRoute
   '/terms-conditions': typeof TermsConditionsRoute
   '/customer/$id': typeof CustomerIdRoute
   '/order/$id': typeof OrderIdRoute
+  '/orders/$id': typeof OrdersIdRoute
   '/product/new': typeof ProductNewRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/orders/': typeof OrdersIndexRoute
   '/product/$id/edit': typeof ProductIdEditRoute
 }
 export interface FileRouteTypes {
@@ -284,6 +329,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/account'
     | '/admin'
     | '/analytics'
     | '/auth'
@@ -301,20 +347,25 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/product'
     | '/review'
+    | '/reviews'
     | '/setting'
+    | '/settings'
     | '/shipping-returns'
     | '/shop'
     | '/size-guide'
     | '/terms-conditions'
     | '/customer/$id'
     | '/order/$id'
+    | '/orders/$id'
     | '/product/new'
     | '/products/$slug'
+    | '/orders/'
     | '/product/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
+    | '/account'
     | '/admin'
     | '/analytics'
     | '/auth'
@@ -332,20 +383,25 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/product'
     | '/review'
+    | '/reviews'
     | '/setting'
+    | '/settings'
     | '/shipping-returns'
     | '/shop'
     | '/size-guide'
     | '/terms-conditions'
     | '/customer/$id'
     | '/order/$id'
+    | '/orders/$id'
     | '/product/new'
     | '/products/$slug'
+    | '/orders'
     | '/product/$id/edit'
   id:
     | '__root__'
     | '/'
     | '/about'
+    | '/account'
     | '/admin'
     | '/analytics'
     | '/auth'
@@ -363,21 +419,26 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/product'
     | '/review'
+    | '/reviews'
     | '/setting'
+    | '/settings'
     | '/shipping-returns'
     | '/shop'
     | '/size-guide'
     | '/terms-conditions'
     | '/customer/$id'
     | '/order/$id'
+    | '/orders/$id'
     | '/product/new'
     | '/products/$slug'
+    | '/orders/'
     | '/product/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
   AnalyticsRoute: typeof AnalyticsRoute
   AuthRoute: typeof AuthRoute
@@ -395,12 +456,16 @@ export interface RootRouteChildren {
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   ProductRoute: typeof ProductRouteWithChildren
   ReviewRoute: typeof ReviewRoute
+  ReviewsRoute: typeof ReviewsRoute
   SettingRoute: typeof SettingRoute
+  SettingsRoute: typeof SettingsRoute
   ShippingReturnsRoute: typeof ShippingReturnsRoute
   ShopRoute: typeof ShopRoute
   SizeGuideRoute: typeof SizeGuideRoute
   TermsConditionsRoute: typeof TermsConditionsRoute
+  OrdersIdRoute: typeof OrdersIdRoute
   ProductsSlugRoute: typeof ProductsSlugRoute
+  OrdersIndexRoute: typeof OrdersIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -417,6 +482,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -538,11 +610,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reviews': {
+      id: '/reviews'
+      path: '/reviews'
+      fullPath: '/reviews'
+      preLoaderRoute: typeof ReviewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/setting': {
       id: '/setting'
       path: '/setting'
       fullPath: '/setting'
       preLoaderRoute: typeof SettingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shipping-returns': {
@@ -586,6 +672,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/order/$id'
       preLoaderRoute: typeof OrderIdRouteImport
       parentRoute: typeof OrderRoute
+    }
+    '/orders/': {
+      id: '/orders/'
+      path: '/orders'
+      fullPath: '/orders/'
+      preLoaderRoute: typeof OrdersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/orders/$id': {
+      id: '/orders/$id'
+      path: '/orders/$id'
+      fullPath: '/orders/$id'
+      preLoaderRoute: typeof OrdersIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/product/new': {
       id: '/product/new'
@@ -649,6 +749,7 @@ const ProductRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
   AnalyticsRoute: AnalyticsRoute,
   AuthRoute: AuthRoute,
@@ -666,12 +767,16 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   ProductRoute: ProductRouteWithChildren,
   ReviewRoute: ReviewRoute,
+  ReviewsRoute: ReviewsRoute,
   SettingRoute: SettingRoute,
+  SettingsRoute: SettingsRoute,
   ShippingReturnsRoute: ShippingReturnsRoute,
   ShopRoute: ShopRoute,
   SizeGuideRoute: SizeGuideRoute,
   TermsConditionsRoute: TermsConditionsRoute,
+  OrdersIdRoute: OrdersIdRoute,
   ProductsSlugRoute: ProductsSlugRoute,
+  OrdersIndexRoute: OrdersIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
