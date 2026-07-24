@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { api } from "./_generated/api";
 
 export const list = query({
   args: {},
@@ -96,6 +97,27 @@ export const create = mutation({
         });
       }
     }
+
+    // Send order confirmation email
+    await ctx.scheduler.runAfter(0, api.email.sendOrderConfirmation, {
+      email: args.customerEmail,
+      customerName: args.customerName,
+      orderNumber: args.orderNumber,
+      items: args.items.map((item) => ({
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+        size: item.size,
+        color: item.color,
+      })),
+      subtotal: args.subtotal,
+      shipping: args.shipping,
+      tax: args.tax,
+      total: args.total,
+      status: args.status,
+      shippingAddress: args.shippingAddress,
+    });
+
     return orderId;
   },
 });
