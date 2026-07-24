@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { generateReceiptPDF } from "@/lib/pdf-utils";
 
 export const Route = createFileRoute("/order-confirmed")({
   component: OrderConfirmed,
@@ -22,6 +25,7 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 function OrderConfirmed() {
   const { orderId } = Route.useSearch();
   const [mounted, setMounted] = useState(false);
+  const order = useQuery(api.orders.getByOrderNumber, { orderNumber: orderId });
 
   useEffect(() => {
     setMounted(true);
@@ -100,16 +104,22 @@ function OrderConfirmed() {
           >
             <button
               onClick={() => {
-                const receipt = `Order: ${orderId}\nDate: ${new Date().toISOString()}\n\nThank you for your patronage.\n— VintageCvunt · Casa d'Argento`;
-                const blob = new Blob([receipt], { type: "text/plain" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `receipt-${orderId}.txt`;
-                a.click();
-                URL.revokeObjectURL(url);
+                if (order) {
+                  generateReceiptPDF(order as any);
+                } else {
+                  // Fallback
+                  const receipt = `Order: ${orderId}\nDate: ${new Date().toISOString()}\n\nThank you for your patronage.\n— VintageCvunt · Casa d'Argento`;
+                  const blob = new Blob([receipt], { type: "text/plain" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `receipt-${orderId}.txt`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }
               }}
               className="btn-chrome btn-chrome-inner"
+              disabled={!order}
             >
               <span className="btn-label">Download Receipt</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

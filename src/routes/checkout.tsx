@@ -51,7 +51,6 @@ function Checkout() {
     else if (!/^[\d\s\+\-]{7,15}$/.test(billing.phone)) errs.phone = "Enter a valid phone number";
     if (!billing.address.trim()) errs.address = "Address is required";
     if (!billing.city.trim()) errs.city = "City is required";
-    if (!billing.country) errs.country = "Country is required";
     if (!billing.zip.trim()) errs.zip = "ZIP code is required";
     if (!screenshot) errs.screenshot = "Payment screenshot is required";
     return errs;
@@ -81,7 +80,7 @@ function Checkout() {
     setErrors(errs);
     setTouched({
       name: true, email: true, phone: true, address: true,
-      city: true, country: true, zip: true, screenshot: true,
+      city: true, zip: true, screenshot: true,
     });
     if (Object.keys(errs).length > 0) return;
 
@@ -261,7 +260,6 @@ function Checkout() {
                             disabled
                             className="w-full rounded-xl border border-chrome/20 bg-graphite/50 px-4 py-3 font-mono text-sm text-chrome-dim/60 outline-none cursor-not-allowed"
                           />
-                        {touched.country && errors.country && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.country}</p>}
                       </div>
                       <div>
                         <label className="block font-mono text-[10px] uppercase tracking-[0.24em] text-chrome-dim mb-2">ZIP Code *</label>

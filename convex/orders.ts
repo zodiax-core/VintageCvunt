@@ -26,6 +26,17 @@ export const getByEmail = query({
   },
 });
 
+export const getByOrderNumber = query({
+  args: { orderNumber: v.string() },
+  handler: async (ctx, args) => {
+    const orders = await ctx.db
+      .query("orders")
+      .filter((q) => q.eq(q.field("orderNumber"), args.orderNumber))
+      .collect();
+    return orders[0] || null;
+  },
+});
+
 export const getByCustomerId = query({
   args: { customerId: v.string() },
   handler: async (ctx, args) => {

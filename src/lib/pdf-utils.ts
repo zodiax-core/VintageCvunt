@@ -18,29 +18,25 @@ const defaultBrand: BrandInfo = {
   email: "studio@vintagecvunt.com",
 };
 
-// ─── Color Palette ────────────────────────────────────────────────────────────
+// ─── Color Palette (Light Theme for PDF) ──────────────────────────────────────
 const C = {
-  BLACK: [8, 8, 8] as [number, number, number],
-  DARK: [14, 14, 14] as [number, number, number],
-  PANEL: [18, 18, 18] as [number, number, number],
-  BORDER: [30, 30, 30] as [number, number, number],
-  DIM: [50, 50, 50] as [number, number, number],
-  MUTED: [100, 100, 100] as [number, number, number],
-  CHROME: [160, 160, 160] as [number, number, number],
-  LIGHT: [200, 200, 200] as [number, number, number],
-  WHITE: [232, 232, 227] as [number, number, number],
+  BLACK: [0, 0, 0] as [number, number, number],
+  DARK_GRAY: [50, 50, 50] as [number, number, number],
+  GRAY: [120, 120, 120] as [number, number, number],
+  LIGHT_GRAY: [230, 230, 230] as [number, number, number],
+  WHITE: [255, 255, 255] as [number, number, number],
   STATUS: {
-    Pending: [234, 179, 8] as [number, number, number],
-    Processing: [99, 179, 237] as [number, number, number],
-    Shipped: [167, 139, 250] as [number, number, number],
-    Delivered: [74, 222, 128] as [number, number, number],
-    Cancelled: [248, 113, 113] as [number, number, number],
+    Pending: [217, 119, 6] as [number, number, number], // Amber
+    Processing: [37, 99, 235] as [number, number, number], // Blue
+    Shipped: [124, 58, 237] as [number, number, number], // Purple
+    Delivered: [22, 163, 74] as [number, number, number], // Green
+    Cancelled: [220, 38, 38] as [number, number, number], // Red
   } as Record<string, [number, number, number]>,
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function fmt(n: number): string {
-  return "$" + n.toFixed(2);
+  return "PKR " + n.toLocaleString("en-PK");
 }
 
 function fmtDate(ts?: number | string): string {
@@ -54,98 +50,43 @@ function setFont(doc: jsPDF, weight: "normal" | "bold" = "normal", size = 9) {
   doc.setFontSize(size);
 }
 
-function mono(doc: jsPDF, text: string, x: number, y: number, opts?: { align?: "left" | "center" | "right" }) {
-  // simulate mono by using bold helvetica with wide letter-spacing
-  setFont(doc, "bold", doc.getFontSize());
-  doc.text(text, x, y, opts);
-}
-
-// Draw a filled rectangle with rounded corners utility
-function filledRect(doc: jsPDF, x: number, y: number, w: number, h: number, color: [number, number, number]) {
-  doc.setFillColor(...color);
-  doc.rect(x, y, w, h, "F");
-}
-
 // Thin rule
-function rule(doc: jsPDF, y: number, color: [number, number, number] = C.BORDER) {
+function rule(doc: jsPDF, y: number, color: [number, number, number] = C.LIGHT_GRAY) {
   const pw = doc.internal.pageSize.width;
   doc.setDrawColor(...color);
   doc.setLineWidth(0.2);
   doc.line(14, y, pw - 14, y);
 }
 
-// Label above value (small caps style)
-function labelValue(doc: jsPDF, label: string, value: string, x: number, y: number, color: [number, number, number] = C.WHITE) {
-  setFont(doc, "normal", 7);
-  doc.setTextColor(...C.MUTED);
-  doc.text(label.toUpperCase(), x, y);
-  setFont(doc, "bold", 9);
-  doc.setTextColor(...color);
-  doc.text(value, x, y + 6);
-}
-
 // Status badge (pill)
 function statusBadge(doc: jsPDF, status: string, x: number, y: number) {
-  const color = C.STATUS[status] || C.CHROME;
+  const color = C.STATUS[status] || C.GRAY;
   const label = status.toUpperCase();
-  setFont(doc, "bold", 6.5);
+  setFont(doc, "bold", 7);
   doc.setTextColor(...color);
   const tw = doc.getTextWidth(label);
   const padX = 4;
-  const padY = 2;
+  
+  // Background
   doc.setDrawColor(...color);
-  doc.setFillColor(color[0] * 0.08 + 8, color[1] * 0.08 + 8, color[2] * 0.08 + 8);
-  doc.setLineWidth(0.3);
+  doc.setFillColor(color[0] + (255 - color[0]) * 0.9, color[1] + (255 - color[1]) * 0.9, color[2] + (255 - color[2]) * 0.9);
+  doc.setLineWidth(0.2);
   doc.roundedRect(x, y - 5, tw + padX * 2, 7, 1.5, 1.5, "FD");
   doc.text(label, x + padX, y);
-}
-
-// Page header — full-width dark band
-function pageHeader(doc: jsPDF, brand: BrandInfo, right?: { label: string; value: string }) {
-  const pw = doc.internal.pageSize.width;
-  filledRect(doc, 0, 0, pw, 36, C.BLACK);
-
-  // Brand dot
-  doc.setFillColor(...C.WHITE);
-  doc.circle(14 + 3, 14, 2.5, "F");
-
-  // Brand name
-  setFont(doc, "bold", 10);
-  doc.setTextColor(...C.WHITE);
-  doc.text(brand.name.toUpperCase(), 14 + 9, 16);
-
-  // Tagline
-  setFont(doc, "normal", 7);
-  doc.setTextColor(...C.MUTED);
-  doc.text(brand.tagline, 14 + 9, 24);
-
-  // Right side info
-  if (right) {
-    setFont(doc, "normal", 7);
-    doc.setTextColor(...C.MUTED);
-    doc.text(right.label.toUpperCase(), pw - 14, 14, { align: "right" });
-    setFont(doc, "bold", 9);
-    doc.setTextColor(...C.WHITE);
-    doc.text(right.value, pw - 14, 22, { align: "right" });
-  }
-
-  // Bottom micro-line accent
-  doc.setDrawColor(40, 40, 40);
-  doc.setLineWidth(0.4);
-  doc.line(0, 36, pw, 36);
 }
 
 // Page footer
 function pageFooter(doc: jsPDF, brand: BrandInfo) {
   const pw = doc.internal.pageSize.width;
   const ph = doc.internal.pageSize.height;
-  filledRect(doc, 0, ph - 16, pw, 16, C.BLACK);
+  
+  rule(doc, ph - 16, C.LIGHT_GRAY);
   setFont(doc, "normal", 7);
-  doc.setTextColor(...C.DIM);
+  doc.setTextColor(...C.GRAY);
   doc.text(
     `${brand.name.toUpperCase()} · ${brand.address} · ${brand.email}`,
     pw / 2,
-    ph - 6,
+    ph - 8,
     { align: "center" }
   );
 }
@@ -159,8 +100,8 @@ function addPageNumbers(doc: jsPDF, brand: BrandInfo) {
       const pw = doc.internal.pageSize.width;
       const ph = doc.internal.pageSize.height;
       setFont(doc, "normal", 6.5);
-      doc.setTextColor(...C.DIM);
-      doc.text(`${p} / ${total}`, pw - 14, ph - 5, { align: "right" });
+      doc.setTextColor(...C.GRAY);
+      doc.text(`${p} / ${total}`, pw - 14, ph - 8, { align: "right" });
     }
   }
 }
@@ -169,155 +110,184 @@ function addPageNumbers(doc: jsPDF, brand: BrandInfo) {
 export function generateReceiptPDF(
   order: {
     id: string;
-    customer: string;
-    email: string;
-    date: string;
+    orderNumber?: string;
+    customerName?: string;
+    customerEmail?: string;
+    _creationTime?: number;
     status: string;
-    phone: string;
-    address: string;
+    shippingAddress?: { street: string; city: string; zip: string; country: string };
+    billingAddress?: { street: string; city: string; zip: string; country: string };
     shipping: number;
     tax: number;
-    items: Array<{ product: string; sku: string; price: number; qty: number; subtotal: number }>;
+    items: Array<{ name?: string; product?: string; price: number; quantity?: number; qty?: number; subtotal?: number; sku?: string }>;
     paymentMethod?: string;
-    shippingMethod?: string;
+    subtotal?: number;
+    total?: number;
   },
   brand: BrandInfo = defaultBrand,
 ) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pw = doc.internal.pageSize.width;
 
+  // Normalization for Order objects from DB vs passed manually
+  const orderNumber = order.orderNumber || order.id;
+  const customer = order.customerName || "Customer";
+  const email = order.customerEmail || "";
+  const date = order._creationTime ? fmtDate(order._creationTime) : fmtDate(Date.now());
+  const paymentMethod = order.paymentMethod || "Bank Transfer";
+  
+  const shipAddr = order.shippingAddress || { street: "", city: "", zip: "", country: "" };
+  const billAddr = order.billingAddress || shipAddr;
+
   // ── Header ──
-  pageHeader(doc, brand, { label: "Invoice", value: order.id });
+  setFont(doc, "bold", 24);
+  doc.setTextColor(...C.BLACK);
+  doc.text(brand.name.toUpperCase(), 14, 24);
 
-  // ── Document title ──
-  let y = 46;
-  setFont(doc, "normal", 7);
-  doc.setTextColor(...C.MUTED);
-  doc.text("— TAX INVOICE / RECEIPT", 14, y);
+  setFont(doc, "normal", 9);
+  doc.setTextColor(...C.GRAY);
+  doc.text(brand.tagline, 14, 30);
+  
+  setFont(doc, "bold", 18);
+  doc.setTextColor(...C.BLACK);
+  doc.text("RECEIPT", pw - 14, 24, { align: "right" });
+  
+  setFont(doc, "normal", 9);
+  doc.setTextColor(...C.GRAY);
+  doc.text(orderNumber, pw - 14, 30, { align: "right" });
 
-  y += 6;
-  setFont(doc, "bold", 22);
-  doc.setTextColor(...C.WHITE);
-  doc.text("Order Receipt", 14, y);
-
-  y += 4;
-  rule(doc, y + 4, C.DIM);
+  let y = 42;
+  rule(doc, y, C.LIGHT_GRAY);
   y += 12;
 
   // ── Meta strip ──
   const metaItems = [
-    { label: "Date", value: order.date },
-    { label: "Order", value: order.id },
-    { label: "Status", value: order.status, isStatus: true },
-    { label: "Payment", value: order.paymentMethod || "Credit Card" },
+    { label: "Date", value: date },
+    { label: "Order", value: orderNumber },
+    { label: "Status", value: order.status.charAt(0).toUpperCase() + order.status.slice(1), isStatus: true },
+    { label: "Payment", value: paymentMethod },
   ];
-  const colW = (pw - 28) / metaItems.length;
+  
+  const colW = (pw - 28) / 4;
   metaItems.forEach((m, i) => {
     const mx = 14 + i * colW;
-    setFont(doc, "normal", 6.5);
-    doc.setTextColor(...C.MUTED);
+    setFont(doc, "bold", 7);
+    doc.setTextColor(...C.GRAY);
     doc.text(m.label.toUpperCase(), mx, y);
     if ((m as any).isStatus) {
-      statusBadge(doc, m.value, mx, y + 8);
+      statusBadge(doc, m.value, mx, y + 6);
     } else {
-      setFont(doc, "bold", 8.5);
-      doc.setTextColor(...C.LIGHT);
-      doc.text(m.value, mx, y + 7);
+      setFont(doc, "bold", 9);
+      doc.setTextColor(...C.BLACK);
+      doc.text(m.value, mx, y + 6);
     }
   });
 
-  y += 18;
-  rule(doc, y, C.BORDER);
-  y += 10;
+  y += 20;
+  rule(doc, y, C.LIGHT_GRAY);
+  y += 12;
 
   // ── Bill to / Ship to ──
   const halfW = (pw - 28) / 2 - 4;
+  
   // Left: Bill To
-  filledRect(doc, 14, y, halfW, 38, C.PANEL);
-  doc.setDrawColor(...C.BORDER);
-  doc.setLineWidth(0.2);
-  doc.rect(14, y, halfW, 38, "S");
-
-  setFont(doc, "bold", 6.5);
-  doc.setTextColor(...C.MUTED);
-  doc.text("BILL TO", 20, y + 8);
+  setFont(doc, "bold", 7);
+  doc.setTextColor(...C.GRAY);
+  doc.text("BILL TO", 14, y);
+  
   setFont(doc, "bold", 9);
-  doc.setTextColor(...C.WHITE);
-  doc.text(order.customer, 20, y + 16);
-  setFont(doc, "normal", 7.5);
-  doc.setTextColor(...C.CHROME);
-  doc.text(order.email, 20, y + 23);
-  doc.text(order.phone, 20, y + 30);
+  doc.setTextColor(...C.BLACK);
+  doc.text(customer, 14, y + 6);
+  
+  setFont(doc, "normal", 8.5);
+  doc.setTextColor(...C.DARK_GRAY);
+  let addrY = y + 12;
+  doc.text(email, 14, addrY);
+  addrY += 5;
+  if (billAddr.street) {
+    const addrLines = [billAddr.street, `${billAddr.city}, ${billAddr.zip}`, billAddr.country].filter(Boolean);
+    addrLines.forEach(line => {
+      doc.text(line, 14, addrY);
+      addrY += 5;
+    });
+  }
 
   // Right: Ship To
   const rx = 14 + halfW + 8;
-  filledRect(doc, rx, y, halfW, 38, C.PANEL);
-  doc.setDrawColor(...C.BORDER);
-  doc.rect(rx, y, halfW, 38, "S");
+  setFont(doc, "bold", 7);
+  doc.setTextColor(...C.GRAY);
+  doc.text("SHIP TO", rx, y);
+  
+  setFont(doc, "bold", 9);
+  doc.setTextColor(...C.BLACK);
+  doc.text(customer, rx, y + 6);
+  
+  setFont(doc, "normal", 8.5);
+  doc.setTextColor(...C.DARK_GRAY);
+  let shipY = y + 12;
+  if (shipAddr.street) {
+    const addrLines = [shipAddr.street, `${shipAddr.city}, ${shipAddr.zip}`, shipAddr.country].filter(Boolean);
+    addrLines.forEach(line => {
+      doc.text(line, rx, shipY);
+      shipY += 5;
+    });
+  }
 
-  setFont(doc, "bold", 6.5);
-  doc.setTextColor(...C.MUTED);
-  doc.text("SHIP TO", rx + 6, y + 8);
-  setFont(doc, "normal", 7.5);
-  doc.setTextColor(...C.CHROME);
-  const addrLines = order.address.split(", ").join("\n");
-  const splitAddr = doc.splitTextToSize(addrLines, halfW - 14);
-  let lineY = y + 16;
-  splitAddr.forEach((line: string) => {
-    doc.text(line, rx + 6, lineY);
-    lineY += 6;
-  });
-
-  y += 46;
+  y = Math.max(addrY, shipY) + 10;
+  rule(doc, y, C.LIGHT_GRAY);
+  y += 12;
 
   // ── Items table ──
   setFont(doc, "bold", 7);
-  doc.setTextColor(...C.MUTED);
+  doc.setTextColor(...C.GRAY);
   doc.text("ITEMS ORDERED", 14, y);
   y += 4;
 
-  const subtotal = order.items.reduce((s, i) => s + i.subtotal, 0);
-  const total = subtotal + order.shipping + order.tax;
+  const normalizedItems = order.items.map(item => ({
+    name: item.name || item.product || "Item",
+    sku: item.sku || "N/A",
+    qty: item.quantity || item.qty || 1,
+    price: item.price || 0,
+    subtotal: item.subtotal || ((item.quantity || item.qty || 1) * (item.price || 0))
+  }));
+
+  const subtotal = order.subtotal || normalizedItems.reduce((s, i) => s + i.subtotal, 0);
+  const total = order.total || (subtotal + order.shipping + order.tax);
 
   autoTable(doc, {
     startY: y,
-    head: [["#", "Product", "SKU / Reference", "Qty", "Unit Price", "Total"]],
-    body: order.items.map((item, idx) => [
+    head: [["#", "Product", "Qty", "Unit Price", "Total"]],
+    body: normalizedItems.map((item, idx) => [
       String(idx + 1),
-      item.product,
-      item.sku,
+      item.name,
       String(item.qty),
       fmt(item.price),
       fmt(item.subtotal),
     ]),
     headStyles: {
-      fillColor: C.BLACK,
-      textColor: C.WHITE,
-      fontSize: 7,
+      fillColor: [250, 250, 250],
+      textColor: C.BLACK,
+      fontSize: 8,
       fontStyle: "bold",
       cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
+      lineWidth: { top: 0.2, bottom: 0.2, left: 0, right: 0 },
+      lineColor: C.LIGHT_GRAY,
     },
     bodyStyles: {
-      fontSize: 8,
-      textColor: C.CHROME,
+      fontSize: 8.5,
+      textColor: C.DARK_GRAY,
       cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
-      fillColor: C.DARK,
+      lineWidth: { top: 0, bottom: 0.2, left: 0, right: 0 },
+      lineColor: [240, 240, 240],
     },
-    alternateRowStyles: { fillColor: C.PANEL },
     theme: "plain",
     margin: { left: 14, right: 14 },
-    styles: {
-      lineColor: C.BORDER,
-      lineWidth: 0.15,
-      overflow: "linebreak",
-    },
     columnStyles: {
-      0: { halign: "center", cellWidth: 10, textColor: C.MUTED },
+      0: { halign: "center", cellWidth: 10, textColor: C.GRAY },
       1: { cellWidth: "auto" },
-      2: { cellWidth: 36, textColor: C.MUTED },
-      3: { halign: "center", cellWidth: 12 },
-      4: { halign: "right", cellWidth: 24 },
-      5: { halign: "right", cellWidth: 26, textColor: C.WHITE, fontStyle: "bold" },
+      2: { halign: "center", cellWidth: 16 },
+      3: { halign: "right", cellWidth: 32 },
+      4: { halign: "right", cellWidth: 32, textColor: C.BLACK, fontStyle: "bold" },
     },
   });
 
@@ -327,93 +297,95 @@ export function generateReceiptPDF(
   const sumW = 80;
   const sumX = pw - 14 - sumW;
 
-  filledRect(doc, sumX, y, sumW, 52, C.PANEL);
-  doc.setDrawColor(...C.BORDER);
-  doc.setLineWidth(0.2);
-  doc.rect(sumX, y, sumW, 52, "S");
-
   const rows = [
     { label: "Subtotal", value: fmt(subtotal) },
     { label: "Shipping", value: order.shipping === 0 ? "Free" : fmt(order.shipping) },
     { label: "Tax", value: fmt(order.tax) },
   ];
 
-  let ry = y + 8;
+  let ry = y;
   rows.forEach((row) => {
-    setFont(doc, "normal", 7.5);
-    doc.setTextColor(...C.MUTED);
-    doc.text(row.label, sumX + 6, ry);
-    doc.setTextColor(...C.CHROME);
-    doc.text(row.value, pw - 14 - 6, ry, { align: "right" });
-    ry += 8;
+    setFont(doc, "normal", 8.5);
+    doc.setTextColor(...C.GRAY);
+    doc.text(row.label, sumX, ry);
+    doc.setTextColor(...C.BLACK);
+    doc.text(row.value, pw - 14, ry, { align: "right" });
+    ry += 6;
   });
 
   // Total separator
-  doc.setDrawColor(...C.DIM);
+  ry += 2;
+  doc.setDrawColor(...C.LIGHT_GRAY);
   doc.setLineWidth(0.3);
-  doc.line(sumX + 4, ry, pw - 14 - 4, ry);
-  ry += 7;
+  doc.line(sumX, ry, pw - 14, ry);
+  ry += 6;
 
-  setFont(doc, "bold", 10);
-  doc.setTextColor(...C.WHITE);
-  doc.text("Total", sumX + 6, ry);
-  doc.text(fmt(total), pw - 14 - 6, ry, { align: "right" });
+  setFont(doc, "bold", 12);
+  doc.setTextColor(...C.BLACK);
+  doc.text("Total", sumX, ry);
+  doc.text(fmt(total), pw - 14, ry, { align: "right" });
 
   // ── Thank you ──
-  y = (doc as any).lastAutoTable.finalY + 70;
-  if (y > 250) {
+  y = ry + 40;
+  if (y > 260) {
     doc.addPage();
     y = 20;
   }
 
-  rule(doc, y - 8, C.DIM);
-  setFont(doc, "normal", 9);
-  doc.setTextColor(...C.MUTED);
-  doc.text("Thank you for shopping with VintageCvunt.", 14, y);
-  setFont(doc, "normal", 7.5);
-  doc.setTextColor(...C.DIM);
-  doc.text(`For support or returns: ${brand.email}`, 14, y + 7);
+  setFont(doc, "bold", 12);
+  doc.setTextColor(...C.BLACK);
+  doc.text("Thank you for your patronage.", 14, y);
+  
+  setFont(doc, "normal", 8.5);
+  doc.setTextColor(...C.GRAY);
+  doc.text(`For support or returns, please contact ${brand.email}`, 14, y + 6);
 
   addPageNumbers(doc, brand);
-  doc.save(`VC-Receipt-${order.id}.pdf`);
+  doc.save(`VC-Receipt-${orderNumber}.pdf`);
 }
 
 // ─── Orders Report PDF ────────────────────────────────────────────────────────
 export function generateOrdersPDF(
   orders: Array<{
     id: string;
+    orderNumber?: string;
     customer: string;
+    customerName?: string;
     email: string;
+    customerEmail?: string;
     date: string;
+    _creationTime?: number;
     items: number;
     total: number;
     status: string;
   }>,
   brand: BrandInfo = defaultBrand,
 ) {
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "landscape" });
   const pw = doc.internal.pageSize.width;
   const now = fmtDate(Date.now());
 
   // ── Header ──
-  pageHeader(doc, brand, { label: "Generated", value: now });
+  setFont(doc, "bold", 24);
+  doc.setTextColor(...C.BLACK);
+  doc.text(brand.name.toUpperCase(), 14, 24);
 
-  let y = 46;
-  setFont(doc, "normal", 7);
-  doc.setTextColor(...C.MUTED);
-  doc.text("— MANAGEMENT REPORT", 14, y);
-  y += 6;
-  setFont(doc, "bold", 22);
-  doc.setTextColor(...C.WHITE);
-  doc.text("Orders Summary", 14, y);
-  y += 4;
-  rule(doc, y + 4, C.DIM);
-  y += 14;
+  setFont(doc, "bold", 18);
+  doc.setTextColor(...C.BLACK);
+  doc.text("ORDERS REPORT", pw - 14, 24, { align: "right" });
+  
+  setFont(doc, "normal", 9);
+  doc.setTextColor(...C.GRAY);
+  doc.text(`Generated: ${now}`, pw - 14, 30, { align: "right" });
+
+  let y = 42;
+  rule(doc, y, C.LIGHT_GRAY);
+  y += 12;
 
   // ── Summary stats ──
   const totalRev = orders.reduce((s, o) => s + o.total, 0);
   const delivered = orders.filter((o) => o.status === "Delivered").length;
-  const pending = orders.filter((o) => o.status === "Pending" || o.status === "Processing").length;
+  const pending = orders.filter((o) => o.status.toLowerCase() === "pending" || o.status.toLowerCase() === "processing").length;
 
   const stats = [
     { label: "Total Orders", value: String(orders.length) },
@@ -422,69 +394,65 @@ export function generateOrdersPDF(
     { label: "Pending / Processing", value: String(pending) },
   ];
 
-  const cardW = (pw - 28 - 9) / 4;
+  const cardW = (pw - 28) / 4;
   stats.forEach((s, i) => {
-    const cx = 14 + i * (cardW + 3);
-    filledRect(doc, cx, y, cardW, 22, C.PANEL);
-    doc.setDrawColor(...C.BORDER);
-    doc.setLineWidth(0.2);
-    doc.rect(cx, y, cardW, 22, "S");
-    setFont(doc, "normal", 6.5);
-    doc.setTextColor(...C.MUTED);
-    doc.text(s.label.toUpperCase(), cx + 5, y + 7);
-    setFont(doc, "bold", 11);
-    doc.setTextColor(...C.WHITE);
-    doc.text(s.value, cx + 5, y + 17);
+    const cx = 14 + i * cardW;
+    setFont(doc, "bold", 7);
+    doc.setTextColor(...C.GRAY);
+    doc.text(s.label.toUpperCase(), cx, y);
+    setFont(doc, "bold", 14);
+    doc.setTextColor(...C.BLACK);
+    doc.text(s.value, cx, y + 8);
   });
 
-  y += 30;
-  rule(doc, y, C.BORDER);
-  y += 6;
+  y += 20;
+  rule(doc, y, C.LIGHT_GRAY);
+  y += 8;
 
   // ── Table ──
   autoTable(doc, {
     startY: y,
     head: [["Order ID", "Customer", "Email", "Date", "Items", "Total", "Status"]],
     body: orders.map((o) => [
-      o.id,
-      o.customer,
-      o.email,
-      o.date,
+      o.orderNumber || o.id,
+      o.customerName || o.customer,
+      o.customerEmail || o.email,
+      o._creationTime ? fmtDate(o._creationTime) : o.date,
       String(o.items),
       fmt(o.total),
-      o.status,
+      o.status.charAt(0).toUpperCase() + o.status.slice(1),
     ]),
     headStyles: {
-      fillColor: C.BLACK,
-      textColor: C.WHITE,
-      fontSize: 7,
+      fillColor: [250, 250, 250],
+      textColor: C.BLACK,
+      fontSize: 8,
       fontStyle: "bold",
       cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
+      lineWidth: { top: 0.2, bottom: 0.2, left: 0, right: 0 },
+      lineColor: C.LIGHT_GRAY,
     },
     bodyStyles: {
-      fontSize: 7.5,
-      textColor: C.CHROME,
-      fillColor: C.DARK,
-      cellPadding: { top: 3.5, bottom: 3.5, left: 4, right: 4 },
+      fontSize: 8.5,
+      textColor: C.DARK_GRAY,
+      cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
+      lineWidth: { top: 0, bottom: 0.2, left: 0, right: 0 },
+      lineColor: [240, 240, 240],
     },
-    alternateRowStyles: { fillColor: C.PANEL },
     theme: "plain",
     margin: { left: 14, right: 14 },
-    styles: { lineColor: C.BORDER, lineWidth: 0.15 },
     columnStyles: {
-      0: { textColor: C.WHITE, fontStyle: "bold", cellWidth: 28 },
-      1: { cellWidth: 28 },
-      2: { cellWidth: 38, textColor: C.MUTED },
-      3: { cellWidth: 24, halign: "center" },
-      4: { cellWidth: 12, halign: "center" },
-      5: { halign: "right", cellWidth: 20, textColor: C.WHITE, fontStyle: "bold" },
-      6: { halign: "center", cellWidth: 22 },
+      0: { textColor: C.BLACK, fontStyle: "bold", cellWidth: 32 },
+      1: { cellWidth: 40 },
+      2: { cellWidth: 50 },
+      3: { cellWidth: 32 },
+      4: { cellWidth: 16, halign: "center" },
+      5: { halign: "right", cellWidth: 32, textColor: C.BLACK, fontStyle: "bold" },
+      6: { halign: "center", cellWidth: 32 },
     },
-    // Color the status column text
     didParseCell(data) {
       if (data.column.index === 6 && data.section === "body") {
         const status = data.cell.raw as string;
-        const color = C.STATUS[status] || C.CHROME;
+        const color = C.STATUS[status] || C.GRAY;
         data.cell.styles.textColor = color;
         data.cell.styles.fontStyle = "bold";
       }
@@ -516,49 +484,37 @@ export function generateCustomerProfilePDF(
   const pw = doc.internal.pageSize.width;
 
   // ── Header ──
-  pageHeader(doc, brand, { label: "Customer ID", value: customer.id });
+  setFont(doc, "bold", 24);
+  doc.setTextColor(...C.BLACK);
+  doc.text(brand.name.toUpperCase(), 14, 24);
 
-  let y = 46;
-  setFont(doc, "normal", 7);
-  doc.setTextColor(...C.MUTED);
-  doc.text("— CUSTOMER PROFILE", 14, y);
-  y += 6;
-  setFont(doc, "bold", 22);
-  doc.setTextColor(...C.WHITE);
-  doc.text(customer.name, 14, y);
-  y += 4;
-  rule(doc, y + 4, C.DIM);
+  setFont(doc, "bold", 18);
+  doc.setTextColor(...C.BLACK);
+  doc.text("CUSTOMER PROFILE", pw - 14, 24, { align: "right" });
+  
+  setFont(doc, "normal", 9);
+  doc.setTextColor(...C.GRAY);
+  doc.text(customer.id, pw - 14, 30, { align: "right" });
+
+  let y = 42;
+  rule(doc, y, C.LIGHT_GRAY);
   y += 12;
 
-  // ── Contact info ──
-  filledRect(doc, 14, y, pw - 28, 28, C.PANEL);
-  doc.setDrawColor(...C.BORDER);
-  doc.setLineWidth(0.2);
-  doc.rect(14, y, pw - 28, 28, "S");
-
-  const contactItems = [
-    { label: "Email", value: customer.email },
-    { label: "Phone", value: customer.phone },
-    { label: "Joined", value: customer.joined },
-    { label: "Status", value: customer.status, isStatus: true },
-  ];
-
-  const cw = (pw - 28) / contactItems.length;
-  contactItems.forEach((c, i) => {
-    const cx = 14 + i * cw;
-    setFont(doc, "normal", 6.5);
-    doc.setTextColor(...C.MUTED);
-    doc.text(c.label.toUpperCase(), cx + 6, y + 8);
-    if ((c as any).isStatus) {
-      statusBadge(doc, c.value, cx + 6, y + 20);
-    } else {
-      setFont(doc, "bold", 8.5);
-      doc.setTextColor(...C.LIGHT);
-      doc.text(c.value, cx + 6, y + 19);
-    }
-  });
-
-  y += 36;
+  // ── Profile Info ──
+  setFont(doc, "bold", 20);
+  doc.setTextColor(...C.BLACK);
+  doc.text(customer.name, 14, y);
+  
+  setFont(doc, "normal", 9);
+  doc.setTextColor(...C.DARK_GRAY);
+  doc.text(customer.email, 14, y + 6);
+  doc.text(customer.phone, 14, y + 12);
+  
+  statusBadge(doc, customer.status, pw - 40, y);
+  
+  y += 24;
+  rule(doc, y, C.LIGHT_GRAY);
+  y += 12;
 
   // ── Stats ──
   const stats = [
@@ -568,66 +524,59 @@ export function generateCustomerProfilePDF(
     { label: "Last Order", value: customer.lastOrderDate },
   ];
 
-  const cardW = (pw - 28 - 6) / 4;
+  const cardW = (pw - 28) / 4;
   stats.forEach((s, i) => {
-    const cx = 14 + i * (cardW + 2);
-    filledRect(doc, cx, y, cardW, 24, C.PANEL);
-    doc.setDrawColor(...C.BORDER);
-    doc.setLineWidth(0.2);
-    doc.rect(cx, y, cardW, 24, "S");
-    // Top accent line per stat
-    doc.setDrawColor(...C.CHROME);
-    doc.setLineWidth(0.8);
-    doc.line(cx, y, cx + cardW * 0.35, y);
-    setFont(doc, "normal", 6.5);
-    doc.setTextColor(...C.MUTED);
-    doc.text(s.label.toUpperCase(), cx + 5, y + 9);
+    const cx = 14 + i * cardW;
+    setFont(doc, "bold", 7);
+    doc.setTextColor(...C.GRAY);
+    doc.text(s.label.toUpperCase(), cx, y);
     setFont(doc, "bold", 11);
-    doc.setTextColor(...C.WHITE);
-    doc.text(s.value, cx + 5, y + 19);
+    doc.setTextColor(...C.BLACK);
+    doc.text(s.value, cx, y + 8);
   });
 
-  y += 32;
-  rule(doc, y, C.BORDER);
-  y += 8;
+  y += 20;
+  rule(doc, y, C.LIGHT_GRAY);
+  y += 12;
 
   // ── Order history table ──
   setFont(doc, "bold", 7);
-  doc.setTextColor(...C.MUTED);
+  doc.setTextColor(...C.GRAY);
   doc.text("ORDER HISTORY", 14, y);
   y += 4;
 
   autoTable(doc, {
     startY: y,
     head: [["Order ID", "Date", "Items", "Total", "Status"]],
-    body: customer.orders.map((o) => [o.id, o.date, String(o.items), fmt(o.total), o.status]),
+    body: customer.orders.map((o) => [o.id, o.date, String(o.items), fmt(o.total), o.status.charAt(0).toUpperCase() + o.status.slice(1)]),
     headStyles: {
-      fillColor: C.BLACK,
-      textColor: C.WHITE,
-      fontSize: 7,
+      fillColor: [250, 250, 250],
+      textColor: C.BLACK,
+      fontSize: 8,
       fontStyle: "bold",
       cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
+      lineWidth: { top: 0.2, bottom: 0.2, left: 0, right: 0 },
+      lineColor: C.LIGHT_GRAY,
     },
     bodyStyles: {
-      fontSize: 8,
-      textColor: C.CHROME,
-      fillColor: C.DARK,
+      fontSize: 8.5,
+      textColor: C.DARK_GRAY,
       cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
+      lineWidth: { top: 0, bottom: 0.2, left: 0, right: 0 },
+      lineColor: [240, 240, 240],
     },
-    alternateRowStyles: { fillColor: C.PANEL },
     theme: "plain",
     margin: { left: 14, right: 14 },
-    styles: { lineColor: C.BORDER, lineWidth: 0.15 },
     columnStyles: {
-      0: { textColor: C.WHITE, fontStyle: "bold" },
+      0: { textColor: C.BLACK, fontStyle: "bold" },
       2: { halign: "center" },
-      3: { halign: "right", textColor: C.WHITE, fontStyle: "bold" },
+      3: { halign: "right", textColor: C.BLACK, fontStyle: "bold" },
       4: { halign: "center" },
     },
     didParseCell(data) {
       if (data.column.index === 4 && data.section === "body") {
         const status = data.cell.raw as string;
-        const color = C.STATUS[status] || C.CHROME;
+        const color = C.STATUS[status] || C.GRAY;
         data.cell.styles.textColor = color;
         data.cell.styles.fontStyle = "bold";
       }
