@@ -13,6 +13,7 @@ import type * as collections from "../collections.js";
 import type * as content from "../content.js";
 import type * as coupons from "../coupons.js";
 import type * as customers from "../customers.js";
+import type * as email from "../email.js";
 import type * as faq from "../faq.js";
 import type * as featuredProducts from "../featuredProducts.js";
 import type * as messages from "../messages.js";
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   content: typeof content;
   coupons: typeof coupons;
   customers: typeof customers;
+  email: typeof email;
   faq: typeof faq;
   featuredProducts: typeof featuredProducts;
   messages: typeof messages;

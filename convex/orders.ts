@@ -121,6 +121,7 @@ export const create = mutation({
         price: item.price,
         size: item.size,
         color: item.color,
+        image: item.image,
       })),
       subtotal: args.subtotal,
       shipping: args.shipping,

@@ -41,16 +41,16 @@ function Auth() {
     if (mode === "register" && !form.name.trim()) errs.name = "Name is required";
     if (mode !== "reset" && !form.email.trim()) errs.email = "Email is required";
     else if (mode !== "reset" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Enter a valid email";
-    
+
     if (mode === "login" || mode === "register" || mode === "reset") {
       if (!form.password) errs.password = "Password is required";
       else if (mode !== "login" && form.password.length < 8) errs.password = "Minimum 8 characters";
     }
-    
+
     if ((mode === "register" || mode === "reset") && form.password !== form.confirmPassword) {
       errs.confirmPassword = "Passwords do not match";
     }
-    
+
     if ((mode === "verify" || mode === "reset") && form.otp.length !== 6) {
       errs.otp = "Enter a 6-digit code";
     }
@@ -81,7 +81,6 @@ function Auth() {
           email: form.email.trim(),
           password: form.password,
         });
-        
         if (user.isEmailVerified) {
           login({
             id: user._id,
@@ -90,12 +89,13 @@ function Auth() {
             role: user.role as "admin" | "customer",
           });
           const isAdminRole = user.email.toLowerCase() === "zodiaxcore@gmail.com" || user.role === "admin";
-          setSuccessMsg(isAdminRole ? "Admin account registered! Redirecting to Dashboard…" : "Account registered! Welcome to the house.");
+          setSuccessMsg(isAdminRole ? "Admin account created! Redirecting to Dashboard…" : "Account created! Welcome to the house.");
           setTimeout(() => navigate({ to: isAdminRole ? "/admin" : "/account" }), 1000);
         } else {
-          setSuccessMsg("Registration successful! Please check your email for the verification code.");
+          setSuccessMsg("Registration successful! Verification code sent to your email.");
           setMode("verify");
         }
+
       } else if (mode === "verify") {
         const user = await verifyMutation({
           email: form.email.trim(),
@@ -109,12 +109,14 @@ function Auth() {
         });
         setSuccessMsg("Email verified! Welcome to the house.");
         setTimeout(() => navigate({ to: "/account" }), 1000);
+
       } else if (mode === "forgot") {
         await requestResetMutation({ email: form.email.trim() });
-        setSuccessMsg("If an account exists, a reset code has been sent.");
+        setSuccessMsg("If an account exists, a verification code has been sent to your email.");
         setMode("reset");
         setForm(f => ({ ...f, otp: "", password: "", confirmPassword: "" }));
         setTouched({});
+
       } else if (mode === "reset") {
         await resetPasswordMutation({
           email: form.email.trim(),
@@ -128,14 +130,16 @@ function Auth() {
           setSuccessMsg("");
           setTouched({});
         }, 2000);
+
       } else {
+        // login
         const user = await authenticateMutation({
           email: form.email.trim(),
           password: form.password,
         });
-        
+
         if (user && 'needsVerification' in user && user.needsVerification) {
-          setSuccessMsg("Please verify your email. A new code has been sent.");
+          setSuccessMsg("Please verify your email. A verification code has been sent.");
           setMode("verify");
           setForm(f => ({ ...f, email: user.email }));
           return;
@@ -311,10 +315,9 @@ function Auth() {
               {(mode === "verify" || mode === "reset") && (
                 <div>
                   <p className="text-center font-mono text-[11px] text-chrome-dim mb-6">
-                    {mode === "reset" 
-                      ? <>Enter the 6-digit code sent to <span className="text-foreground">{form.email}</span></>
-                      : <>We sent a 6-digit verification code to <span className="text-foreground">{form.email}</span>.</>}
-                    <br/><span className="text-chrome-dim/50">(Check your terminal for the mocked email code)</span>
+                    {mode === "reset"
+                      ? <>Enter the 6-digit reset code sent to <span className="text-foreground">{form.email}</span></>
+                      : <>Enter the 6-digit verification code sent to <span className="text-foreground">{form.email}</span>.</>}
                   </p>
                   <label className="block font-mono text-[10px] uppercase tracking-[0.28em] text-chrome-dim mb-2">Verification Code</label>
                   <input
@@ -327,7 +330,7 @@ function Auth() {
                     className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-center text-xl tracking-widest placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.otp && errors.otp ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
                   />
                   {touched.otp && errors.otp && <p className="mt-1 font-mono text-[10px] text-red-400 text-center">{errors.otp}</p>}
-                  
+
                   {mode === "verify" && (
                     <button
                       type="button"
@@ -347,9 +350,11 @@ function Auth() {
               )}
 
               <button type="submit" disabled={loading} className="btn-chrome btn-chrome-inner w-full justify-center disabled:opacity-50 mt-2">
-                <span className="btn-label">{loading ? "Processing…" : mode === "login" ? "Sign In" : mode === "register" ? "Create Account" : mode === "forgot" ? "Send Reset Code" : mode === "reset" ? "Update Password" : "Verify Email"}</span>
+                <span className="btn-label">
+                  {loading ? "Processing…" : mode === "login" ? "Sign In" : mode === "register" ? "Create Account" : mode === "forgot" ? "Send Reset Code" : mode === "reset" ? "Update Password" : "Verify Email"}
+                </span>
               </button>
-              
+
               {(mode === "verify" || mode === "forgot" || mode === "reset") && (
                 <button
                   type="button"

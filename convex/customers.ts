@@ -109,21 +109,21 @@ export const register = mutation({
       .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
       .first();
 
+    if (existing) {
+      throw new Error("Email is already registered. Please sign in.");
+    }
+
     const isAdmin = normalizedEmail === "zodiaxcore@gmail.com";
     const role = isAdmin ? "admin" : "customer";
     const now = Date.now();
     const { hash, salt } = await hashPassword(args.password);
 
-    // Generate a 6-digit OTP
+    // Generate a 6-digit OTP valid for 15 minutes
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiresAt = now + 10 * 60 * 1000; // 10 minutes
+    const otpExpiresAt = now + 15 * 60 * 1000;
     const isEmailVerified = isAdmin; // Auto-verify admin
 
-    console.log(`[OTP] Generated OTP for ${normalizedEmail}: ${otp}`); // Log to convex logs for development
-
-    if (existing) {
-      throw new Error("Email is already registered. Please sign in.");
-    }
+    console.log(`[OTP] Generated OTP for ${normalizedEmail}: ${otp}`);
 
     const newId = await ctx.db.insert("customers", {
       name: safeName,
@@ -143,11 +143,11 @@ export const register = mutation({
     });
 
     if (!isAdmin) {
-      // @ts-ignore: Stale convex types
-      await ctx.scheduler.runAfter(0, internal.email.sendEmail, {
+      // @ts-ignore
+      await ctx.scheduler.runAfter(0, internal.email.sendVerificationCode, {
         email: normalizedEmail,
-        otp,
-        type: "verification",
+        passcode: otp,
+        time: "15 minutes",
       });
     }
 
@@ -194,7 +194,7 @@ export const verifyEmail = mutation({
     }
 
     if (existing.otpExpiresAt && existing.otpExpiresAt < Date.now()) {
-      throw new Error("Verification code has expired. Please register again.");
+      throw new Error("Verification code has expired. Please resend code.");
     }
 
     await ctx.db.patch(existing._id, {
@@ -210,6 +210,40 @@ export const verifyEmail = mutation({
       email: existing.email,
       role: existing.role || "customer",
     };
+  },
+});
+
+export const resendVerification = mutation({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    const normalizedEmail = args.email.toLowerCase().trim();
+    if (!normalizedEmail) throw new Error("Email is required.");
+
+    const existing = await ctx.db
+      .query("customers")
+      .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+      .first();
+
+    if (!existing) throw new Error("No account found with this email.");
+    if (existing.isEmailVerified) throw new Error("Email is already verified.");
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiresAt = Date.now() + 15 * 60 * 1000; // 15 mins
+
+    await ctx.db.patch(existing._id, {
+      otp,
+      otpExpiresAt,
+      updatedAt: Date.now(),
+    });
+
+    // @ts-ignore
+    await ctx.scheduler.runAfter(0, internal.email.sendVerificationCode, {
+      email: normalizedEmail,
+      passcode: otp,
+      time: "15 minutes",
+    });
+
+    return { success: true };
   },
 });
 
@@ -232,7 +266,7 @@ export const authenticate = mutation({
     const isAdmin = normalizedEmail === "zodiaxcore@gmail.com";
 
     if (!existing) {
-      throw new Error("No account found with this email. Please register first.");
+      throw new Error("Invalid email or password.");
     }
 
     if (isLocked(existing)) {
@@ -246,7 +280,7 @@ export const authenticate = mutation({
         lockedUntil: existing.loginAttempts + 1 >= LOCKOUT_THRESHOLD ? Date.now() + LOCKOUT_DURATION_MS : undefined,
         updatedAt: Date.now(),
       });
-      throw new Error("No password set for this account. Please use 'Forgot password' to reset.");
+      throw new Error("Invalid email or password.");
     }
 
     const { hash } = await hashPassword(args.password, existing.passwordSalt);
@@ -260,27 +294,26 @@ export const authenticate = mutation({
       });
       const remaining = LOCKOUT_THRESHOLD - attempts;
       if (remaining <= 0) throw new Error("Account locked due to too many failed attempts. Try again in 15 minutes.");
-      throw new Error(`Incorrect password. ${remaining} attempt(s) remaining before lockout.`);
+      throw new Error("Invalid email or password.");
     }
 
     if (!existing.isEmailVerified) {
+      // User must verify their email before fully logging in
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      const otpExpiresAt = Date.now() + 10 * 60 * 1000;
+      const otpExpiresAt = Date.now() + 15 * 60 * 1000;
       await ctx.db.patch(existing._id, {
         otp,
         otpExpiresAt,
         updatedAt: Date.now(),
       });
-      // @ts-ignore: Stale convex types
-      await ctx.scheduler.runAfter(0, internal.email.sendEmail, {
+      // @ts-ignore
+      await ctx.scheduler.runAfter(0, internal.email.sendVerificationCode, {
         email: normalizedEmail,
-        otp,
-        type: "verification",
+        passcode: otp,
+        time: "15 minutes",
       });
       return { needsVerification: true, email: normalizedEmail };
     }
-
-
 
     await ctx.db.patch(existing._id, {
       loginAttempts: 0,
@@ -399,14 +432,13 @@ export const requestPasswordReset = mutation({
       .first();
 
     if (!customer) {
-      // Don't leak if email exists, just return success
       return { success: true };
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+    const otpExpiresAt = Date.now() + 15 * 60 * 1000; // 15 mins
 
-    console.log(`[OTP] Password Reset OTP for ${normalizedEmail}: ${otp}`);
+    console.log(`[Password Reset] OTP for ${normalizedEmail}: ${otp}`);
 
     await ctx.db.patch(customer._id, {
       otp,
@@ -414,11 +446,11 @@ export const requestPasswordReset = mutation({
       updatedAt: Date.now(),
     });
 
-    // @ts-ignore: Stale convex types
-    await ctx.scheduler.runAfter(0, internal.email.sendEmail, {
+    // @ts-ignore
+    await ctx.scheduler.runAfter(0, internal.email.sendVerificationCode, {
       email: normalizedEmail,
-      otp,
-      type: "reset",
+      passcode: otp,
+      time: "15 minutes",
     });
 
     return { success: true };
@@ -462,40 +494,6 @@ export const resetPassword = mutation({
       loginAttempts: 0,
       lockedUntil: undefined,
       updatedAt: Date.now(),
-    });
-
-    return { success: true };
-  },
-});
-
-export const resendVerification = mutation({
-  args: { email: v.string() },
-  handler: async (ctx, args) => {
-    const normalizedEmail = args.email.toLowerCase().trim();
-    if (!normalizedEmail) throw new Error("Email is required.");
-
-    const existing = await ctx.db
-      .query("customers")
-      .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
-      .first();
-
-    if (!existing) throw new Error("No account found with this email.");
-    if (existing.isEmailVerified) throw new Error("Email is already verified.");
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiresAt = Date.now() + 10 * 60 * 1000;
-
-    await ctx.db.patch(existing._id, {
-      otp,
-      otpExpiresAt,
-      updatedAt: Date.now(),
-    });
-
-    // @ts-ignore: Stale convex types
-    await ctx.scheduler.runAfter(0, internal.email.sendEmail, {
-      email: normalizedEmail,
-      otp,
-      type: "verification",
     });
 
     return { success: true };
