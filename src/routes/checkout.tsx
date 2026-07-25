@@ -100,6 +100,7 @@ function Checkout() {
         customerId: user?.id || undefined,
         customerName: billing.name,
         customerEmail: billing.email,
+        phone: billing.phone,
         items: cart.items.map((item) => ({
           productId: String(item.id),
           name: item.name,

@@ -113,6 +113,7 @@ export function generateReceiptPDF(
     orderNumber?: string;
     customerName?: string;
     customerEmail?: string;
+    phone?: string;
     _creationTime?: number;
     status: string;
     shippingAddress?: { street: string; city: string; zip: string; country: string };
@@ -133,6 +134,7 @@ export function generateReceiptPDF(
   const orderNumber = order.orderNumber || order.id;
   const customer = order.customerName || "Customer";
   const email = order.customerEmail || "";
+  const phone = order.phone || "";
   const date = order._creationTime ? fmtDate(order._creationTime) : fmtDate(Date.now());
   const paymentMethod = order.paymentMethod || "Bank Transfer";
   
@@ -201,14 +203,20 @@ export function generateReceiptPDF(
   
   setFont(doc, "normal", 8.5);
   doc.setTextColor(...C.DARK_GRAY);
-  let addrY = y + 12;
-  doc.text(email, 14, addrY);
-  addrY += 5;
+  let addrY = y + 11;
+  if (email) {
+    doc.text(email, 14, addrY);
+    addrY += 4.5;
+  }
+  if (phone) {
+    doc.text(`Phone: ${phone}`, 14, addrY);
+    addrY += 4.5;
+  }
   if (billAddr.street) {
     const addrLines = [billAddr.street, `${billAddr.city}, ${billAddr.zip}`, billAddr.country].filter(Boolean);
     addrLines.forEach(line => {
       doc.text(line, 14, addrY);
-      addrY += 5;
+      addrY += 4.5;
     });
   }
 
@@ -224,12 +232,20 @@ export function generateReceiptPDF(
   
   setFont(doc, "normal", 8.5);
   doc.setTextColor(...C.DARK_GRAY);
-  let shipY = y + 12;
+  let shipY = y + 11;
+  if (email) {
+    doc.text(email, rx, shipY);
+    shipY += 4.5;
+  }
+  if (phone) {
+    doc.text(`Phone: ${phone}`, rx, shipY);
+    shipY += 4.5;
+  }
   if (shipAddr.street) {
     const addrLines = [shipAddr.street, `${shipAddr.city}, ${shipAddr.zip}`, shipAddr.country].filter(Boolean);
     addrLines.forEach(line => {
       doc.text(line, rx, shipY);
-      shipY += 5;
+      shipY += 4.5;
     });
   }
 

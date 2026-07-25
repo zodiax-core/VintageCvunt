@@ -12,6 +12,7 @@ function getStoredUser() {
 }
 
 export function requireAdmin() {
+  if (typeof window === "undefined") return;
   const user = getStoredUser();
   if (!user) throw redirect({ to: "/auth" });
   const isAdmin = user.role === "admin" || user.email?.toLowerCase() === "zodiaxcore@gmail.com";
@@ -19,9 +20,9 @@ export function requireAdmin() {
 }
 
 export function requireCustomer() {
+  if (typeof window === "undefined") return;
   const user = getStoredUser();
   if (!user) throw redirect({ to: "/auth" });
-  // Both customers AND admins can access customer pages
   if (!user.email) throw redirect({ to: "/auth" });
 }
 

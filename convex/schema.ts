@@ -31,6 +31,7 @@ export default defineSchema({
     customerId: v.optional(v.string()),
     customerName: v.string(),
     customerEmail: v.string(),
+    phone: v.optional(v.string()),
     items: v.array(
       v.object({
         productId: v.string(),
