@@ -266,10 +266,6 @@ export const authenticate = mutation({
       throw new Error("No account found with this email. Please register first.");
     }
 
-    if (!existing.isEmailVerified) {
-      throw new Error("Please verify your email first.");
-    }
-
     if (isLocked(existing)) {
       const remaining = Math.ceil((existing.lockedUntil! - Date.now()) / 60000);
       throw new Error(`Account temporarily locked. Try again in ${remaining} minute(s).`);
@@ -297,6 +293,25 @@ export const authenticate = mutation({
       if (remaining <= 0) throw new Error("Account locked due to too many failed attempts. Try again in 15 minutes.");
       throw new Error(`Incorrect password. ${remaining} attempt(s) remaining before lockout.`);
     }
+
+    if (!existing.isEmailVerified) {
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const otpExpiresAt = Date.now() + 10 * 60 * 1000;
+      await ctx.db.patch(existing._id, {
+        otp,
+        otpExpiresAt,
+        updatedAt: Date.now(),
+      });
+      // @ts-ignore: Stale convex types
+      await ctx.scheduler.runAfter(0, internal.email.sendEmail, {
+        email: normalizedEmail,
+        otp,
+        type: "verification",
+      });
+      return { needsVerification: true, email: normalizedEmail };
+    }
+
+
 
     await ctx.db.patch(existing._id, {
       loginAttempts: 0,
@@ -478,6 +493,40 @@ export const resetPassword = mutation({
       loginAttempts: 0,
       lockedUntil: undefined,
       updatedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+export const resendVerification = mutation({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    const normalizedEmail = args.email.toLowerCase().trim();
+    if (!normalizedEmail) throw new Error("Email is required.");
+
+    const existing = await ctx.db
+      .query("customers")
+      .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+      .first();
+
+    if (!existing) throw new Error("No account found with this email.");
+    if (existing.isEmailVerified) throw new Error("Email is already verified.");
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiresAt = Date.now() + 10 * 60 * 1000;
+
+    await ctx.db.patch(existing._id, {
+      otp,
+      otpExpiresAt,
+      updatedAt: Date.now(),
+    });
+
+    // @ts-ignore: Stale convex types
+    await ctx.scheduler.runAfter(0, internal.email.sendEmail, {
+      email: normalizedEmail,
+      otp,
+      type: "verification",
     });
 
     return { success: true };

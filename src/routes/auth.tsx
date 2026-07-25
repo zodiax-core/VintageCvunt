@@ -25,6 +25,7 @@ function Auth() {
   const registerMutation = useMutation(api.customers.register);
   const authenticateMutation = useMutation(api.customers.authenticate);
   const verifyMutation = useMutation(api.customers.verifyEmail);
+  const resendVerificationMutation = useMutation(api.customers.resendVerification);
   const requestResetMutation = useMutation(api.customers.requestPasswordReset);
   const resetPasswordMutation = useMutation(api.customers.resetPassword);
 
@@ -132,10 +133,18 @@ function Auth() {
           email: form.email.trim(),
           password: form.password,
         });
+        
+        if (user && 'needsVerification' in user && user.needsVerification) {
+          setSuccessMsg("Please verify your email. A new code has been sent.");
+          setMode("verify");
+          setForm(f => ({ ...f, email: user.email }));
+          return;
+        }
+
         login({
           id: user._id,
-          name: user.name,
-          email: user.email,
+          name: user.name || "",
+          email: user.email as string,
           role: user.role as "admin" | "customer",
         });
         const isAdminRole = user.email.toLowerCase() === "zodiaxcore@gmail.com" || user.role === "admin";
@@ -146,6 +155,17 @@ function Auth() {
       setErrors({ form: err.message || "An unexpected error occurred." });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setErrors({});
+    setSuccessMsg("");
+    try {
+      await resendVerificationMutation({ email: form.email.trim() });
+      setSuccessMsg("Verification code resent! Please check your email.");
+    } catch (err: any) {
+      setErrors({ form: err.message || "Failed to resend code." });
     }
   };
 
@@ -307,6 +327,16 @@ function Auth() {
                     className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-center text-xl tracking-widest placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.otp && errors.otp ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
                   />
                   {touched.otp && errors.otp && <p className="mt-1 font-mono text-[10px] text-red-400 text-center">{errors.otp}</p>}
+                  
+                  {mode === "verify" && (
+                    <button
+                      type="button"
+                      onClick={handleResendCode}
+                      className="w-full text-center font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim hover:text-chrome mt-4"
+                    >
+                      Resend Code
+                    </button>
+                  )}
                 </div>
               )}
 
