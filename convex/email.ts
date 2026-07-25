@@ -400,7 +400,7 @@ export const sendEmail = internalAction({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "VintageCvunt <onboarding@resend.dev>",
+          from: process.env.RESEND_FROM_EMAIL || "VintageCvunt <onboarding@resend.dev>",
           to: [args.email],
           subject,
           html,
@@ -469,7 +469,7 @@ export const sendOrderConfirmation = internalAction({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "VintageCvunt <onboarding@resend.dev>",
+          from: process.env.RESEND_FROM_EMAIL || "VintageCvunt <onboarding@resend.dev>",
           to: [args.email],
           subject: `Order Confirmed — ${args.orderNumber}`,
           html,

@@ -122,38 +122,7 @@ export const register = mutation({
     console.log(`[OTP] Generated OTP for ${normalizedEmail}: ${otp}`); // Log to convex logs for development
 
     if (existing) {
-      if (existing.isEmailVerified) {
-        throw new Error("Email is already registered. Please sign in.");
-      }
-      
-      await ctx.db.patch(existing._id, {
-        name: safeName || existing.name,
-        passwordHash: hash,
-        passwordSalt: salt,
-        otp,
-        otpExpiresAt,
-        loginAttempts: 0,
-        lockedUntil: undefined,
-        role: isAdmin ? "admin" : (existing.role || "customer"),
-        updatedAt: now,
-      });
-
-      if (!isAdmin) {
-        // @ts-ignore: Stale convex types
-        await ctx.scheduler.runAfter(0, internal.email.sendEmail, {
-          email: normalizedEmail,
-          otp,
-          type: "verification",
-        });
-      }
-
-      return {
-        _id: existing._id,
-        name: safeName || existing.name,
-        email: normalizedEmail,
-        role: isAdmin ? "admin" : (existing.role || "customer"),
-        isEmailVerified: existing.isEmailVerified,
-      };
+      throw new Error("Email is already registered. Please sign in.");
     }
 
     const newId = await ctx.db.insert("customers", {
