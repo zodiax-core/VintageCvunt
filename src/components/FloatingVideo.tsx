@@ -10,6 +10,7 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
   const [isScaling, setIsScaling] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
+  const [videoRatio, setVideoRatio] = useState(16 / 9);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const togglePlay = useCallback(() => {
@@ -39,6 +40,9 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
     }
   }, [isMinimized]);
 
+  const videoWidth = Math.min(360, Math.round(320 * videoRatio));
+  const videoHeight = Math.round(videoWidth / videoRatio);
+
   return (
     <motion.div
       drag={isMinimized && !isScaling}
@@ -49,8 +53,8 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
         isScaling
           ? { width: "80vw", height: "80vh", borderRadius: 0, opacity: 1, scale: 1, x: 0, y: 0 }
           : isMinimized
-          ? { width: 160, height: 120, borderRadius: 16, opacity: 0.9, scale: 1 }
-          : { width: 280, height: 200, borderRadius: 16, opacity: 1, scale: 1 }
+          ? { width: 160, height: 160 / videoRatio, borderRadius: 16, opacity: 0.9, scale: 1 }
+          : { width: videoWidth, height: videoHeight, borderRadius: 16, opacity: 1, scale: 1 }
       }
       transition={{ type: "spring", stiffness: 200, damping: 25 }}
       className={`fixed z-50 overflow-hidden bg-black shadow-2xl border border-white/20 cursor-pointer group ${
@@ -66,7 +70,12 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
         loop
         muted={isMuted}
         playsInline
-        className="h-full w-full object-contain bg-black pointer-events-none"
+        onLoadedMetadata={() => {
+          if (videoRef.current) {
+            setVideoRatio(videoRef.current.videoWidth / videoRef.current.videoHeight);
+          }
+        }}
+        className="h-full w-full object-cover bg-black pointer-events-none"
       />
 
       {!isMinimized && (
