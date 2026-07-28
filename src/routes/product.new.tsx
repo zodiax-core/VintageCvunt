@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useRef } from "react";
-import { Upload, Save, X, Plus, Minus } from "lucide-react";
+import { Upload, Save, X, Plus } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
 
@@ -13,6 +13,7 @@ export const Route = createFileRoute("/product/new")({
 });
 
 function AddProduct() {
+  const navigate = useNavigate();
   const collections = useQuery(api.collections.list) ?? [];
   const activeCollections = collections.filter((c) => c.isActive);
   const categoryOptions = activeCollections.map((c) => c.name);
@@ -135,7 +136,7 @@ function AddProduct() {
       if (imageFile) {
         try {
           const uploadUrl = await generateUploadUrl();
-          const result = await fetch(uploadUrl, { method: "POST", body: imageFile });
+          const result = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": imageFile.type }, body: imageFile });
           if (result.ok) {
             const { storageId } = await result.json();
             if (storageId) images = [storageId];
@@ -148,7 +149,7 @@ function AddProduct() {
       if (videoFile) {
         try {
           const uploadUrl = await generateUploadUrl();
-          const result = await fetch(uploadUrl, { method: "POST", body: videoFile });
+          const result = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": videoFile.type }, body: videoFile });
           if (result.ok) {
             const { storageId } = await result.json();
             if (storageId) video = storageId;
@@ -193,8 +194,7 @@ function AddProduct() {
         }
       }
 
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      navigate({ to: "/product" });
     } catch (err) {
       setSaveError("Failed to save product. Please check your connection and try again.");
       console.error("Failed to create product", err);

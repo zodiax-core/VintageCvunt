@@ -43,6 +43,7 @@ function ProductPage() {
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const productFaqs = useQuery(api.faq.getByCategory, { category: slug }) ?? [];
   const [reviewForm, setReviewForm] = useState({ name: "", email: "", rating: 5, text: "" });
   const [reviewErrors, setReviewErrors] = useState<Record<string, string>>({});
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
@@ -245,14 +246,52 @@ function ProductPage() {
         </div>
       </section>
 
+      {/* FAQ */}
+      {productFaqs.length > 0 && (
+        <section className="border-b border-chrome py-12 md:py-24">
+          <div className="mx-auto max-w-7xl px-6">
+            <span className="font-mono text-[10px] uppercase tracking-[0.32em] text-chrome-dim">§ Inquiries</span>
+            <h2 className="mt-4 mb-8 font-display text-3xl md:text-5xl leading-[0.95]">
+              Frequently Asked <span className="italic text-chrome-h">Questions</span>
+            </h2>
+            <div className="max-w-3xl space-y-3">
+              {productFaqs.map((faq, i) => (
+                <div key={i} className="rounded-2xl border border-chrome bg-graphite overflow-hidden">
+                  <button
+                    onClick={() => setActiveFaq(activeFaq === i ? null : i)}
+                    className="w-full flex items-center justify-between px-5 py-4 text-left"
+                  >
+                    <span className="font-mono text-sm tracking-tight pr-4">{faq.question}</span>
+                    <svg
+                      className={`shrink-0 transition-transform duration-300 ${activeFaq === i ? "rotate-45" : ""}`}
+                      width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.2"
+                    >
+                      <path d="M7 1v12M1 7h12" />
+                    </svg>
+                  </button>
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={activeFaq === i ? { height: "auto", opacity: 1 } : { height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: EASE }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-5 pb-4 font-mono text-sm text-chrome-dim leading-relaxed">{faq.answer}</div>
+                  </motion.div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Reviews */}
-      <section className="border-y border-chrome py-12 md:py-24">
+      <section className="border-b border-chrome py-12 md:py-24">
         <div className="mx-auto max-w-7xl px-6">
-          <div className="grid grid-cols-12 gap-8 md:gap-12">
-            <div className="col-span-12 md:col-span-7">
-              <span className="font-mono text-[10px] uppercase tracking-[0.32em] text-chrome-dim">§ Testimonials</span>
-              <h2 className="mt-4 font-display text-3xl md:text-5xl leading-[0.95]">
-                Patron <span className="italic text-chrome-h">Voices</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16">
+            <div>
+              <span className="font-mono text-[10px] uppercase tracking-[0.32em] text-chrome-dim">§ Object Log</span>
+              <h2 className="mt-4 mb-8 font-display text-3xl md:text-5xl leading-[0.95]">
+                Patron <span className="italic text-chrome-h">Reviews</span>
               </h2>
 
               <div className="mt-10 space-y-6">

@@ -51,13 +51,15 @@ function EditProduct() {
     faqs: [] as { question: string; answer: string }[],
   });
 
+  const existingFaqs = useQuery(api.faq.getByCategory, { category: product?.slug ?? "" }) ?? [];
+
   const updateProduct = useMutation(api.products.update);
   const generateUploadUrl = useMutation(api.products.generateUploadUrl);
   const createFaq = useMutation(api.faq.create);
 
   useEffect(() => {
     if (product) {
-      setForm((prev) => ({
+      setForm({
         name: product.name,
         slug: product.slug,
         category: product.category,
@@ -72,10 +74,10 @@ function EditProduct() {
         tags: product.tags ?? [],
         sizes: product.sizes ?? [],
         colors: product.colors ?? [],
-        faqs: prev.faqs,
-      }));
+        faqs: existingFaqs.map((f) => ({ question: f.question, answer: f.answer })),
+      });
     }
-  }, [product]);
+  }, [product, existingFaqs]);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -131,7 +133,7 @@ function EditProduct() {
       if (imageFile) {
         try {
           const uploadUrl = await generateUploadUrl();
-          const result = await fetch(uploadUrl, { method: "POST", body: imageFile });
+          const result = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": imageFile.type }, body: imageFile });
           if (result.ok) {
             const { storageId } = await result.json();
             if (storageId) images = [storageId];
@@ -144,7 +146,7 @@ function EditProduct() {
       if (videoFile) {
         try {
           const uploadUrl = await generateUploadUrl();
-          const result = await fetch(uploadUrl, { method: "POST", body: videoFile });
+          const result = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": videoFile.type }, body: videoFile });
           if (result.ok) {
             const { storageId } = await result.json();
             if (storageId) video = storageId;
