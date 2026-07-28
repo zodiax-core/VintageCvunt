@@ -1,7 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
-import { Save, Upload, X } from "lucide-react";
-import { toWebP } from "@/lib/image-utils";
+import { Save, Upload, X, Plus } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
 
@@ -20,15 +19,13 @@ function EditProduct() {
 
   const collections = useQuery(api.collections.list) ?? [];
   const activeCollections = collections.filter((c) => c.isActive);
-  const categoryOptions = activeCollections.length > 0
-    ? activeCollections.map((c) => c.name)
-    : ["Outerwear", "Footwear", "Silverwork", "Adornment", "Tops", "Bottoms"];
+  const categoryOptions = activeCollections.map((c) => c.name);
 
-  const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saveError, setSaveError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
@@ -51,10 +48,12 @@ function EditProduct() {
     tags: [] as string[],
     sizes: [] as string[],
     colors: [] as string[],
+    faqs: [] as { question: string; answer: string }[],
   });
 
   const updateProduct = useMutation(api.products.update);
   const generateUploadUrl = useMutation(api.products.generateUploadUrl);
+  const createFaq = useMutation(api.faq.create);
 
   useEffect(() => {
     if (product) {
@@ -94,6 +93,23 @@ function EditProduct() {
   const addColor = () => { const c = colorInput.trim(); if (c && !form.colors.includes(c)) { setForm((prev) => ({ ...prev, colors: [...prev.colors, c] })); } setColorInput(""); };
   const removeColor = (c: string) => setForm((prev) => ({ ...prev, colors: prev.colors.filter((x) => x !== c) }));
 
+  const [faqQuestion, setFaqQuestion] = useState("");
+  const [faqAnswer, setFaqAnswer] = useState("");
+
+  const addFaq = () => {
+    const q = faqQuestion.trim();
+    const a = faqAnswer.trim();
+    if (q && a) {
+      setForm((prev) => ({ ...prev, faqs: [...prev.faqs, { question: q, answer: a }] }));
+      setFaqQuestion("");
+      setFaqAnswer("");
+    }
+  };
+
+  const removeFaq = (i: number) => {
+    setForm((prev) => ({ ...prev, faqs: prev.faqs.filter((_, idx) => idx !== i) }));
+  };
+
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (!form.name.trim()) errs.name = "Required";
@@ -107,25 +123,34 @@ function EditProduct() {
   const handleSave = async () => {
     if (!validate()) return;
     setSaving(true);
+    setSaveError("");
+    let images: string[] | undefined;
+    let video: string | undefined;
     try {
-      let images: string[] | undefined;
       if (imageFile) {
-        const webpFile = await toWebP(imageFile);
-        const uploadUrl = await generateUploadUrl();
-        const result = await fetch(uploadUrl, { method: "POST", body: webpFile });
-        if (!result.ok) throw new Error(`Upload failed: ${result.status}`);
-        const { storageId } = await result.json();
-        if (!storageId) throw new Error("No storageId in upload response");
-        images = [storageId];
+        try {
+          const uploadUrl = await generateUploadUrl();
+          const result = await fetch(uploadUrl, { method: "POST", body: imageFile });
+          if (result.ok) {
+            const { storageId } = await result.json();
+            if (storageId) images = [storageId];
+          }
+        } catch (e) {
+          console.warn("Image upload failed, saving without image", e);
+        }
       }
 
-      let video: string | undefined;
       if (videoFile) {
-        const uploadUrl = await generateUploadUrl();
-        const result = await fetch(uploadUrl, { method: "POST", body: videoFile });
-        if (!result.ok) throw new Error(`Video upload failed: ${result.status}`);
-        const { storageId } = await result.json();
-        if (storageId) video = storageId;
+        try {
+          const uploadUrl = await generateUploadUrl();
+          const result = await fetch(uploadUrl, { method: "POST", body: videoFile });
+          if (result.ok) {
+            const { storageId } = await result.json();
+            if (storageId) video = storageId;
+          }
+        } catch (e) {
+          console.warn("Video upload failed, saving without video", e);
+        }
       }
 
       await updateProduct({
@@ -147,8 +172,24 @@ function EditProduct() {
         stockCount: Number(form.stock),
         images,
       });
+
+      for (const faq of form.faqs) {
+        try {
+          await createFaq({
+            question: faq.question,
+            answer: faq.answer,
+            category: form.slug || form.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+            order: 0,
+            isActive: true,
+          });
+        } catch (e) {
+          console.warn("Failed to save FAQ", e);
+        }
+      }
+
       navigate({ to: "/product" });
     } catch (err) {
+      setSaveError("Failed to save product. Please check your connection and try again.");
       console.error("Failed to update product", err);
     } finally {
       setSaving(false);
@@ -315,6 +356,28 @@ function EditProduct() {
                 <button onClick={addColor} type="button" className="btn-chrome btn-chrome-inner px-3 py-2 rounded-xl text-[10px]">Add</button>
               </div>
             </div>
+
+            <div>
+              <label className={labelClass}>Product FAQ</label>
+              <div className="space-y-2 mb-3">
+                {form.faqs.map((faq, i) => (
+                  <div key={i} className="flex gap-2 items-start rounded-xl border border-chrome/20 bg-graphite-2 p-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-mono text-[11px] font-medium truncate">{faq.question}</p>
+                      <p className="font-mono text-[9px] text-chrome-dim line-clamp-2">{faq.answer}</p>
+                    </div>
+                    <button onClick={() => removeFaq(i)} className="shrink-0 text-chrome-dim hover:text-red-400 mt-0.5"><X size={14} /></button>
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-2">
+                <input value={faqQuestion} onChange={(e) => setFaqQuestion(e.target.value)} placeholder="Question" className={inputClass} />
+                <div className="flex gap-2">
+                  <textarea value={faqAnswer} onChange={(e) => setFaqAnswer(e.target.value)} placeholder="Answer" className={`${inputClass} min-h-[60px] resize-none flex-1`} />
+                  <button onClick={addFaq} type="button" className="btn-chrome btn-chrome-inner px-3 py-2 rounded-xl text-[10px] shrink-0 self-end"><Plus size={12} /></button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -398,18 +461,25 @@ function EditProduct() {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center gap-4">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="btn-chrome btn-chrome-inner flex-1 justify-center !py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Save size={16} />
-          <span className="btn-label">{saving ? "Saving..." : saved ? "Saved ✓" : "Save Changes"}</span>
-        </button>
-        <Link to="/product" className="btn-chrome btn-chrome-inner justify-center !py-3.5">
-          <span className="btn-label">Cancel</span>
-        </Link>
+      <div className="mt-6">
+        {saveError && (
+          <div className="mb-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3">
+            <p className="font-mono text-[11px] text-red-400">{saveError}</p>
+          </div>
+        )}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="btn-chrome btn-chrome-inner flex-1 justify-center !py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Save size={16} />
+            <span className="btn-label">{saving ? "Saving..." : "Save Changes"}</span>
+          </button>
+          <Link to="/product" className="btn-chrome btn-chrome-inner justify-center !py-3.5">
+            <span className="btn-label">Cancel</span>
+          </Link>
+        </div>
       </div>
     </>
   );

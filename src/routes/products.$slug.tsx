@@ -90,8 +90,8 @@ function ProductPage() {
     <div className="relative min-h-screen bg-background text-foreground">
       <SiteNav />
 
-      {product.video && product.imageUrls?.[0] && (
-        <FloatingVideo videoUrl={product.video} />
+      {product.videoUrl && product.imageUrls?.[0] && (
+        <FloatingVideo videoUrl={product.videoUrl} />
       )}
 
       {/* Breadcrumb */}

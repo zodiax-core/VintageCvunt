@@ -16,6 +16,7 @@ async function enrichProduct(ctx: any, product: any) {
   return {
     ...product,
     imageUrls: await resolveImages(ctx, product.images ?? []),
+    videoUrl: product.video ? await ctx.storage.getUrl(product.video as any) : undefined,
   };
 }
 

@@ -365,6 +365,26 @@ var Download = createLucideIcon("download", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var ExternalLink = createLucideIcon("external-link", [
+	["path", {
+		d: "M15 3h6v6",
+		key: "1q9fwt"
+	}],
+	["path", {
+		d: "M10 14 21 3",
+		key: "gplh6r"
+	}],
+	["path", {
+		d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6",
+		key: "a6xqqp"
+	}]
+]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Eye = createLucideIcon("eye", [["path", {
 	d: "M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0",
 	key: "1nclc0"
@@ -1053,4 +1073,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { MailOpen as A, CircleX as B, Pencil as C, MessageSquare as D, Package as E, Eye as F, ChartColumn as G, ChevronLeft as H, Download as I, ArrowUpRight as J, Calendar as K, DollarSign as L, LayoutDashboard as M, Globe as N, Menu as O, FileText as P, CreditCard as R, Percent as S, PanelsTopLeft as T, ChevronDown as U, ChevronRight as V, Check as W, ArrowLeft as X, ArrowRight as Y, ArrowDownRight as Z, Save as _, Truck as a, Quote as b, Trash2 as c, SquareCheckBig as d, SlidersHorizontal as f, Search as g, Settings as h, Upload as i, LogOut as j, Mail as k, Tag as l, Ship as m, Users as n, TriangleAlert as o, ShoppingBag as p, Bell as q, User as r, TrendingUp as s, X as t, Star as u, Reply as v, PenLine as w, Plus as x, Receipt as y, Clock as z };
+export { MailOpen as A, Clock as B, Pencil as C, MessageSquare as D, Package as E, Eye as F, Check as G, ChevronRight as H, ExternalLink as I, Bell as J, ChartColumn as K, Download as L, LayoutDashboard as M, Globe as N, Menu as O, FileText as P, ArrowDownRight as Q, DollarSign as R, Percent as S, PanelsTopLeft as T, ChevronLeft as U, CircleX as V, ChevronDown as W, ArrowRight as X, ArrowUpRight as Y, ArrowLeft as Z, Save as _, Truck as a, Quote as b, Trash2 as c, SquareCheckBig as d, SlidersHorizontal as f, Search as g, Settings as h, Upload as i, LogOut as j, Mail as k, Tag as l, Ship as m, Users as n, TriangleAlert as o, ShoppingBag as p, Calendar as q, User as r, TrendingUp as s, X as t, Star as u, Reply as v, PenLine as w, Plus as x, Receipt as y, CreditCard as z };

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
-import { DollarSign, ShoppingBag, Users, TrendingUp, ArrowUpRight } from "lucide-react";
+import { DollarSign, ShoppingBag, Users, TrendingUp } from "lucide-react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   ResponsiveContainer, Tooltip, AreaChart, Area,
@@ -20,68 +20,74 @@ export const Route = createFileRoute("/analytics")({
 type Range = "7D" | "30D" | "12M";
 const ranges: Range[] = ["7D", "30D", "12M"];
 
-const products7D = [
-  { name: "Obsidian Tailcoat", sales: 48 },
-  { name: "Argentine Cuff", sales: 41 },
-  { name: "Noir Leather Boots", sales: 35 },
-  { name: "Silver Mesh Veil", sales: 27 },
-  { name: "Chrome Signet Ring", sales: 22 },
-];
-
-const products30D = [
-  { name: "Obsidian Tailcoat", sales: 186 },
-  { name: "Argentine Cuff", sales: 152 },
-  { name: "Noir Leather Boots", sales: 138 },
-  { name: "Silver Mesh Veil", sales: 104 },
-  { name: "Chrome Signet Ring", sales: 91 },
-];
-
-const products12M = [
-  { name: "Obsidian Tailcoat", sales: 2140 },
-  { name: "Argentine Cuff", sales: 1820 },
-  { name: "Noir Leather Boots", sales: 1650 },
-  { name: "Silver Mesh Veil", sales: 1290 },
-  { name: "Chrome Signet Ring", sales: 1140 },
-];
-
-const productsMap: Record<Range, { name: string; sales: number }[]> = {
-  "7D": products7D,
-  "30D": products30D,
-  "12M": products12M,
-};
+function computePeriodOrders(orders: typeof allOrders, range: Range) {
+  const now = Date.now();
+  const msMap: Record<Range, number> = {
+    "7D": 7 * 86400000,
+    "30D": 30 * 86400000,
+    "12M": 365 * 86400000,
+  };
+  const cutoff = now - msMap[range];
+  return orders.filter((o) => o.createdAt >= cutoff);
+}
 
 function Analytics() {
   const [range, setRange] = useState<Range>("30D");
   const allOrders = useQuery(api.orders.list) ?? [];
 
-  const globalStats = useMemo(() => {
-    const totalRevenue = allOrders.reduce((sum, o) => sum + o.total, 0);
-    const totalOrders = allOrders.length;
-    return { totalRevenue, totalOrders };
-  }, [allOrders]);
+  const periodOrders = useMemo(() => computePeriodOrders(allOrders, range), [allOrders, range]);
 
-  const monthlyRevenue = useMemo(() => {
-    const byMonth: Record<string, number> = {};
-    for (const order of allOrders) {
-      const d = new Date(order.createdAt);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      byMonth[key] = (byMonth[key] || 0) + order.total;
+  const kpis = useMemo(() => {
+    const totalRevenue = periodOrders.reduce((s, o) => s + o.total, 0);
+    const totalOrders = periodOrders.length;
+    const customerEmails = new Set(periodOrders.map((o) => o.customerEmail));
+    const totalCustomers = customerEmails.size;
+    const completed = periodOrders.filter((o) => o.status === "delivered" || o.status === "shipped").length;
+    const convRate = totalOrders > 0 ? (completed / totalOrders) * 100 : 0;
+    return { totalRevenue, totalOrders, totalCustomers, convRate };
+  }, [periodOrders]);
+
+  const chartData = useMemo(() => {
+    if (range === "12M") {
+      const byMonth: Record<string, { revenue: number; orders: number; customers: Set<string> }> = {};
+      for (const order of periodOrders) {
+        const d = new Date(order.createdAt);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        if (!byMonth[key]) byMonth[key] = { revenue: 0, orders: 0, customers: new Set() };
+        byMonth[key].revenue += order.total;
+        byMonth[key].orders++;
+        byMonth[key].customers.add(order.customerEmail);
+      }
+      return Object.entries(byMonth)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([month, d]) => ({ label: month, revenue: d.revenue, orders: d.orders, customers: d.customers.size }));
     }
-    return Object.entries(byMonth)
+    const byDay: Record<string, { revenue: number; orders: number; customers: Set<string> }> = {};
+    for (const order of periodOrders) {
+      const d = new Date(order.createdAt);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      if (!byDay[key]) byDay[key] = { revenue: 0, orders: 0, customers: new Set() };
+      byDay[key].revenue += order.total;
+      byDay[key].orders++;
+      byDay[key].customers.add(order.customerEmail);
+    }
+    return Object.entries(byDay)
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([month, revenue]) => ({ month, revenue }));
-  }, [allOrders]);
+      .map(([label, d]) => ({ label, revenue: d.revenue, orders: d.orders, customers: d.customers.size }));
+  }, [periodOrders, range]);
 
-  const chartData = monthlyRevenue.map((m) => ({ month: m.month, revenue: m.revenue, orders: 0, customers: 0 }));
-  const labelKey = "month";
-  const products = productsMap[range];
-
-  const kpis = [
-    { label: "Revenue", value: globalStats ? `$${globalStats.totalRevenue.toLocaleString()}` : "$0", icon: DollarSign },
-    { label: "Orders", value: globalStats ? globalStats.totalOrders.toLocaleString() : "0", icon: ShoppingBag },
-    { label: "Customers", value: "892", icon: Users },
-    { label: "Conversion", value: "3.24%", icon: TrendingUp },
-  ];
+  const topProducts = useMemo(() => {
+    const sales: Record<string, number> = {};
+    for (const order of periodOrders) {
+      for (const item of order.items) {
+        sales[item.name] = (sales[item.name] || 0) + item.quantity;
+      }
+    }
+    return Object.entries(sales)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([name, sales]) => ({ name, sales }));
+  }, [periodOrders]);
 
   return (
     <AdminLayout>
@@ -107,15 +113,17 @@ function Analytics() {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {kpis.map((kpi) => {
+          {[
+            { label: "Revenue", value: `PKR ${kpis.totalRevenue.toLocaleString("en-PK")}`, icon: DollarSign },
+            { label: "Orders", value: kpis.totalOrders.toLocaleString(), icon: ShoppingBag },
+            { label: "Customers", value: kpis.totalCustomers.toLocaleString(), icon: Users },
+            { label: "Conversion", value: `${kpis.convRate.toFixed(2)}%`, icon: TrendingUp },
+          ].map((kpi) => {
             const Icon = kpi.icon;
             return (
               <div key={kpi.label} className="bg-graphite border border-chrome/20 rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-3">
                   <Icon size={18} className="text-chrome-dim" />
-                  <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 text-green-400 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.15em]">
-                    <ArrowUpRight size={10} /> +12.3%
-                  </span>
                 </div>
                 <p className="font-display text-2xl mb-1">{kpi.value}</p>
                 <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">{kpi.label}</p>
@@ -131,7 +139,7 @@ function Analytics() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.3 0 240 / 0.5)" />
-                  <XAxis dataKey={labelKey} stroke="oklch(0.55 0.008 240)" tick={{ fontSize: 10, fontFamily: "JetBrains Mono" }} />
+                  <XAxis dataKey="label" stroke="oklch(0.55 0.008 240)" tick={{ fontSize: 10, fontFamily: "JetBrains Mono" }} />
                   <YAxis stroke="oklch(0.55 0.008 240)" tick={{ fontSize: 10, fontFamily: "JetBrains Mono" }} />
                   <Tooltip
                     contentStyle={{
@@ -155,7 +163,7 @@ function Analytics() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.3 0 240 / 0.5)" />
-                  <XAxis dataKey={labelKey} stroke="oklch(0.55 0.008 240)" tick={{ fontSize: 10, fontFamily: "JetBrains Mono" }} />
+                  <XAxis dataKey="label" stroke="oklch(0.55 0.008 240)" tick={{ fontSize: 10, fontFamily: "JetBrains Mono" }} />
                   <YAxis stroke="oklch(0.55 0.008 240)" tick={{ fontSize: 10, fontFamily: "JetBrains Mono" }} />
                   <Tooltip
                     contentStyle={{
@@ -179,7 +187,7 @@ function Analytics() {
             <h2 className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim mb-4">Top Products</h2>
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={products} layout="vertical">
+                <BarChart data={topProducts.length > 0 ? topProducts : [{ name: "No data", sales: 0 }]} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.3 0 240 / 0.5)" horizontal={false} />
                   <XAxis type="number" stroke="oklch(0.55 0.008 240)" tick={{ fontSize: 10, fontFamily: "JetBrains Mono" }} />
                   <YAxis dataKey="name" type="category" stroke="oklch(0.55 0.008 240)" tick={{ fontSize: 10, fontFamily: "JetBrains Mono" }} width={140} />
@@ -204,7 +212,7 @@ function Analytics() {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.3 0 240 / 0.5)" />
-                  <XAxis dataKey={labelKey} stroke="oklch(0.55 0.008 240)" tick={{ fontSize: 10, fontFamily: "JetBrains Mono" }} />
+                  <XAxis dataKey="label" stroke="oklch(0.55 0.008 240)" tick={{ fontSize: 10, fontFamily: "JetBrains Mono" }} />
                   <YAxis stroke="oklch(0.55 0.008 240)" tick={{ fontSize: 10, fontFamily: "JetBrains Mono" }} />
                   <Tooltip
                     contentStyle={{
