@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Save } from "lucide-react";
 import { CustomerLayout } from "@/components/CustomerLayout";
 import { useAuthContext } from "@/lib/auth-context";
+import { cleanError } from "@/lib/utils";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
@@ -48,8 +49,8 @@ function AccountSettings() {
         updateUser({ name: profile.name.trim() });
       }
       setProfileMsg("Profile updated successfully.");
-    } catch (err: any) {
-      setProfileMsg(err.message || "Failed to update profile.");
+    } catch (err) {
+      setProfileMsg(cleanError(err));
     } finally {
       setProfileLoading(false);
     }
@@ -76,8 +77,8 @@ function AccountSettings() {
       });
       setPasswords({ current: "", new: "", confirm: "" });
       setPasswordMsg("Password changed successfully.");
-    } catch (err: any) {
-      setPasswordMsg(err.message || "Failed to change password.");
+    } catch (err) {
+      setPasswordMsg(cleanError(err));
     } finally {
       setPasswordLoading(false);
     }

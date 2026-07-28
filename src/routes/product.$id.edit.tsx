@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
-import { Save, Upload } from "lucide-react";
+import { Save, Upload, X } from "lucide-react";
 import { toWebP } from "@/lib/image-utils";
 import { api } from "../../convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
@@ -13,18 +13,28 @@ export const Route = createFileRoute("/product/$id/edit")({
   }),
 });
 
-const CATEGORIES = ["Outerwear", "Footwear", "Silverwork", "Adornment", "Tops", "Bottoms"];
-
 function EditProduct() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const product = useQuery(api.products.getById, { id: id as any });
 
+  const collections = useQuery(api.collections.list) ?? [];
+  const activeCollections = collections.filter((c) => c.isActive);
+  const categoryOptions = activeCollections.length > 0
+    ? activeCollections.map((c) => c.name)
+    : ["Outerwear", "Footwear", "Silverwork", "Adornment", "Tops", "Bottoms"];
+
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+
+  const [tagInput, setTagInput] = useState("");
+  const [sizeInput, setSizeInput] = useState("");
+  const [colorInput, setColorInput] = useState("");
 
   const [form, setForm] = useState({
     name: "",
@@ -38,6 +48,9 @@ function EditProduct() {
     dimensions: "",
     stock: "",
     status: "Draft" as "Active" | "Draft" | "Archived",
+    tags: [] as string[],
+    sizes: [] as string[],
+    colors: [] as string[],
   });
 
   const updateProduct = useMutation(api.products.update);
@@ -52,11 +65,14 @@ function EditProduct() {
         price: product.price.toString(),
         comparePrice: product.compareAtPrice?.toString() || "",
         description: product.description,
-        details: "",
-        materials: "",
-        dimensions: "",
+        details: product.details ?? "",
+        materials: product.material ?? "",
+        dimensions: product.dimensions ?? "",
         stock: product.stockCount.toString(),
         status: product.inStock ? "Active" : "Draft",
+        tags: product.tags ?? [],
+        sizes: product.sizes ?? [],
+        colors: product.colors ?? [],
       });
     }
   }, [product]);
@@ -70,6 +86,13 @@ function EditProduct() {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
+
+  const addTag = () => { const t = tagInput.trim(); if (t && !form.tags.includes(t)) { setForm((prev) => ({ ...prev, tags: [...prev.tags, t] })); } setTagInput(""); };
+  const removeTag = (t: string) => setForm((prev) => ({ ...prev, tags: prev.tags.filter((x) => x !== t) }));
+  const addSize = () => { const s = sizeInput.trim(); if (s && !form.sizes.includes(s)) { setForm((prev) => ({ ...prev, sizes: [...prev.sizes, s] })); } setSizeInput(""); };
+  const removeSize = (s: string) => setForm((prev) => ({ ...prev, sizes: prev.sizes.filter((x) => x !== s) }));
+  const addColor = () => { const c = colorInput.trim(); if (c && !form.colors.includes(c)) { setForm((prev) => ({ ...prev, colors: [...prev.colors, c] })); } setColorInput(""); };
+  const removeColor = (c: string) => setForm((prev) => ({ ...prev, colors: prev.colors.filter((x) => x !== c) }));
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
@@ -95,6 +118,16 @@ function EditProduct() {
         if (!storageId) throw new Error("No storageId in upload response");
         images = [storageId];
       }
+
+      let video: string | undefined;
+      if (videoFile) {
+        const uploadUrl = await generateUploadUrl();
+        const result = await fetch(uploadUrl, { method: "POST", body: videoFile });
+        if (!result.ok) throw new Error(`Video upload failed: ${result.status}`);
+        const { storageId } = await result.json();
+        if (storageId) video = storageId;
+      }
+
       await updateProduct({
         id: id as any,
         name: form.name.trim(),
@@ -103,6 +136,13 @@ function EditProduct() {
         price: Number(form.price),
         compareAtPrice: form.comparePrice ? Number(form.comparePrice) : undefined,
         description: form.description.trim(),
+        details: form.details.trim() || undefined,
+        dimensions: form.dimensions.trim() || undefined,
+        video,
+        tags: form.tags,
+        sizes: form.sizes,
+        colors: form.colors,
+        material: form.materials.trim() || undefined,
         inStock: Number(form.stock) > 0,
         stockCount: Number(form.stock),
         images,
@@ -166,7 +206,7 @@ function EditProduct() {
                 className={errors.category ? inputErrorClass : inputClass}
               >
                 <option value="">Select category</option>
-                {CATEGORIES.map((c) => (
+                {categoryOptions.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
@@ -191,7 +231,6 @@ function EditProduct() {
                   onChange={(e) => handleChange("comparePrice", e.target.value)}
                   type="number"
                   step="0.01"
-                  placeholder="0.00"
                   className={inputClass}
                 />
               </div>
@@ -228,6 +267,54 @@ function EditProduct() {
                 className={inputClass}
               />
             </div>
+
+            <div>
+              <label className={labelClass}>Tags</label>
+              <div className="flex gap-2 mb-2 flex-wrap">
+                {form.tags.map((t) => (
+                  <span key={t} className="inline-flex items-center gap-1 rounded-full border border-chrome/20 bg-graphite-2 px-2.5 py-1 font-mono text-[10px]">
+                    {t}
+                    <button onClick={() => removeTag(t)} className="text-chrome-dim hover:text-red-400"><X size={10} /></button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }} placeholder="Add tag" className={`${inputClass} flex-1`} />
+                <button onClick={addTag} type="button" className="btn-chrome btn-chrome-inner px-3 py-2 rounded-xl text-[10px]">Add</button>
+              </div>
+            </div>
+
+            <div>
+              <label className={labelClass}>Sizes</label>
+              <div className="flex gap-2 mb-2 flex-wrap">
+                {form.sizes.map((s) => (
+                  <span key={s} className="inline-flex items-center gap-1 rounded-full border border-chrome/20 bg-graphite-2 px-2.5 py-1 font-mono text-[10px]">
+                    {s}
+                    <button onClick={() => removeSize(s)} className="text-chrome-dim hover:text-red-400"><X size={10} /></button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input value={sizeInput} onChange={(e) => setSizeInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSize(); } }} placeholder="Add size" className={`${inputClass} flex-1`} />
+                <button onClick={addSize} type="button" className="btn-chrome btn-chrome-inner px-3 py-2 rounded-xl text-[10px]">Add</button>
+              </div>
+            </div>
+
+            <div>
+              <label className={labelClass}>Colors</label>
+              <div className="flex gap-2 mb-2 flex-wrap">
+                {form.colors.map((c) => (
+                  <span key={c} className="inline-flex items-center gap-1 rounded-full border border-chrome/20 bg-graphite-2 px-2.5 py-1 font-mono text-[10px]">
+                    {c}
+                    <button onClick={() => removeColor(c)} className="text-chrome-dim hover:text-red-400"><X size={10} /></button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input value={colorInput} onChange={(e) => setColorInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addColor(); } }} placeholder="Add color" className={`${inputClass} flex-1`} />
+                <button onClick={addColor} type="button" className="btn-chrome btn-chrome-inner px-3 py-2 rounded-xl text-[10px]">Add</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -245,12 +332,7 @@ function EditProduct() {
                       <img src={URL.createObjectURL(imageFile)} alt="Preview" className="h-full w-full object-cover" />
                     </div>
                     <p className="font-mono text-[10px] text-chrome-dim">{imageFile.name}</p>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setImageFile(null); }}
-                      className="font-mono text-[9px] uppercase tracking-[0.2em] text-red-400 hover:text-red-300"
-                    >
-                      Remove
-                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); setImageFile(null); }} className="font-mono text-[9px] uppercase tracking-[0.2em] text-red-400 hover:text-red-300">Remove</button>
                   </div>
                 ) : product.imageUrls?.[0] ? (
                   <div className="flex flex-col items-center gap-2">
@@ -262,25 +344,34 @@ function EditProduct() {
                   </div>
                 ) : (
                   <>
-                    <div className="h-12 w-12 rounded-xl bg-graphite-2 flex items-center justify-center font-mono text-lg text-chrome-dim mb-3">
-                      {product.name.charAt(0)}
-                    </div>
+                    <Upload size={24} className="text-chrome-dim mb-3" />
                     <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Click to upload</p>
-                    <p className="font-mono text-[9px] text-chrome-dim/50 mt-1">PNG, JPG up to 10MB</p>
                   </>
                 )}
               </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null;
-                  setImageFile(file);
-                }}
-              />
+              <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
             </div>
+
+            <div>
+              <label className={labelClass}>Video <span className="text-chrome-dim/50 font-normal normal-case">(optional)</span></label>
+              <div
+                onClick={() => videoInputRef.current?.click()}
+                className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-chrome/20 bg-graphite-2/50 px-6 py-6 text-center cursor-pointer hover:border-chrome/50 transition-colors"
+              >
+                {videoFile ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="font-mono text-[10px] text-chrome-dim">{videoFile.name}</p>
+                    <button onClick={(e) => { e.stopPropagation(); setVideoFile(null); }} className="font-mono text-[9px] uppercase tracking-[0.2em] text-red-400 hover:text-red-300">Remove</button>
+                  </div>
+                ) : product.video ? (
+                  <p className="font-mono text-[10px] text-chrome-dim">Video uploaded. Click to replace.</p>
+                ) : (
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Click to upload video</p>
+                )}
+              </div>
+              <input ref={videoInputRef} type="file" accept="video/mp4,video/webm" className="hidden" onChange={(e) => setVideoFile(e.target.files?.[0] || null)} />
+            </div>
+
             <div>
               <label className={labelClass}>Stock <span className="text-red-400">*</span></label>
               <input

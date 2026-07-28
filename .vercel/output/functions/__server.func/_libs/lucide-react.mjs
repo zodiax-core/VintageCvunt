@@ -852,6 +852,19 @@ var SlidersHorizontal = createLucideIcon("sliders-horizontal", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var SquareCheckBig = createLucideIcon("square-check-big", [["path", {
+	d: "M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344",
+	key: "2acyp4"
+}], ["path", {
+	d: "m9 11 3 3L22 4",
+	key: "1pflzl"
+}]]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Star = createLucideIcon("star", [["path", {
 	d: "M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z",
 	key: "r04s7s"
@@ -1040,4 +1053,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { LogOut as A, ChevronRight as B, PenLine as C, Menu as D, MessageSquare as E, Download as F, Calendar as G, ChevronDown as H, DollarSign as I, ArrowRight as J, Bell as K, CreditCard as L, Globe as M, FileText as N, Mail as O, Eye as P, Clock as R, Pencil as S, Package as T, Check as U, ChevronLeft as V, ChartColumn as W, ArrowDownRight as X, ArrowLeft as Y, Reply as _, Truck as a, Plus as b, Trash2 as c, SlidersHorizontal as d, ShoppingBag as f, Save as g, Search as h, Upload as i, LayoutDashboard as j, MailOpen as k, Tag as l, Settings as m, Users as n, TriangleAlert as o, Ship as p, ArrowUpRight as q, User as r, TrendingUp as s, X as t, Star as u, Receipt as v, PanelsTopLeft as w, Percent as x, Quote as y, CircleX as z };
+export { MailOpen as A, CircleX as B, Pencil as C, MessageSquare as D, Package as E, Eye as F, ChartColumn as G, ChevronLeft as H, Download as I, ArrowUpRight as J, Calendar as K, DollarSign as L, LayoutDashboard as M, Globe as N, Menu as O, FileText as P, CreditCard as R, Percent as S, PanelsTopLeft as T, ChevronDown as U, ChevronRight as V, Check as W, ArrowLeft as X, ArrowRight as Y, ArrowDownRight as Z, Save as _, Truck as a, Quote as b, Trash2 as c, SquareCheckBig as d, SlidersHorizontal as f, Search as g, Settings as h, Upload as i, LogOut as j, Mail as k, Tag as l, Ship as m, Users as n, TriangleAlert as o, ShoppingBag as p, Bell as q, User as r, TrendingUp as s, X as t, Star as u, Reply as v, PenLine as w, Plus as x, Receipt as y, Clock as z };

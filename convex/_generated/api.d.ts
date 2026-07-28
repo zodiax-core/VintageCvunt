@@ -20,6 +20,7 @@ import type * as messages from "../messages.js";
 import type * as orders from "../orders.js";
 import type * as products from "../products.js";
 import type * as reviews from "../reviews.js";
+import type * as settings from "../settings.js";
 import type * as shippingRates from "../shippingRates.js";
 
 import type {
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   orders: typeof orders;
   products: typeof products;
   reviews: typeof reviews;
+  settings: typeof settings;
   shippingRates: typeof shippingRates;
 }>;
 

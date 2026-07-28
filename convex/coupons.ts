@@ -61,3 +61,32 @@ export const remove = mutation({
     await ctx.db.delete(args.id);
   },
 });
+
+export const validateCoupon = query({
+  args: { code: v.string(), subtotal: v.number() },
+  handler: async (ctx, args) => {
+    const coupon = await ctx.db
+      .query("coupons")
+      .withIndex("by_code", (q) => q.eq("code", args.code.toUpperCase()))
+      .first();
+    if (!coupon) return { valid: false, reason: "Coupon not found" };
+    if (!coupon.isActive) return { valid: false, reason: "Coupon is inactive" };
+    if (Date.now() > coupon.expiresAt) return { valid: false, reason: "Coupon has expired" };
+    if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) return { valid: false, reason: "Coupon usage limit reached" };
+    if (coupon.minPurchase && args.subtotal < coupon.minPurchase) return { valid: false, reason: `Minimum purchase of $${coupon.minPurchase} required` };
+    let discountAmount = 0;
+    if (coupon.type === "percentage") discountAmount = Math.round(args.subtotal * (coupon.value / 100) * 100) / 100;
+    else if (coupon.type === "fixed") discountAmount = coupon.value;
+    if (discountAmount > args.subtotal) discountAmount = args.subtotal;
+    return {
+      valid: true,
+      coupon: {
+        _id: coupon._id,
+        code: coupon.code,
+        type: coupon.type,
+        value: coupon.value,
+        discountAmount,
+      },
+    };
+  },
+});

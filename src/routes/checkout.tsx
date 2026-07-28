@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useCartContext } from "@/lib/cart-context";
 import { useAuthContext } from "@/lib/auth-context";
+import type { Id } from "../../convex/_generated/dataModel";
 
 export const Route = createFileRoute("/checkout")({
   component: Checkout,
@@ -25,6 +26,8 @@ function Checkout() {
   const { cart, cartTotal, cartCount, clearCart } = useCartContext();
   const { user } = useAuthContext();
   const navigate = useNavigate();
+  const settings = useQuery(api.settings.get);
+  const shippingRates = useQuery(api.shippingRates.list) ?? [];
 
   const [billing, setBilling] = useState({
     name: user?.name || "",
@@ -41,6 +44,34 @@ function Checkout() {
   const [screenshotPreview, setScreenshotPreview] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Coupon
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    _id: Id<"coupons">;
+    code: string;
+    type: string;
+    value: number;
+    discountAmount: number;
+  } | null>(null);
+  const [couponError, setCouponError] = useState("");
+  const [couponApplying, setCouponApplying] = useState(false);
+
+  // Shipping
+  const [selectedShipping, setSelectedShipping] = useState<typeof shippingRates[number] | null>(null);
+
+  useEffect(() => {
+    if (shippingRates.length > 0 && !selectedShipping) {
+      setSelectedShipping(shippingRates[0]);
+    }
+  }, [shippingRates, selectedShipping]);
+
+  const shippingCost = selectedShipping?.price ?? 0;
+  const taxRate = settings?.defaultTaxRate ?? 0;
+  const discount = appliedCoupon?.discountAmount ?? 0;
+  const taxableAmount = Math.max(0, cartTotal - discount);
+  const tax = settings?.taxInclusive ? 0 : Math.round(taxableAmount * (taxRate / 100) * 100) / 100;
+  const grandTotal = cartTotal + shippingCost + tax - discount;
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -68,6 +99,26 @@ function Checkout() {
       const reader = new FileReader();
       reader.onload = (e) => setScreenshotPreview(e.target?.result as string);
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponApplying(true);
+    setCouponError("");
+    setAppliedCoupon(null);
+    try {
+      const result = await queryValidateCoupon(couponCode.trim().toUpperCase(), cartTotal);
+      if (result.valid) {
+        setAppliedCoupon(result.coupon);
+        setCouponCode("");
+      } else {
+        setCouponError(result.reason);
+      }
+    } catch {
+      setCouponError("Failed to validate coupon");
+    } finally {
+      setCouponApplying(false);
     }
   };
 
@@ -108,9 +159,11 @@ function Checkout() {
           quantity: item.quantity,
         })),
         subtotal: cartTotal,
-        shipping: 0,
-        tax: 0,
-        total: cartTotal,
+        shipping: shippingCost,
+        tax,
+        discount: discount > 0 ? discount : undefined,
+        couponCode: appliedCoupon?.code,
+        total: grandTotal,
         status: "pending",
         paymentMethod: "Bank Transfer",
         billingAddress: {
@@ -281,8 +334,8 @@ function Checkout() {
                 <div>
                   <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">§ Payment Proof</span>
                   <p className="mt-2 font-mono text-[10px] text-chrome-dim/60">Upload a screenshot of your payment transaction to confirm your order.</p>
+                  <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim/40">Other payment methods coming soon.</p>
 
-                  {/* Screenshot Upload */}
                   <div className="mt-5">
                     <label className="block font-mono text-[10px] uppercase tracking-[0.24em] text-chrome-dim mb-2">Payment Screenshot *</label>
                     <div
@@ -337,7 +390,7 @@ function Checkout() {
                 <div className="md:sticky md:top-28 rounded-2xl border border-chrome bg-graphite p-6 md:p-8" style={{ boxShadow: "var(--shadow-plate)" }}>
                   <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Order Summary</span>
                   <div className="divider-chrome my-5" />
-                  <div className="space-y-3">
+                  <div className="space-y-3 max-h-48 overflow-y-auto scrollbar-thin">
                     {cart.items.map((item) => (
                       <div key={item.id} className="flex items-center gap-3">
                         <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden border border-chrome/30 bg-graphite-2 grid place-items-center font-mono text-xs text-chrome-dim">
@@ -351,19 +404,109 @@ function Checkout() {
                       </div>
                     ))}
                   </div>
-                  <div className="divider-chrome my-5" />
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Subtotal</span>
-                    <span className="font-mono text-sm text-chrome">{priceLabel(cartTotal)}</span>
+
+                  {/* Coupon */}
+                  <div className="divider-chrome my-4" />
+                  <div>
+                    {appliedCoupon ? (
+                      <div className="flex items-center justify-between rounded-xl border border-green-500/30 bg-green-500/10 px-3 py-2">
+                        <span className="font-mono text-[10px] text-green-400">{appliedCoupon.code} (-{priceLabel(discount)})</span>
+                        <button
+                          type="button"
+                          onClick={() => setAppliedCoupon(null)}
+                          className="font-mono text-[9px] text-chrome-dim hover:text-red-400"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value)}
+                          placeholder="Coupon code"
+                          className="flex-1 rounded-xl border border-chrome/20 bg-background px-3 py-2 font-mono text-[10px] outline-none focus:border-chrome/50"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyCoupon}
+                          disabled={couponApplying || !couponCode.trim()}
+                          className="btn-chrome btn-chrome-inner px-3 py-2 rounded-xl text-[10px] disabled:opacity-30"
+                        >
+                          {couponApplying ? "..." : "Apply"}
+                        </button>
+                      </div>
+                    )}
+                    {couponError && <p className="mt-1 font-mono text-[9px] text-red-400">{couponError}</p>}
                   </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Shipping</span>
-                    <span className="font-mono text-xs text-chrome-dim">Free</span>
+
+                  {/* Shipping */}
+                  {shippingRates.length > 0 && (
+                    <div className="divider-chrome my-4" />
+                  )}
+                  {shippingRates.length > 0 && (
+                    <div>
+                      <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Shipping</span>
+                      <div className="mt-2 space-y-2">
+                        {shippingRates.map((rate) => (
+                          <label
+                            key={rate._id}
+                            className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 cursor-pointer transition-colors ${
+                              selectedShipping?._id === rate._id
+                                ? "border-chrome/50 bg-chrome/10"
+                                : "border-chrome/20 hover:border-chrome/30"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="shipping"
+                              checked={selectedShipping?._id === rate._id}
+                              onChange={() => setSelectedShipping(rate)}
+                              className="accent-chrome"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-mono text-[11px] text-foreground">{rate.name}</p>
+                              {rate.description && (
+                                <p className="font-mono text-[9px] text-chrome-dim">{rate.description}</p>
+                              )}
+                              {rate.estimatedDays && (
+                                <p className="font-mono text-[9px] text-chrome-dim/60">{rate.estimatedDays} days</p>
+                              )}
+                            </div>
+                            <span className="font-mono text-[11px] text-chrome shrink-0">{priceLabel(rate.price)}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="divider-chrome my-5" />
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Subtotal</span>
+                      <span className="font-mono text-sm text-chrome">{priceLabel(cartTotal)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Shipping</span>
+                      <span className="font-mono text-xs text-chrome">{shippingCost === 0 ? "Free" : priceLabel(shippingCost)}</span>
+                    </div>
+                    {tax > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Tax</span>
+                        <span className="font-mono text-xs text-chrome">{priceLabel(tax)}</span>
+                      </div>
+                    )}
+                    {discount > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-green-400">Discount</span>
+                        <span className="font-mono text-xs text-green-400">-{priceLabel(discount)}</span>
+                      </div>
+                    )}
                   </div>
                   <div className="divider-chrome my-5" />
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Total</span>
-                    <span className="font-mono text-lg text-chrome">{priceLabel(cartTotal)}</span>
+                    <span className="font-mono text-lg text-chrome">{priceLabel(grandTotal)}</span>
                   </div>
 
                   <button
@@ -400,4 +543,11 @@ function Checkout() {
       <SiteFooter />
     </div>
   );
+}
+
+// Helper to query coupon validation via Convex
+async function queryValidateCoupon(code: string, subtotal: number) {
+  const { convex } = await import("@/lib/convex");
+  const { api } = await import("../../convex/_generated/api");
+  return await convex.query(api.coupons.validateCoupon, { code, subtotal });
 }

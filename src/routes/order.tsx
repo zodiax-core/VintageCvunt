@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { Eye, ChevronLeft, ChevronRight, Search, FileText, SlidersHorizontal, X } from "lucide-react";
+import { Eye, ChevronLeft, ChevronRight, Search, FileText, SlidersHorizontal, X, Check, CheckSquare } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { generateOrdersPDF } from "@/lib/pdf-utils";
 import { Id } from "../../convex/_generated/dataModel";
 import { api } from "../../convex/_generated/api";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 
 export const Route = createFileRoute("/order")({
   beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
@@ -34,8 +34,6 @@ const dateRangeLabel: Record<DateRangeKey, string> = {
   month: "This Month",
 };
 
-
-
 const statusColors: Record<string, string> = {
   Pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
   Processing: "bg-blue-500/20 text-blue-400 border-blue-500/30",
@@ -48,11 +46,16 @@ const PAGE_SIZE = 5;
 
 function Orders() {
   const orders = useQuery(api.orders.list) ?? [];
+  const settings = useQuery(api.settings.get);
+  const updateOrder = useMutation(api.orders.update);
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeKey>("all");
   const [page, setPage] = useState(0);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<Id<"orders">>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState("");
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -104,6 +107,33 @@ function Orders() {
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const allSelected = paged.length > 0 && paged.every((o) => selectedIds.has(o._id as Id<"orders">));
+
+  function toggleSelect(id: Id<"orders">) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paged.map((o) => o._id as Id<"orders">)));
+    }
+  }
+
+  async function handleBulkUpdate() {
+    if (!bulkStatus || selectedIds.size === 0) return;
+    for (const id of selectedIds) {
+      await updateOrder({ id, status: bulkStatus });
+    }
+    setSelectedIds(new Set());
+    setBulkStatus("");
+  }
 
   function StatusBadge({ status }: { status: string }) {
     return (
@@ -148,7 +178,13 @@ function Orders() {
                 items: o.items.reduce((acc: any, i: any) => acc + i.quantity, 0),
                 total: o.total,
                 status: o.status
-              })))}
+              })), settings ? {
+                name: settings.storeName,
+                tagline: "Objects / Chrome / Bone",
+                address: "Karachi, Pakistan",
+                phone: "+92 21 1123 4567",
+                email: settings.storeEmail,
+              } : undefined)}
               className="btn-chrome btn-chrome-inner btn-chrome-sm"
             >
               <FileText size={12} />
@@ -235,11 +271,48 @@ function Orders() {
           </div>
         )}
 
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-3 p-3 bg-graphite border border-chrome/20 rounded-2xl">
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground">
+              {selectedIds.size} selected
+            </span>
+            <select
+              value={bulkStatus}
+              onChange={(e) => setBulkStatus(e.target.value)}
+              className="rounded-xl bg-background border border-chrome/20 px-3 py-1.5 font-mono text-[10px] text-foreground focus:outline-none focus:border-chrome/40"
+            >
+              <option value="">Change status to...</option>
+              {statusList.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+            <button
+              onClick={handleBulkUpdate}
+              disabled={!bulkStatus}
+              className="btn-chrome btn-chrome-inner btn-chrome-sm"
+            >
+              <Check size={12} />
+              <span className="btn-label">Apply</span>
+            </button>
+            <button
+              onClick={() => { setSelectedIds(new Set()); setBulkStatus(""); }}
+              className="font-mono text-[10px] text-chrome-dim hover:text-foreground transition-colors ml-auto"
+            >
+              Clear
+            </button>
+          </div>
+        )}
+
         <div className="hidden md:block">
           <div className="bg-graphite border border-chrome/20 rounded-2xl overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="border-chrome/10">
+                  <TableHead className="w-10">
+                    <button onClick={toggleSelectAll} className="flex items-center justify-center">
+                      <CheckSquare size={14} className={allSelected ? "text-foreground" : "text-chrome-dim"} />
+                    </button>
+                  </TableHead>
                   <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Order ID</TableHead>
                   <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Customer</TableHead>
                   <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Date</TableHead>
@@ -251,7 +324,12 @@ function Orders() {
               </TableHeader>
               <TableBody>
                 {paged.map((o) => (
-                  <TableRow key={o._id} className="border-chrome/10 hover:bg-chrome/5">
+                  <TableRow key={o._id} className={`border-chrome/10 hover:bg-chrome/5 ${selectedIds.has(o._id as Id<"orders">) ? "bg-chrome/10" : ""}`}>
+                    <TableCell>
+                      <button onClick={() => toggleSelect(o._id as Id<"orders">)} className="flex items-center justify-center">
+                        <CheckSquare size={14} className={selectedIds.has(o._id as Id<"orders">) ? "text-foreground" : "text-chrome-dim/40"} />
+                      </button>
+                    </TableCell>
                     <TableCell className="font-medium text-foreground">{o.orderNumber}</TableCell>
                     <TableCell className="text-chrome-dim">{o.customerName}</TableCell>
                     <TableCell className="text-chrome-dim">{new Date(o.createdAt).toLocaleDateString()}</TableCell>
@@ -259,16 +337,13 @@ function Orders() {
                     <TableCell className="text-foreground">PKR {o.total.toFixed(2)}</TableCell>
                     <TableCell><StatusBadge status={o.status} /></TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Link
-                          to="/order/$id"
-                          params={{ id: o._id }}
-                          className="btn-chrome btn-chrome-inner p-2 rounded-lg"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Link>
-
-                      </div>
+                      <Link
+                        to="/order/$id"
+                        params={{ id: o._id }}
+                        className="btn-chrome btn-chrome-inner p-2 rounded-lg"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Link>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -281,7 +356,12 @@ function Orders() {
           {paged.map((o) => (
             <div key={o._id} className="bg-graphite border border-chrome/20 rounded-2xl p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-medium text-foreground">{o.orderNumber}</span>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => toggleSelect(o._id as Id<"orders">)}>
+                    <CheckSquare size={14} className={selectedIds.has(o._id as Id<"orders">) ? "text-foreground" : "text-chrome-dim/40"} />
+                  </button>
+                  <span className="font-medium text-foreground">{o.orderNumber}</span>
+                </div>
                 <StatusBadge status={o.status} />
               </div>
               <div className="text-sm text-chrome-dim">{o.customerName}</div>
@@ -297,7 +377,6 @@ function Orders() {
                 >
                   <Eye className="h-3 w-3" /> View
                 </Link>
-
               </div>
             </div>
           ))}
@@ -327,8 +406,6 @@ function Orders() {
           </div>
         )}
       </div>
-
-
     </AdminLayout>
   );
 }

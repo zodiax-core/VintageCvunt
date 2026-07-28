@@ -14,6 +14,7 @@ export const getByProductId = query({
     return await ctx.db
       .query("reviews")
       .withIndex("by_productId", (q) => q.eq("productId", args.productId))
+      .filter((q) => q.eq(q.field("status"), "Approved"))
       .collect();
   },
 });

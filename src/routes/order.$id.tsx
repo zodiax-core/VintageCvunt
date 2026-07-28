@@ -1,14 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Package, Receipt, Trash2 } from "lucide-react";
+import { ArrowLeft, Package, Receipt, Trash2, Check, X } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Id } from "../../convex/_generated/dataModel";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { generateReceiptPDF } from "@/lib/pdf-utils";
 import { api } from "../../convex/_generated/api";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 
 export const Route = createFileRoute("/order/$id")({
   beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
@@ -31,6 +31,9 @@ function OrderDetail() {
   const navigate = useNavigate();
 
   const order = useQuery(api.orders.getById, { id: id as Id<"orders"> });
+  const settings = useQuery(api.settings.get);
+  const updateOrder = useMutation(api.orders.update);
+  const removeOrder = useMutation(api.orders.remove);
 
   const [status, setStatus] = useState(order?.status ?? "");
   const [showSuccess, setShowSuccess] = useState(false);
@@ -56,10 +59,48 @@ function OrderDetail() {
   }
 
   const subtotal = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
+  const profit = (order.shipping || 0) + (order.tax || 0) - (order.discount || 0);
 
-  function handleUpdate() {
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 2000);
+  async function handleUpdate() {
+    try {
+      await updateOrder({ id: order._id as Id<"orders">, status });
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+    } catch (err) {
+      console.error("Failed to update order", err);
+    }
+  }
+
+  async function handleConfirm() {
+    try {
+      await updateOrder({ id: order._id as Id<"orders">, status: "Processing" });
+      setStatus("Processing");
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+    } catch (err) {
+      console.error("Failed to confirm order", err);
+    }
+  }
+
+  async function handleCancel() {
+    try {
+      await updateOrder({ id: order._id as Id<"orders">, status: "Cancelled" });
+      setStatus("Cancelled");
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+    } catch (err) {
+      console.error("Failed to cancel order", err);
+    }
+  }
+
+  async function handleDelete() {
+    try {
+      await removeOrder({ id: order._id as Id<"orders"> });
+      navigate({ to: "/order" });
+    } catch (err) {
+      console.error("Failed to delete order", err);
+    }
+    setDeleteTarget(false);
   }
 
   return (
@@ -75,8 +116,15 @@ function OrderDetail() {
           <button
             onClick={() => generateReceiptPDF({
               ...order,
-              id: order._id
-            } as any)}
+              id: order._id,
+              discount: order.discount ?? 0,
+            } as any, settings ? {
+              name: settings.storeName,
+              tagline: "Objects / Chrome / Bone",
+              address: "Karachi, Pakistan",
+              phone: "+92 21 1123 4567",
+              email: settings.storeEmail,
+            } : undefined)}
             className="btn-chrome btn-chrome-inner inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm"
           >
             <Receipt className="h-4 w-4" /> Download Receipt
@@ -137,10 +185,22 @@ function OrderDetail() {
                   <span className="text-muted-foreground">Tax</span>
                   <span className="text-foreground">PKR {order.tax.toFixed(2)}</span>
                 </div>
+                {order.discount ? (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-400">Discount {order.couponCode ? `(${order.couponCode})` : ""}</span>
+                    <span className="text-green-400">-PKR {order.discount.toFixed(2)}</span>
+                  </div>
+                ) : null}
                 <div className="flex justify-between text-base font-semibold pt-1 border-t border-chrome/10">
                   <span className="text-foreground">Total</span>
-                  <span className="text-foreground">PKR {(subtotal + order.shipping + order.tax).toFixed(2)}</span>
+                  <span className="text-foreground">PKR {(subtotal + order.shipping + order.tax - (order.discount || 0)).toFixed(2)}</span>
                 </div>
+                {order.status === "Delivered" ? (
+                  <div className="flex justify-between text-sm pt-1 border-t border-chrome/10">
+                    <span className="text-green-400 font-semibold">Profit</span>
+                    <span className="text-green-400 font-semibold">PKR {profit.toFixed(2)}</span>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -151,21 +211,67 @@ function OrderDetail() {
               <div className="space-y-2 text-sm">
                 <p className="text-foreground font-medium">{order.customerName}</p>
                 <p className="text-muted-foreground">{order.customerEmail}</p>
+                {order.phone ? <p className="text-muted-foreground">{order.phone}</p> : null}
+              </div>
+              <div className="border-t border-chrome/10 pt-3">
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">Billing Address</p>
                 <p className="text-muted-foreground text-xs leading-relaxed">
                   {order.billingAddress.street}, {order.billingAddress.city},{" "}
-                  {order.billingAddress.state} {order.billingAddress.zip}
+                  {order.billingAddress.state} {order.billingAddress.zip}<br />
+                  {order.billingAddress.country}
                 </p>
               </div>
+              <div className="border-t border-chrome/10 pt-3">
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">Shipping Address</p>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  {order.shippingAddress.street}, {order.shippingAddress.city},{" "}
+                  {order.shippingAddress.state} {order.shippingAddress.zip}<br />
+                  {order.shippingAddress.country}
+                </p>
+              </div>
+              {order.paymentMethod ? (
+                <div className="border-t border-chrome/10 pt-3">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Payment</p>
+                  <p className="text-foreground text-sm mt-1">{order.paymentMethod}</p>
+                  {order.screenshot && (
+                    <img
+                      src={order.screenshot}
+                      alt="Payment proof"
+                      className="mt-2 max-h-32 rounded-xl object-contain border border-chrome/20 bg-background"
+                    />
+                  )}
+                </div>
+              ) : null}
             </div>
 
             <div className="bg-graphite border border-chrome/20 rounded-2xl p-5 space-y-4">
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Status</span>
-              {showSuccess && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-green-500/30 bg-green-500/20 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-green-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                  Status Updated!
-                </span>
-              )}
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Status</span>
+                {showSuccess && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-green-500/30 bg-green-500/20 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-green-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                    Updated!
+                  </span>
+                )}
+              </div>
+
+              {order.status === "Pending" ? (
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleConfirm}
+                    className="btn-chrome btn-chrome-inner flex-1 py-2.5 rounded-xl text-sm font-medium text-green-400 flex items-center justify-center gap-2"
+                  >
+                    <Check className="h-4 w-4" /> Confirm
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    className="btn-chrome btn-chrome-inner flex-1 py-2.5 rounded-xl text-sm font-medium text-red-400 flex items-center justify-center gap-2"
+                  >
+                    <X className="h-4 w-4" /> Cancel
+                  </button>
+                </div>
+              ) : null}
+
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
@@ -179,8 +285,16 @@ function OrderDetail() {
                 onClick={handleUpdate}
                 className="btn-chrome btn-chrome-inner w-full py-2.5 rounded-xl text-sm font-medium"
               >
-                Update
+                Update Status
               </button>
+
+              {order.notes ? (
+                <div className="border-t border-chrome/10 pt-3">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">Notes</p>
+                  <p className="text-xs text-muted-foreground">{order.notes}</p>
+                </div>
+              ) : null}
+
               <button
                 onClick={() => setDeleteTarget(true)}
                 className="btn-chrome btn-chrome-inner w-full py-2.5 rounded-xl text-sm font-medium text-red-400 flex items-center justify-center gap-2"
@@ -195,7 +309,7 @@ function OrderDetail() {
       <ConfirmDialog
         open={deleteTarget}
         onClose={() => setDeleteTarget(false)}
-        onConfirm={() => navigate({ to: "/order" })}
+        onConfirm={handleDelete}
         title="Delete Order"
         message={`Are you sure you want to delete order ${order.orderNumber}?`}
         confirmLabel="Delete"

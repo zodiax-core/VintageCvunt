@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAuthContext } from "@/lib/auth-context";
+import { cleanError } from "@/lib/utils";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 
@@ -155,8 +156,8 @@ function Auth() {
         setSuccessMsg(isAdminRole ? "Welcome back Admin! Redirecting to Dashboard…" : "Signed in successfully. Redirecting…");
         setTimeout(() => navigate({ to: isAdminRole ? "/admin" : "/account" }), 1000);
       }
-    } catch (err: any) {
-      setErrors({ form: err.message || "An unexpected error occurred." });
+    } catch (err) {
+      setErrors({ form: cleanError(err) });
     } finally {
       setLoading(false);
     }
@@ -168,8 +169,8 @@ function Auth() {
     try {
       await resendVerificationMutation({ email: form.email.trim() });
       setSuccessMsg("Verification code resent! Please check your email.");
-    } catch (err: any) {
-      setErrors({ form: err.message || "Failed to resend code." });
+    } catch (err) {
+      setErrors({ form: cleanError(err) });
     }
   };
 
@@ -285,14 +286,20 @@ function Auth() {
               {(mode === "login" || mode === "register" || mode === "reset") && (
                 <div>
                   <label className="block font-mono text-[10px] uppercase tracking-[0.28em] text-chrome-dim mb-2">{mode === "reset" ? "New Password" : "Password"}</label>
-                  <input
-                    type="password"
-                    value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    onBlur={() => handleBlur("password")}
-                    placeholder="••••••••"
-                    className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.password && errors.password ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
-                  />
+                  <div className="relative">
+                    <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-chrome-dim/50 pointer-events-none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    <input
+                      type="password"
+                      value={form.password}
+                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                      onBlur={() => handleBlur("password")}
+                      placeholder="••••••••"
+                      className={`w-full rounded-xl border bg-graphite pl-10 pr-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.password && errors.password ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
+                    />
+                  </div>
                   {touched.password && errors.password && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.password}</p>}
                 </div>
               )}
@@ -300,14 +307,20 @@ function Auth() {
               {(mode === "register" || mode === "reset") && (
                 <div>
                   <label className="block font-mono text-[10px] uppercase tracking-[0.28em] text-chrome-dim mb-2">Confirm Password</label>
-                  <input
-                    type="password"
-                    value={form.confirmPassword}
-                    onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                    onBlur={() => handleBlur("confirmPassword")}
-                    placeholder="••••••••"
-                    className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.confirmPassword && errors.confirmPassword ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
-                  />
+                  <div className="relative">
+                    <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-chrome-dim/50 pointer-events-none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    <input
+                      type="password"
+                      value={form.confirmPassword}
+                      onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                      onBlur={() => handleBlur("confirmPassword")}
+                      placeholder="••••••••"
+                      className={`w-full rounded-xl border bg-graphite pl-10 pr-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.confirmPassword && errors.confirmPassword ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
+                    />
+                  </div>
                   {touched.confirmPassword && errors.confirmPassword && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.confirmPassword}</p>}
                 </div>
               )}

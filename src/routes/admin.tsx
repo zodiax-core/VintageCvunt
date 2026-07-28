@@ -53,18 +53,89 @@ function statusBadge(status: string) {
   return <span className={`${base} ${styles[status] || styles.Pending}`}>{status}</span>;
 }
 
+function getPeriods(range: Range) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  switch (range) {
+    case "today": {
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      return { current: { start: today, end: now }, previous: { start: yesterday, end: today } };
+    }
+    case "week": {
+      const dow = today.getDay();
+      const monOff = dow === 0 ? -6 : 1 - dow;
+      const weekStart = new Date(today);
+      weekStart.setDate(weekStart.getDate() + monOff);
+      const prevWeekStart = new Date(weekStart);
+      prevWeekStart.setDate(prevWeekStart.getDate() - 7);
+      return { current: { start: weekStart, end: now }, previous: { start: prevWeekStart, end: weekStart } };
+    }
+    case "month": {
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      return { current: { start: monthStart, end: now }, previous: { start: prevMonthStart, end: monthStart } };
+    }
+    case "quarter": {
+      const q = Math.floor(now.getMonth() / 3);
+      const qStart = new Date(now.getFullYear(), q * 3, 1);
+      const prevQStart = new Date(now.getFullYear(), (q - 1) * 3, 1);
+      return { current: { start: qStart, end: now }, previous: { start: prevQStart, end: qStart } };
+    }
+  }
+}
+
+function calcTrend(current: number, previous: number): { pct: string; up: boolean } {
+  if (previous === 0) {
+    if (current === 0) return { pct: "0%", up: true };
+    return { pct: "+100%", up: true };
+  }
+  const change = ((current - previous) / previous) * 100;
+  return { pct: `${change >= 0 ? "+" : ""}${change.toFixed(1)}%`, up: change >= 0 };
+}
+
 function AdminDashboard() {
   const [range, setRange] = useState<Range>("week");
   const allOrders = useQuery(api.orders.list) ?? [];
   const allProducts = useQuery(api.products.list) ?? [];
 
+  const periods = getPeriods(range);
+
   const stats = useMemo(() => {
-    const totalRevenue = allOrders.reduce((sum, o) => sum + o.total, 0);
-    const totalOrders = allOrders.length;
-    const pendingOrders = allOrders.filter((o) => o.status === "pending" || o.status === "processing").length;
-    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-    return { totalRevenue, totalOrders, pendingOrders, averageOrderValue };
-  }, [allOrders]);
+    function compute(orders: typeof allOrders) {
+      const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
+      const totalOrders = orders.length;
+      const pendingOrders = orders.filter((o) => o.status === "pending" || o.status === "processing").length;
+      const completedOrders = orders.filter((o) => o.status === "delivered" || o.status === "shipped").length;
+      const avgValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+      const convRate = allOrders.length > 0 ? (completedOrders / allOrders.length) * 100 : 0;
+      return { totalRevenue, totalOrders, pendingOrders, avgValue, convRate, completedOrders };
+    }
+
+    const cur = allOrders.filter((o) => {
+      const t = o.createdAt;
+      return t >= periods.current.start.getTime() && t <= periods.current.end.getTime();
+    });
+    const prev = allOrders.filter((o) => {
+      const t = o.createdAt;
+      return t >= periods.previous.start.getTime() && t <= periods.previous.end.getTime();
+    });
+
+    const c = compute(cur);
+    const p = compute(prev);
+    const all = compute(allOrders);
+
+    return {
+      current: c,
+      previous: p,
+      all,
+      revenueTrend: calcTrend(c.totalRevenue, p.totalRevenue),
+      ordersTrend: calcTrend(c.totalOrders, p.totalOrders),
+      pendingTrend: calcTrend(c.pendingOrders, p.pendingOrders),
+      avgTrend: calcTrend(c.avgValue, p.avgValue),
+      convTrend: calcTrend(c.convRate, p.convRate),
+    };
+  }, [allOrders, periods]);
 
   const monthlyRevenue = useMemo(() => {
     const byMonth: Record<string, number> = {};
@@ -101,12 +172,12 @@ function AdminDashboard() {
   const chartLabel = chartLabels[range];
 
   const statCards = [
-    { label: "Total Revenue", value: stats ? `PKR ${stats.totalRevenue.toLocaleString("en-PK")}` : "PKR 0", trend: "+12.3%", up: true, icon: DollarSign },
-    { label: "Orders", value: stats ? stats.totalOrders.toLocaleString() : "0", trend: "+8.1%", up: true, icon: ShoppingBag },
-    { label: "Pending Orders", value: stats ? stats.pendingOrders.toLocaleString() : "0", trend: "+5.7%", up: true, icon: Package },
-    { label: "Avg Order Value", value: stats ? `PKR ${Math.round(stats.averageOrderValue).toLocaleString("en-PK")}` : "PKR 0", trend: "-2.1%", up: false, icon: TrendingUp },
-    { label: "Products", value: allProducts.length.toLocaleString(), trend: "+3.2%", up: true, icon: Users },
-    { label: "Conversion Rate", value: "3.24%", trend: "+0.8%", up: true, icon: Percent },
+    { label: "Total Revenue", value: stats ? `PKR ${stats.all.totalRevenue.toLocaleString("en-PK")}` : "PKR 0", trend: stats?.revenueTrend.pct ?? "0%", up: stats?.revenueTrend.up ?? true, icon: DollarSign },
+    { label: "Orders", value: stats ? stats.all.totalOrders.toLocaleString() : "0", trend: stats?.ordersTrend.pct ?? "0%", up: stats?.ordersTrend.up ?? true, icon: ShoppingBag },
+    { label: "Pending Orders", value: stats ? stats.all.pendingOrders.toLocaleString() : "0", trend: stats?.pendingTrend.pct ?? "0%", up: stats?.pendingTrend.up ?? true, icon: Package },
+    { label: "Avg Order Value", value: stats ? `PKR ${Math.round(stats.all.avgValue).toLocaleString("en-PK")}` : "PKR 0", trend: stats?.avgTrend.pct ?? "0%", up: stats?.avgTrend.up ?? false, icon: TrendingUp },
+    { label: "Products", value: allProducts.length.toLocaleString(), trend: "+0%", up: true, icon: Users },
+    { label: "Conversion Rate", value: stats ? `${stats.all.convRate.toFixed(2)}%` : "0%", trend: stats?.convTrend.pct ?? "0%", up: stats?.convTrend.up ?? true, icon: Percent },
   ];
 
   return (

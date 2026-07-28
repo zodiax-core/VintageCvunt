@@ -1,10 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
-import { Save, Plus, Globe, Ship, CreditCard, Receipt } from "lucide-react";
+import { Save, Plus, Globe, Ship, CreditCard, Receipt, Trash2, Pencil } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
 
 export const Route = createFileRoute("/setting")({
   beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
@@ -22,27 +25,10 @@ const tabs: { id: Tab; label: string; icon: typeof Globe }[] = [
   { id: "tax", label: "Tax", icon: Receipt },
 ];
 
-const shippingRates = [
-  { zone: "Domestic", method: "Standard", rate: "$8.00", freeAbove: "$100" },
-  { zone: "Domestic", method: "Express", rate: "$22.00", freeAbove: "$200" },
-  { zone: "International", method: "Standard", rate: "$25.00", freeAbove: "$500" },
-  { zone: "International", method: "Express", rate: "$55.00", freeAbove: "$500" },
-];
-
-const paymentMethods = [
-  { name: "Credit Card", enabled: true },
-  { name: "PayPal", enabled: true },
-  { name: "Bank Transfer", enabled: false },
-];
-
-const taxRules = [
-  { country: "United States", rate: "8.5%", appliesTo: "All products" },
-  { country: "European Union", rate: "20.0%", appliesTo: "Digital goods" },
-];
-
 function Toggle({ enabled, onChange }: { enabled: boolean; onChange: () => void }) {
   return (
     <button
+      type="button"
       onClick={onChange}
       className={`relative h-6 w-11 rounded-full transition-colors ${enabled ? "bg-green-500" : "bg-chrome/20"}`}
     >
@@ -52,19 +38,107 @@ function Toggle({ enabled, onChange }: { enabled: boolean; onChange: () => void 
 }
 
 function Settings() {
+  const settingsData = useQuery(api.settings.get);
+  const upsertSettings = useMutation(api.settings.upsert);
+  const shippingRatesData = useQuery(api.shippingRates.list) ?? [];
+  const createShippingRate = useMutation(api.shippingRates.create);
+  const updateShippingRate = useMutation(api.shippingRates.update);
+  const removeShippingRate = useMutation(api.shippingRates.remove);
+
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [storeName, setStoreName] = useState("VintageCvunt");
   const [storeEmail, setStoreEmail] = useState("hello@vintagecvunt.com");
-  const [currency, setCurrency] = useState("USD");
-  const [language, setLanguage] = useState("English");
-  const [timezone, setTimezone] = useState("America/New_York");
-  const [taxRate, setTaxRate] = useState("8.5");
+  const [currency, setCurrency] = useState("PKR");
+  const [timezone, setTimezone] = useState("Asia/Karachi");
+  const [taxRate, setTaxRate] = useState("0");
   const [taxInclusive, setTaxInclusive] = useState(false);
-  const [payments, setPayments] = useState(paymentMethods);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
-  function togglePayment(name: string) {
-    setPayments((prev) => prev.map((p) => (p.name === name ? { ...p, enabled: !p.enabled } : p)));
-  }
+  const [shippingForm, setShippingForm] = useState({ name: "", description: "", price: "", estimatedDays: "" });
+  const [editingShippingId, setEditingShippingId] = useState<Id<"shippingRates"> | null>(null);
+
+  useEffect(() => {
+    if (settingsData) {
+      setStoreName(settingsData.storeName);
+      setStoreEmail(settingsData.storeEmail);
+      setCurrency(settingsData.currency);
+      setTimezone(settingsData.timezone);
+      setTaxRate(String(settingsData.defaultTaxRate));
+      setTaxInclusive(settingsData.taxInclusive);
+    }
+  }, [settingsData]);
+
+  const handleSaveGeneral = async () => {
+    setSaving(true);
+    try {
+      await upsertSettings({
+        storeName,
+        storeEmail,
+        currency,
+        timezone,
+        defaultTaxRate: Number(taxRate) || 0,
+        taxInclusive,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveShipping = async () => {
+    if (!shippingForm.name || !shippingForm.price) return;
+    const price = Number(shippingForm.price);
+    if (editingShippingId) {
+      await updateShippingRate({
+        id: editingShippingId,
+        name: shippingForm.name,
+        description: shippingForm.description,
+        price,
+        estimatedDays: shippingForm.estimatedDays,
+        isActive: true,
+      });
+    } else {
+      await createShippingRate({
+        name: shippingForm.name,
+        description: shippingForm.description,
+        price,
+        estimatedDays: shippingForm.estimatedDays,
+        isActive: true,
+      });
+    }
+    setShippingForm({ name: "", description: "", price: "", estimatedDays: "" });
+    setEditingShippingId(null);
+  };
+
+  const editShipping = (rate: (typeof shippingRatesData)[number]) => {
+    setEditingShippingId(rate._id);
+    setShippingForm({
+      name: rate.name,
+      description: rate.description,
+      price: String(rate.price),
+      estimatedDays: rate.estimatedDays,
+    });
+  };
+
+  const handleSaveTax = async () => {
+    setSaving(true);
+    try {
+      await upsertSettings({
+        storeName,
+        storeEmail,
+        currency,
+        timezone,
+        defaultTaxRate: Number(taxRate) || 0,
+        taxInclusive,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const Icon = tabs.find((t) => t.id === activeTab)!.icon;
 
@@ -124,24 +198,13 @@ function Settings() {
                   onChange={(e) => setCurrency(e.target.value)}
                   className="w-full rounded-xl border border-chrome/20 bg-background px-4 py-2.5 font-mono text-sm outline-none focus:border-chrome/50"
                 >
+                  <option value="PKR">PKR (Rs)</option>
                   <option value="USD">USD ($)</option>
                   <option value="EUR">EUR (€)</option>
                   <option value="GBP">GBP (£)</option>
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Language</label>
-                <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full rounded-xl border border-chrome/20 bg-background px-4 py-2.5 font-mono text-sm outline-none focus:border-chrome/50"
-                >
-                  <option value="English">English</option>
-                  <option value="Italian">Italian</option>
-                  <option value="French">French</option>
-                </select>
-              </div>
-              <div className="space-y-2 md:col-span-2">
                 <label className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Timezone</label>
                 <select
                   value={timezone}
@@ -149,12 +212,19 @@ function Settings() {
                   className="w-full rounded-xl border border-chrome/20 bg-background px-4 py-2.5 font-mono text-sm outline-none focus:border-chrome/50"
                 >
                   <option value="Asia/Karachi">Asia/Karachi (PKT)</option>
+                  <option value="Asia/Dubai">Asia/Dubai (GST)</option>
+                  <option value="America/New_York">America/New_York (EST)</option>
+                  <option value="Europe/London">Europe/London (GMT)</option>
                 </select>
               </div>
             </div>
-            <button className="btn-chrome btn-chrome-inner rounded-lg px-4 py-2 inline-flex items-center gap-2">
+            <button
+              onClick={handleSaveGeneral}
+              disabled={saving}
+              className="btn-chrome btn-chrome-inner rounded-lg px-4 py-2 inline-flex items-center gap-2"
+            >
               <Save size={14} />
-              <span className="btn-label">Save Changes</span>
+              <span className="btn-label">{saving ? "Saving..." : saved ? "Saved ✓" : "Save Changes"}</span>
             </button>
           </div>
         )}
@@ -166,27 +236,82 @@ function Settings() {
                 <Ship size={18} className="text-chrome-dim" />
                 <h2 className="font-mono text-[10px] uppercase tracking-[0.2em]">Shipping Rates</h2>
               </div>
-              <button className="btn-chrome btn-chrome-inner rounded-lg px-4 py-2 inline-flex items-center gap-2">
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <input
+                value={shippingForm.name}
+                onChange={(e) => setShippingForm({ ...shippingForm, name: e.target.value })}
+                placeholder="Name (e.g. Standard)"
+                className="rounded-xl border border-chrome/20 bg-background px-4 py-2.5 font-mono text-sm outline-none focus:border-chrome/50"
+              />
+              <input
+                value={shippingForm.description}
+                onChange={(e) => setShippingForm({ ...shippingForm, description: e.target.value })}
+                placeholder="Description"
+                className="rounded-xl border border-chrome/20 bg-background px-4 py-2.5 font-mono text-sm outline-none focus:border-chrome/50"
+              />
+              <input
+                value={shippingForm.price}
+                onChange={(e) => setShippingForm({ ...shippingForm, price: e.target.value })}
+                type="number"
+                step="0.01"
+                placeholder="Price"
+                className="rounded-xl border border-chrome/20 bg-background px-4 py-2.5 font-mono text-sm outline-none focus:border-chrome/50"
+              />
+              <input
+                value={shippingForm.estimatedDays}
+                onChange={(e) => setShippingForm({ ...shippingForm, estimatedDays: e.target.value })}
+                placeholder="Est. days (e.g. 3-5)"
+                className="rounded-xl border border-chrome/20 bg-background px-4 py-2.5 font-mono text-sm outline-none focus:border-chrome/50"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              {editingShippingId && (
+                <button
+                  onClick={() => { setEditingShippingId(null); setShippingForm({ name: "", description: "", price: "", estimatedDays: "" }); }}
+                  className="rounded-xl border border-chrome/20 px-4 py-2 font-mono text-[10px] text-chrome-dim hover:text-foreground transition-colors"
+                >
+                  Cancel
+                </button>
+              )}
+              <button
+                onClick={handleSaveShipping}
+                disabled={!shippingForm.name || !shippingForm.price}
+                className="btn-chrome btn-chrome-inner rounded-lg px-4 py-2 inline-flex items-center gap-2"
+              >
                 <Plus size={14} />
-                <span className="btn-label">Add Rate</span>
+                <span className="btn-label">{editingShippingId ? "Update" : "Add Rate"}</span>
               </button>
             </div>
+
             <Table>
               <TableHeader>
                 <TableRow className="border-chrome/10">
-                  <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Zone</TableHead>
-                  <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Method</TableHead>
-                  <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Rate</TableHead>
-                  <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Free Above</TableHead>
+                  <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Name</TableHead>
+                  <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Description</TableHead>
+                  <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Price</TableHead>
+                  <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Est. Days</TableHead>
+                  <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {shippingRates.map((rate, i) => (
-                  <TableRow key={i} className="border-chrome/10">
-                    <TableCell className="text-foreground">{rate.zone}</TableCell>
-                    <TableCell className="text-muted-foreground">{rate.method}</TableCell>
-                    <TableCell className="text-foreground font-mono">{rate.rate}</TableCell>
-                    <TableCell className="text-muted-foreground">${rate.freeAbove}</TableCell>
+                {shippingRatesData.map((rate) => (
+                  <TableRow key={rate._id} className="border-chrome/10">
+                    <TableCell className="text-foreground">{rate.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{rate.description}</TableCell>
+                    <TableCell className="text-foreground font-mono">{currency} {rate.price.toFixed(2)}</TableCell>
+                    <TableCell className="text-muted-foreground">{rate.estimatedDays}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => editShipping(rate)} className="btn-chrome btn-chrome-inner p-2 rounded-lg">
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => removeShippingRate({ id: rate._id })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -201,13 +326,27 @@ function Settings() {
               <h2 className="font-mono text-[10px] uppercase tracking-[0.2em]">Payment Methods</h2>
             </div>
             <div className="space-y-3">
-              {payments.map((method) => (
-                <div key={method.name} className="flex items-center justify-between rounded-xl border border-chrome/20 bg-background px-5 py-4">
+              {[
+                { name: "Bank Transfer", enabled: true, desc: "Accepted — upload proof at checkout" },
+                { name: "Credit Card", enabled: false, desc: "Coming Soon" },
+                { name: "PayPal", enabled: false, desc: "Coming Soon" },
+                { name: "Cash on Delivery", enabled: false, desc: "Coming Soon" },
+              ].map((method) => (
+                <div key={method.name} className={`flex items-center justify-between rounded-xl border ${method.enabled ? "border-green-500/30 bg-green-500/5" : "border-chrome/20 bg-background/50"} px-5 py-4 ${!method.enabled ? "opacity-50" : ""}`}>
                   <div>
                     <p className="font-mono text-[12px] text-foreground">{method.name}</p>
-                    <p className="font-mono text-[10px] text-chrome-dim">{method.enabled ? "Active" : "Disabled"}</p>
+                    <p className="font-mono text-[10px] text-chrome-dim">{method.desc}</p>
                   </div>
-                  <Toggle enabled={method.enabled} onChange={() => togglePayment(method.name)} />
+                  {method.enabled ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-green-500/30 bg-green-500/20 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-green-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                      Active
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-chrome/20 bg-chrome/10 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">
+                      Coming Soon
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
@@ -220,7 +359,7 @@ function Settings() {
               <Receipt size={18} className="text-chrome-dim" />
               <h2 className="font-mono text-[10px] uppercase tracking-[0.2em]">Tax Settings</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div className="space-y-2">
                 <label className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Default Tax Rate (%)</label>
                 <input
@@ -239,27 +378,14 @@ function Settings() {
                 </div>
               </div>
             </div>
-            <div>
-              <h3 className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim mb-3">Country-Specific Rules</h3>
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-chrome/10">
-                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Country</TableHead>
-                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Rate</TableHead>
-                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Applies To</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {taxRules.map((rule, i) => (
-                    <TableRow key={i} className="border-chrome/10">
-                      <TableCell className="text-foreground">{rule.country}</TableCell>
-                      <TableCell className="text-foreground font-mono">{rule.rate}</TableCell>
-                      <TableCell className="text-muted-foreground">{rule.appliesTo}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <button
+              onClick={handleSaveTax}
+              disabled={saving}
+              className="btn-chrome btn-chrome-inner rounded-lg px-4 py-2 inline-flex items-center gap-2"
+            >
+              <Save size={14} />
+              <span className="btn-label">{saving ? "Saving..." : saved ? "Saved ✓" : "Save Changes"}</span>
+            </button>
           </div>
         )}
       </div>

@@ -69,6 +69,8 @@ export const create = mutation({
     subtotal: v.number(),
     shipping: v.number(),
     tax: v.number(),
+    discount: v.optional(v.number()),
+    couponCode: v.optional(v.string()),
     total: v.number(),
     status: v.string(),
     paymentMethod: v.string(),

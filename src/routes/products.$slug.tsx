@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { FloatingVideo } from "@/components/FloatingVideo";
 import { useCartContext } from "@/lib/cart-context";
 import { api } from "../../convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
@@ -37,7 +38,6 @@ function ProductPage() {
   const product = useQuery(api.products.getBySlug, { slug }) ?? null;
   const reviews = useQuery(api.reviews.getByProductId, { productId: product?._id ?? "" }) ?? [];
   const allProducts = useQuery(api.products.list) ?? [];
-  const faqs: { q: string; a: string }[] = [];
   const relatedProducts = allProducts.filter((p) => p.slug !== slug).slice(0, 4);
   const createReview = useMutation(api.reviews.create);
 
@@ -48,6 +48,16 @@ function ProductPage() {
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
   const { addToCart } = useCartContext();
+
+  const detailsList = useMemo(() => {
+    if (!product?.details) return [];
+    return product.details.split("\n").map((l: string) => l.trim()).filter(Boolean);
+  }, [product?.details]);
+
+  const materialsList = useMemo(() => {
+    if (!product?.material) return [];
+    return product.material.split("\n").map((l: string) => l.trim()).filter(Boolean);
+  }, [product?.material]);
 
   if (!product) return null;
 
@@ -80,6 +90,10 @@ function ProductPage() {
     <div className="relative min-h-screen bg-background text-foreground">
       <SiteNav />
 
+      {product.video && product.imageUrls?.[0] && (
+        <FloatingVideo videoUrl={product.video} />
+      )}
+
       {/* Breadcrumb */}
       <section className="pt-24 md:pt-36 pb-3 md:pb-4">
         <div className="mx-auto max-w-7xl px-6">
@@ -109,9 +123,6 @@ function ProductPage() {
                 <div className="aspect-[4/5]">
                    <img src={product.imageUrls?.[0] || "/placeholder.svg"} alt={product.name} className="h-full w-full object-cover" />
                 </div>
-                <button className="absolute right-3 md:right-4 top-3 md:top-4 h-8 w-8 md:h-9 md:w-9 rounded-full border border-chrome bg-graphite/60 backdrop-blur grid place-items-center text-sm transition-colors hover:bg-chrome hover:text-background">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
-                </button>
               </motion.div>
             </div>
 
@@ -126,9 +137,84 @@ function ProductPage() {
                 <h1 className="mt-3 font-display text-3xl md:text-6xl leading-[0.95] tracking-tight">{product.name}</h1>
                 <p className="mt-4 md:mt-6 font-mono text-lg md:text-xl tracking-[0.08em] text-chrome">{priceLabel(product.price)}</p>
 
+                {product.compareAtPrice && product.compareAtPrice > product.price && (
+                  <p className="mt-1 font-mono text-sm text-chrome-dim line-through">{priceLabel(product.compareAtPrice)}</p>
+                )}
+
+                {/* Tags */}
+                {product.tags && product.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-4">
+                    {product.tags.map((t) => (
+                      <span key={t} className="rounded-full border border-chrome/20 bg-graphite px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim">{t}</span>
+                    ))}
+                  </div>
+                )}
+
                 <div className="divider-chrome my-6 md:my-8" />
 
                 <p className="text-sm leading-relaxed text-chrome-dim">{product.description}</p>
+
+                {/* Details */}
+                {detailsList.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim mb-3">Details</h3>
+                    <ul className="space-y-1.5">
+                      {detailsList.map((d, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-chrome-dim">
+                          <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-chrome-dim/40" />
+                          {d}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Materials */}
+                {materialsList.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim mb-3">Materials</h3>
+                    <ul className="space-y-1.5">
+                      {materialsList.map((m, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-chrome-dim">
+                          <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-chrome-dim/40" />
+                          {m}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Dimensions */}
+                {product.dimensions && (
+                  <div className="mt-6">
+                    <h3 className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim mb-2">Dimensions</h3>
+                    <p className="text-sm text-chrome-dim">{product.dimensions}</p>
+                  </div>
+                )}
+
+                {/* Sizes */}
+                {product.sizes && product.sizes.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim mb-2">Sizes</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {product.sizes.map((s) => (
+                        <span key={s} className="rounded-lg border border-chrome/30 bg-graphite px-3 py-1.5 font-mono text-[11px] text-chrome">{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Colors */}
+                {product.colors && product.colors.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim mb-2">Colors</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {product.colors.map((c) => (
+                        <span key={c} className="rounded-lg border border-chrome/30 bg-graphite px-3 py-1.5 font-mono text-[11px] text-chrome">{c}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="divider-chrome my-6 md:my-8" />
 
@@ -159,59 +245,8 @@ function ProductPage() {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="border-y border-chrome py-12 md:py-24">
-        <div className="mx-auto max-w-3xl px-6">
-          <div className="text-center mb-8 md:mb-12">
-            <span className="font-mono text-[10px] uppercase tracking-[0.32em] text-chrome-dim">§ Information</span>
-            <h2 className="mt-4 font-display text-3xl md:text-5xl leading-[0.95] italic text-chrome-h">Frequently Asked</h2>
-          </div>
-          <div className="space-y-3">
-            {faqs.map((faq, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, ease: EASE, delay: i * 0.05 }}
-                className="rounded-2xl border border-chrome bg-graphite overflow-hidden"
-                style={{ boxShadow: "var(--shadow-plate)" }}
-              >
-                <button
-                  onClick={() => setActiveFaq(activeFaq === i ? null : i)}
-                  className="flex items-center justify-between w-full px-6 py-5 text-left transition-colors hover:bg-graphite-2/50"
-                >
-                  <span className="font-mono text-xs md:text-sm tracking-[0.04em] pr-4">{faq.q}</span>
-                  <svg
-                    className={`w-4 h-4 shrink-0 text-chrome-dim transition-transform duration-300 ${activeFaq === i ? "rotate-180" : ""}`}
-                    viewBox="0 0 12 12" fill="none"
-                  >
-                    <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
-                <AnimatePresence>
-                  {activeFaq === i && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3, ease: EASE }}
-                      className="overflow-hidden"
-                    >
-                      <div className="px-6 pb-5 pt-0">
-                        <p className="text-sm text-chrome-dim leading-relaxed">{faq.a}</p>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Reviews */}
-      <section className="border-b border-chrome py-12 md:py-24">
+      <section className="border-y border-chrome py-12 md:py-24">
         <div className="mx-auto max-w-7xl px-6">
           <div className="grid grid-cols-12 gap-8 md:gap-12">
             <div className="col-span-12 md:col-span-7">
@@ -223,7 +258,7 @@ function ProductPage() {
               <div className="mt-10 space-y-6">
                 {reviews.map((r, i) => (
                   <motion.div
-                    key={i}
+                    key={r._id}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -249,6 +284,7 @@ function ProductPage() {
                         ))}
                       </div>
                     </div>
+                    {r.title && <p className="font-mono text-xs text-foreground font-semibold mb-1">{r.title}</p>}
                     <p className="text-sm text-chrome-dim leading-relaxed">{r.comment}</p>
                   </motion.div>
                 ))}
