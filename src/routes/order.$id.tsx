@@ -35,7 +35,7 @@ function OrderDetail() {
   const updateOrder = useMutation(api.orders.update);
   const removeOrder = useMutation(api.orders.remove);
 
-  const [status, setStatus] = useState(order?.status ?? "");
+  const [status, setStatus] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(false);
 
@@ -43,7 +43,19 @@ function OrderDetail() {
     if (order) setStatus(order.status);
   }, [id, order]);
 
-  if (!order) {
+  if (order === undefined) {
+    return (
+      <AdminLayout>
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <Package className="h-12 w-12 text-muted-foreground mb-4 animate-pulse" />
+          <h2 className="text-xl font-semibold text-foreground mb-2">Loading order...</h2>
+          <p className="text-muted-foreground text-sm">Fetching details...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (order === null) {
     return (
       <AdminLayout>
         <div className="flex flex-col items-center justify-center py-24 text-center">

@@ -1,0 +1,1 @@
+import{n as e}from"./Match-Dq_lMvn6.js";import{r as t}from"./useRouter-CKmlJLai.js";var n=t(),r=()=>(0,n.jsx)(e,{});export{r as component};

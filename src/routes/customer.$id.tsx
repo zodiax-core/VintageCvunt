@@ -31,7 +31,19 @@ function CustomerDetail() {
   const customer = useQuery(api.customers.getById, { id: id as Id<"customers"> });
   const orders = useQuery(api.orders.getByEmail, { email: customer?.email ?? "" });
 
-  if (!customer) {
+  if (customer === undefined) {
+    return (
+      <AdminLayout>
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <Users className="h-12 w-12 text-muted-foreground mb-4 animate-pulse" />
+          <h2 className="text-xl font-semibold text-foreground mb-2">Loading customer...</h2>
+          <p className="text-muted-foreground text-sm">Fetching details...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (customer === null) {
     return (
       <AdminLayout>
         <div className="flex flex-col items-center justify-center py-24 text-center">

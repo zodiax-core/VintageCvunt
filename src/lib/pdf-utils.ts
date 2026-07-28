@@ -602,3 +602,228 @@ export function generateCustomerProfilePDF(
   addPageNumbers(doc, brand);
   doc.save(`VC-Customer-${customer.name.toLowerCase().replace(/\s+/g, "-")}.pdf`);
 }
+
+// ─── Detailed Orders Report PDF ──────────────────────────────────────────────
+export function generateDetailedOrdersPDF(
+  orders: Array<{
+    _id: string;
+    orderNumber: string;
+    customerName: string;
+    customerEmail: string;
+    phone?: string;
+    createdAt: number;
+    status: string;
+    items: Array<{ name: string; productId: string; price: number; quantity: number }>;
+    total: number;
+    shipping: number;
+    tax: number;
+    discount?: number;
+    couponCode?: string;
+    notes?: string;
+    paymentMethod?: string;
+    billingAddress: { street: string; city: string; state?: string; zip: string; country: string };
+    shippingAddress: { street: string; city: string; state?: string; zip: string; country: string };
+  }>,
+  brand: BrandInfo = defaultBrand,
+) {
+  const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "landscape" });
+  const pw = doc.internal.pageSize.width;
+  const ph = doc.internal.pageSize.height;
+  const now = fmtDate(Date.now());
+
+  orders.forEach((order, idx) => {
+    if (idx > 0) doc.addPage();
+
+    const orderNumber = order.orderNumber || order._id;
+    const customer = order.customerName || "Customer";
+    const email = order.customerEmail || "";
+    const phone = order.phone || "";
+    const date = fmtDate(order.createdAt);
+    const paymentMethod = order.paymentMethod || "Bank Transfer";
+
+    const shipAddr = order.shippingAddress || { street: "", city: "", state: "", zip: "", country: "" };
+    const billAddr = order.billingAddress || shipAddr;
+
+    // ── Header ──
+    setFont(doc, "bold", 22);
+    doc.setTextColor(...C.BLACK);
+    doc.text("VC DETAILED ORDERS REPORT", 14, 22);
+
+    setFont(doc, "normal", 9);
+    doc.setTextColor(...C.GRAY);
+    doc.text(brand.name.toUpperCase(), 14, 28);
+    doc.text(`Generated: ${now}`, pw - 14, 28, { align: "right" });
+
+    let y = 36;
+    rule(doc, y, C.LIGHT_GRAY);
+    y += 12;
+
+    // ── Order header ──
+    setFont(doc, "bold", 16);
+    doc.setTextColor(...C.BLACK);
+    doc.text(orderNumber, 14, y);
+
+    setFont(doc, "normal", 9);
+    doc.setTextColor(...C.GRAY);
+    doc.text(date, pw - 14, y, { align: "right" });
+    y += 8;
+
+    statusBadge(doc, order.status, 14, y);
+    setFont(doc, "normal", 8.5);
+    doc.setTextColor(...C.DARK_GRAY);
+    doc.text(`Payment: ${paymentMethod}`, 50, y);
+
+    y += 14;
+    rule(doc, y, C.LIGHT_GRAY);
+    y += 10;
+
+    // ── Customer info ──
+    setFont(doc, "bold", 7);
+    doc.setTextColor(...C.GRAY);
+    doc.text("CUSTOMER", 14, y);
+
+    setFont(doc, "bold", 9);
+    doc.setTextColor(...C.BLACK);
+    doc.text(customer, 14, y + 6);
+
+    setFont(doc, "normal", 8.5);
+    doc.setTextColor(...C.DARK_GRAY);
+    let cy = y + 11;
+    if (email) { doc.text(email, 14, cy); cy += 4.5; }
+    if (phone) { doc.text(`Phone: ${phone}`, 14, cy); cy += 4.5; }
+
+    y = Math.max(y + 28, cy + 4);
+    rule(doc, y, C.LIGHT_GRAY);
+    y += 10;
+
+    // ── Billing & Shipping addresses side by side ──
+    const halfW = (pw - 28) / 2 - 4;
+
+    setFont(doc, "bold", 7);
+    doc.setTextColor(...C.GRAY);
+    doc.text("BILLING ADDRESS", 14, y);
+
+    setFont(doc, "bold", 7);
+    doc.setTextColor(...C.GRAY);
+    doc.text("SHIPPING ADDRESS", 14 + halfW + 8, y);
+
+    setFont(doc, "normal", 8.5);
+    doc.setTextColor(...C.DARK_GRAY);
+
+    let addrY = y + 5;
+    const billLines = [billAddr.street, `${billAddr.city}${billAddr.state ? ", " + billAddr.state : ""} ${billAddr.zip}`, billAddr.country].filter(Boolean);
+    billLines.forEach(line => { doc.text(line, 14, addrY); addrY += 4.5; });
+
+    let shipY = y + 5;
+    const shipLines = [shipAddr.street, `${shipAddr.city}${shipAddr.state ? ", " + shipAddr.state : ""} ${shipAddr.zip}`, shipAddr.country].filter(Boolean);
+    shipLines.forEach(line => { doc.text(line, 14 + halfW + 8, shipY); shipY += 4.5; });
+
+    y = Math.max(addrY, shipY) + 8;
+    rule(doc, y, C.LIGHT_GRAY);
+    y += 10;
+
+    // ── Items table ──
+    setFont(doc, "bold", 7);
+    doc.setTextColor(...C.GRAY);
+    doc.text("ORDER ITEMS", 14, y);
+    y += 4;
+
+    autoTable(doc, {
+      startY: y,
+      head: [["#", "Product", "SKU / ProductID", "Price", "Qty", "Subtotal"]],
+      body: order.items.map((item, i) => [
+        String(i + 1),
+        item.name,
+        item.productId,
+        fmt(item.price),
+        String(item.quantity),
+        fmt(item.price * item.quantity),
+      ]),
+      headStyles: {
+        fillColor: [250, 250, 250],
+        textColor: C.BLACK,
+        fontSize: 8,
+        fontStyle: "bold",
+        cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
+        lineWidth: { top: 0.2, bottom: 0.2, left: 0, right: 0 },
+        lineColor: C.LIGHT_GRAY,
+      },
+      bodyStyles: {
+        fontSize: 8.5,
+        textColor: C.DARK_GRAY,
+        cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
+        lineWidth: { top: 0, bottom: 0.2, left: 0, right: 0 },
+        lineColor: [240, 240, 240],
+      },
+      theme: "plain",
+      margin: { left: 14, right: 14 },
+      columnStyles: {
+        0: { halign: "center", cellWidth: 10, textColor: C.GRAY },
+        1: { cellWidth: "auto" },
+        2: { cellWidth: 36, fontStyle: "bold", textColor: C.GRAY, fontSize: 7 },
+        3: { halign: "right", cellWidth: 30 },
+        4: { halign: "center", cellWidth: 14 },
+        5: { halign: "right", cellWidth: 32, textColor: C.BLACK, fontStyle: "bold" },
+      },
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 10;
+
+    // ── Summary panel ──
+    const subtotal = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
+    const sumW = 80;
+    const sumX = pw - 14 - sumW;
+
+    let ry = y;
+    const summaryRows = [
+      { label: "Subtotal", value: fmt(subtotal) },
+      { label: "Shipping", value: order.shipping === 0 ? "Free" : fmt(order.shipping) },
+      { label: "Tax", value: fmt(order.tax) },
+    ];
+
+    if (order.discount) {
+      summaryRows.push({
+        label: order.couponCode ? `Discount (${order.couponCode})` : "Discount",
+        value: `-${fmt(order.discount)}`,
+      });
+    }
+
+    summaryRows.forEach((row) => {
+      setFont(doc, "normal", 8.5);
+      doc.setTextColor(...C.GRAY);
+      doc.text(row.label, sumX, ry);
+      const isDiscount = row.label.toLowerCase().includes("discount");
+      if (isDiscount) doc.setTextColor(22, 163, 74);
+      else doc.setTextColor(...C.BLACK);
+      doc.text(row.value, pw - 14, ry, { align: "right" });
+      ry += 6;
+    });
+
+    ry += 2;
+    doc.setDrawColor(...C.LIGHT_GRAY);
+    doc.setLineWidth(0.3);
+    doc.line(sumX, ry, pw - 14, ry);
+    ry += 7;
+
+    setFont(doc, "bold", 12);
+    doc.setTextColor(...C.BLACK);
+    doc.text("Total", sumX, ry);
+    doc.text(fmt(order.total), pw - 14, ry, { align: "right" });
+
+    // ── Notes ──
+    if (order.notes) {
+      y = ry + 14;
+      if (y > ph - 30) { doc.addPage(); y = 20; }
+      setFont(doc, "bold", 7);
+      doc.setTextColor(...C.GRAY);
+      doc.text("NOTES", 14, y);
+      y += 5;
+      setFont(doc, "normal", 8.5);
+      doc.setTextColor(...C.DARK_GRAY);
+      doc.text(order.notes, 14, y);
+    }
+  });
+
+  addPageNumbers(doc, brand);
+  doc.save("VC-Detailed-Orders-Report.pdf");
+}

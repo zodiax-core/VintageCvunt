@@ -36,7 +36,9 @@ import { Route as ShippingReturnsRouteImport } from './routes/shipping-returns'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as SizeGuideRouteImport } from './routes/size-guide'
 import { Route as TermsConditionsRouteImport } from './routes/terms-conditions'
+import { Route as CustomerIndexRouteImport } from './routes/customer.index'
 import { Route as CustomerIdRouteImport } from './routes/customer.$id'
+import { Route as OrderIndexRouteImport } from './routes/order.index'
 import { Route as OrderIdRouteImport } from './routes/order.$id'
 import { Route as OrdersIndexRouteImport } from './routes/orders.index'
 import { Route as OrdersIdRouteImport } from './routes/orders.$id'
@@ -179,10 +181,20 @@ const TermsConditionsRoute = TermsConditionsRouteImport.update({
   path: '/terms-conditions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CustomerIndexRoute = CustomerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CustomerRoute,
+} as any)
 const CustomerIdRoute = CustomerIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => CustomerRoute,
+} as any)
+const OrderIndexRoute = OrderIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OrderRoute,
 } as any)
 const OrderIdRoute = OrderIdRouteImport.update({
   id: '/$id',
@@ -248,6 +260,8 @@ export interface FileRoutesByFullPath {
   '/orders/$id': typeof OrdersIdRoute
   '/product/new': typeof ProductNewRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/customer/': typeof CustomerIndexRoute
+  '/order/': typeof OrderIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/product/$id/edit': typeof ProductIdEditRoute
 }
@@ -264,10 +278,8 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/content': typeof ContentRoute
   '/coupon': typeof CouponRoute
-  '/customer': typeof CustomerRouteWithChildren
   '/faq': typeof FaqRoute
   '/message': typeof MessageRoute
-  '/order': typeof OrderRouteWithChildren
   '/order-confirmed': typeof OrderConfirmedRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/product': typeof ProductRouteWithChildren
@@ -284,6 +296,8 @@ export interface FileRoutesByTo {
   '/orders/$id': typeof OrdersIdRoute
   '/product/new': typeof ProductNewRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/customer': typeof CustomerIndexRoute
+  '/order': typeof OrderIndexRoute
   '/orders': typeof OrdersIndexRoute
   '/product/$id/edit': typeof ProductIdEditRoute
 }
@@ -321,6 +335,8 @@ export interface FileRoutesById {
   '/orders/$id': typeof OrdersIdRoute
   '/product/new': typeof ProductNewRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/customer/': typeof CustomerIndexRoute
+  '/order/': typeof OrderIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/product/$id/edit': typeof ProductIdEditRoute
 }
@@ -359,6 +375,8 @@ export interface FileRouteTypes {
     | '/orders/$id'
     | '/product/new'
     | '/products/$slug'
+    | '/customer/'
+    | '/order/'
     | '/orders/'
     | '/product/$id/edit'
   fileRoutesByTo: FileRoutesByTo
@@ -375,10 +393,8 @@ export interface FileRouteTypes {
     | '/contact'
     | '/content'
     | '/coupon'
-    | '/customer'
     | '/faq'
     | '/message'
-    | '/order'
     | '/order-confirmed'
     | '/privacy-policy'
     | '/product'
@@ -395,6 +411,8 @@ export interface FileRouteTypes {
     | '/orders/$id'
     | '/product/new'
     | '/products/$slug'
+    | '/customer'
+    | '/order'
     | '/orders'
     | '/product/$id/edit'
   id:
@@ -431,6 +449,8 @@ export interface FileRouteTypes {
     | '/orders/$id'
     | '/product/new'
     | '/products/$slug'
+    | '/customer/'
+    | '/order/'
     | '/orders/'
     | '/product/$id/edit'
   fileRoutesById: FileRoutesById
@@ -659,12 +679,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsConditionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/customer/': {
+      id: '/customer/'
+      path: '/'
+      fullPath: '/customer/'
+      preLoaderRoute: typeof CustomerIndexRouteImport
+      parentRoute: typeof CustomerRoute
+    }
     '/customer/$id': {
       id: '/customer/$id'
       path: '/$id'
       fullPath: '/customer/$id'
       preLoaderRoute: typeof CustomerIdRouteImport
       parentRoute: typeof CustomerRoute
+    }
+    '/order/': {
+      id: '/order/'
+      path: '/'
+      fullPath: '/order/'
+      preLoaderRoute: typeof OrderIndexRouteImport
+      parentRoute: typeof OrderRoute
     }
     '/order/$id': {
       id: '/order/$id'
@@ -713,10 +747,12 @@ declare module '@tanstack/react-router' {
 
 interface CustomerRouteChildren {
   CustomerIdRoute: typeof CustomerIdRoute
+  CustomerIndexRoute: typeof CustomerIndexRoute
 }
 
 const CustomerRouteChildren: CustomerRouteChildren = {
   CustomerIdRoute: CustomerIdRoute,
+  CustomerIndexRoute: CustomerIndexRoute,
 }
 
 const CustomerRouteWithChildren = CustomerRoute._addFileChildren(
@@ -725,10 +761,12 @@ const CustomerRouteWithChildren = CustomerRoute._addFileChildren(
 
 interface OrderRouteChildren {
   OrderIdRoute: typeof OrderIdRoute
+  OrderIndexRoute: typeof OrderIndexRoute
 }
 
 const OrderRouteChildren: OrderRouteChildren = {
   OrderIdRoute: OrderIdRoute,
+  OrderIndexRoute: OrderIndexRoute,
 }
 
 const OrderRouteWithChildren = OrderRoute._addFileChildren(OrderRouteChildren)
