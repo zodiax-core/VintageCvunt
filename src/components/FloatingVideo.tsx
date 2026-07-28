@@ -34,18 +34,20 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
     setIsScaling((prev) => !prev);
   }, []);
 
-  const handleClick = useCallback(() => {
-    if (isMinimized) {
-      setIsMinimized(false);
-    }
-  }, [isMinimized]);
+  const handleMouseEnter = useCallback(() => {
+    setIsMinimized(false);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    if (!isScaling) setIsMinimized(true);
+  }, [isScaling]);
 
   const videoWidth = Math.min(360, Math.round(320 * videoRatio));
   const videoHeight = Math.round(videoWidth / videoRatio);
 
   return (
     <motion.div
-      drag={isMinimized && !isScaling}
+      drag={!isScaling}
       dragMomentum={false}
       dragElastic={0.1}
       initial={{ opacity: 0, scale: 0.8 }}
@@ -53,15 +55,16 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
         isScaling
           ? { width: "80vw", height: "80vh", borderRadius: 0, opacity: 1, scale: 1, x: 0, y: 0 }
           : isMinimized
-          ? { width: 160, height: 160 / videoRatio, borderRadius: 16, opacity: 0.9, scale: 1 }
+          ? { width: 160, height: 160 / videoRatio, borderRadius: 16, opacity: 1, scale: 1 }
           : { width: videoWidth, height: videoHeight, borderRadius: 16, opacity: 1, scale: 1 }
       }
       transition={{ type: "spring", stiffness: 200, damping: 25 }}
-      className={`fixed z-50 overflow-hidden bg-black shadow-2xl border border-white/20 cursor-pointer group ${
-        isScaling ? "inset-0 m-auto" : isMinimized ? "bottom-4 right-4" : "bottom-20 right-6"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className={`fixed z-50 overflow-hidden bg-black shadow-2xl border border-white/20 group ${
+        isMinimized ? "cursor-pointer bottom-4 right-4" : isScaling ? "inset-0 m-auto" : "bottom-20 right-6"
       }`}
       style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}
-      onClick={isMinimized ? handleClick : undefined}
     >
       <video
         ref={videoRef}
@@ -70,12 +73,13 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
         loop
         muted={isMuted}
         playsInline
+        onClick={togglePlay}
         onLoadedMetadata={() => {
           if (videoRef.current) {
             setVideoRatio(videoRef.current.videoWidth / videoRef.current.videoHeight);
           }
         }}
-        className="h-full w-full object-cover bg-black pointer-events-none"
+        className="m-0 block h-full w-full object-cover bg-black"
       />
 
       {!isMinimized && (
@@ -120,8 +124,14 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
       )}
 
       {isMinimized && (
-        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="h-9 w-9 rounded-full bg-black/60 backdrop-blur text-white grid place-items-center pointer-events-none">
+            {isPlaying ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
+            )}
+          </div>
         </div>
       )}
     </motion.div>

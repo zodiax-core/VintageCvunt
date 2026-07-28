@@ -5,6 +5,7 @@ import {
   LayoutDashboard, ShoppingBag, Package, Users, BarChart3,
   MessageSquare, Star, Tag, FileText, Settings, LogOut,
   Menu, ChevronLeft, Bell, Search, User, ExternalLink,
+  MoreHorizontal, Home,
 } from "lucide-react";
 import { useAuthContext } from "@/lib/auth-context";
 
@@ -47,7 +48,14 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  const MOBILE_NAV = NAV_ITEMS.slice(0, 5);
+  const MOBILE_NAV: (NavItem & { action?: string })[] = [
+    { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/order", label: "Orders", icon: ShoppingBag },
+    { to: "/product", label: "Products", icon: Package },
+    { to: "/analytics", label: "Analytics", icon: BarChart3 },
+    { to: "/setting", label: "Settings", icon: Settings },
+    { to: "", label: "Menu", icon: MoreHorizontal, action: "sidebar" },
+  ];
 
   const isActive = (to: string) => {
     if (to === "/admin") return location.pathname === "/admin";
@@ -156,10 +164,22 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         </header>
         <main className="flex-1 p-4 lg:p-6 overflow-auto pb-20 md:pb-6">{children}</main>
 
-        <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-chrome/20 bg-background/95 backdrop-blur-xl px-2 py-1 md:hidden">
+        <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-chrome/20 bg-background/95 backdrop-blur-xl px-1 py-1 md:hidden">
           {MOBILE_NAV.map((item) => {
             const active = isActive(item.to);
             const Icon = item.icon;
+            if (item.action === "sidebar") {
+              return (
+                <button
+                  key={item.label}
+                  onClick={() => setSidebarOpen(true)}
+                  className="flex flex-col items-center gap-0.5 rounded-lg px-3 py-2 transition-colors text-chrome-dim"
+                >
+                  <Icon size={16} />
+                  <span className="font-mono text-[8px] uppercase tracking-[0.15em]">{item.label}</span>
+                </button>
+              );
+            }
             return (
               <Link
                 key={item.to}
@@ -177,10 +197,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
         <a
           href="/"
-          className="fixed bottom-20 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-foreground text-background shadow-lg hover:bg-foreground/90 transition-colors md:hidden"
+          className="fixed bottom-24 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-chrome-h text-background shadow-lg shadow-black/20 hover:bg-chrome-h/90 transition-colors md:hidden"
           aria-label="Go to website"
         >
-          <ExternalLink size={18} />
+          <Home size={16} />
         </a>
       </div>
     </div>

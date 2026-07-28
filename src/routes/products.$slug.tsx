@@ -294,7 +294,7 @@ function ProductPage() {
                 Patron <span className="italic text-chrome-h">Reviews</span>
               </h2>
 
-              <div className="mt-10 space-y-8">
+              <div className="mt-12 space-y-10">
                 {reviews.map((r, i) => (
                   <motion.div
                     key={r._id}
@@ -302,36 +302,36 @@ function ProductPage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, ease: EASE, delay: i * 0.08 }}
-                    className="rounded-2xl border border-chrome bg-graphite p-8"
+                    className="rounded-2xl border border-chrome bg-graphite p-8 md:p-10"
                     style={{ boxShadow: "var(--shadow-plate)" }}
                   >
-                    <div className="flex items-start justify-between gap-4 mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full border border-chrome bg-graphite-2 grid place-items-center font-mono text-xs text-chrome shrink-0">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-5">
+                      <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-full border border-chrome bg-graphite-2 grid place-items-center font-mono text-sm text-chrome shrink-0">
                           {r.customerName.charAt(0)}
                         </div>
                         <div>
-                          <span className="font-mono text-sm text-foreground">{r.customerName}</span>
-                          <span className="block font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim/60 mt-0.5">{new Date(r.createdAt).toLocaleDateString("en-PK", { year: "numeric", month: "short" })}</span>
+                          <span className="font-mono text-sm md:text-base text-foreground">{r.customerName}</span>
+                          <span className="block font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim/50 mt-0.5">{new Date(r.createdAt).toLocaleDateString("en-PK", { year: "numeric", month: "short" })}</span>
                         </div>
                       </div>
-                      <div className="flex gap-0.5 shrink-0">
+                      <div className="flex gap-1 shrink-0">
                         {Array.from({ length: 5 }, (_, j) => (
-                          <svg key={j} width="14" height="14" viewBox="0 0 12 12" fill={j < r.rating ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1" className={j < r.rating ? "text-chrome" : "text-chrome-dim/30"}>
+                          <svg key={j} width="16" height="16" viewBox="0 0 12 12" fill={j < r.rating ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1" className={j < r.rating ? "text-chrome" : "text-chrome-dim/30"}>
                             <polygon points="6,1 7.5,4.5 11,4.5 8.5,7 9.5,11 6,8.5 2.5,11 3.5,7 1,4.5 4.5,4.5" />
                           </svg>
                         ))}
                       </div>
                     </div>
-                    {r.title && <p className="font-mono text-sm text-foreground font-semibold mb-2">{r.title}</p>}
-                    <p className="text-base text-chrome-dim leading-relaxed">{r.comment}</p>
+                    {r.title && <p className="font-mono text-sm md:text-base text-foreground font-semibold mb-3">{r.title}</p>}
+                    <p className="text-sm md:text-base text-chrome-dim leading-relaxed md:leading-loose">{r.comment}</p>
                   </motion.div>
                 ))}
               </div>
             </div>
 
             {/* Review Form */}
-            <div className="col-span-12 md:col-span-4 md:col-start-9">
+            <div>
               <div className="md:sticky md:top-28">
                 <span className="font-mono text-[10px] uppercase tracking-[0.32em] text-chrome-dim">§ Write a Review</span>
                 <p className="mt-2 text-xs text-chrome-dim">Share your experience with this object.</p>

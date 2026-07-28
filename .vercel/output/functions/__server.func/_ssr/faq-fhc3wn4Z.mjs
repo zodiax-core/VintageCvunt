@@ -4,7 +4,7 @@ import { t as api } from "./api-xr_VpTVu.mjs";
 import { _ as require_react, a as Trigger2, g as require_jsx_runtime, i as Root2, n as Header, r as Item, t as Content2 } from "../_libs/@radix-ui/react-accordion+[...].mjs";
 import { i as motion } from "../_libs/framer-motion.mjs";
 import { n as SiteFooter, r as SiteNav } from "./SiteFooter-DXdzIAJ-.mjs";
-import { W as ChevronDown } from "../_libs/lucide-react.mjs";
+import { G as ChevronDown } from "../_libs/lucide-react.mjs";
 import { n as cn } from "./utils-DLpWP-3B.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/faq-fhc3wn4Z.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
