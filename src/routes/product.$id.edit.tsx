@@ -57,7 +57,7 @@ function EditProduct() {
 
   useEffect(() => {
     if (product) {
-      setForm({
+      setForm((prev) => ({
         name: product.name,
         slug: product.slug,
         category: product.category,
@@ -72,7 +72,8 @@ function EditProduct() {
         tags: product.tags ?? [],
         sizes: product.sizes ?? [],
         colors: product.colors ?? [],
-      });
+        faqs: prev.faqs,
+      }));
     }
   }, [product]);
 
