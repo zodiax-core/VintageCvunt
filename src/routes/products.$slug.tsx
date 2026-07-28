@@ -91,7 +91,7 @@ function ProductPage() {
     <div className="relative min-h-screen bg-background text-foreground">
       <SiteNav />
 
-      {product.videoUrl && product.imageUrls?.[0] && (
+      {product.videoUrl && (
         <FloatingVideo videoUrl={product.videoUrl} />
       )}
 

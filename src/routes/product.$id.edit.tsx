@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { Save, Upload, X, Plus } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
+import { cleanError } from "@/lib/utils";
 
 export const Route = createFileRoute("/product/$id/edit")({
   beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
@@ -137,9 +138,11 @@ function EditProduct() {
           if (result.ok) {
             const { storageId } = await result.json();
             if (storageId) images = [storageId];
+          } else {
+            setSaveError("Image upload failed (HTTP " + result.status + "). Product saved without image.");
           }
         } catch (e) {
-          console.warn("Image upload failed, saving without image", e);
+          setSaveError("Image upload error: " + cleanError(e));
         }
       }
 
@@ -150,9 +153,11 @@ function EditProduct() {
           if (result.ok) {
             const { storageId } = await result.json();
             if (storageId) video = storageId;
+          } else {
+            setSaveError("Video upload failed (HTTP " + result.status + "). Product saved without video.");
           }
         } catch (e) {
-          console.warn("Video upload failed, saving without video", e);
+          setSaveError("Video upload error: " + cleanError(e));
         }
       }
 
@@ -186,7 +191,7 @@ function EditProduct() {
             isActive: true,
           });
         } catch (e) {
-          console.warn("Failed to save FAQ", e);
+          setSaveError("Failed to save FAQ: " + cleanError(e));
         }
       }
 
