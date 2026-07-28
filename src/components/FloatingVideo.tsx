@@ -54,7 +54,7 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
               muted={isMuted}
               playsInline
               onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-              className="max-h-full max-w-full object-contain"
+              className="max-h-full max-w-full object-contain rounded-2xl"
             />
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4">
               <button
