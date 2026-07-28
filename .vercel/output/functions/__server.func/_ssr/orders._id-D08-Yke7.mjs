@@ -1,7 +1,7 @@
 import { i as useQuery } from "../_libs/convex.mjs";
 import { t as api } from "./api-xr_VpTVu.mjs";
 import { g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
-import { g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
+import { _ as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { Q as ArrowLeft } from "../_libs/lucide-react.mjs";
 import { t as CustomerLayout } from "./CustomerLayout-Duu_HWWl.mjs";
 import { a as TableHeader, i as TableHead, n as TableBody, o as TableRow, r as TableCell, t as Table } from "./table-BCmSA03j.mjs";

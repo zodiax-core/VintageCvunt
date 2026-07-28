@@ -2,7 +2,7 @@ import { o as __toESM } from "../_runtime.mjs";
 import { i as useQuery, r as useMutation } from "../_libs/convex.mjs";
 import { t as api } from "./api-xr_VpTVu.mjs";
 import { _ as require_react, g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
-import { _ as useNavigate } from "../_libs/@tanstack/react-router+[...].mjs";
+import { v as useNavigate } from "../_libs/@tanstack/react-router+[...].mjs";
 import { _ as Save, i as Upload, t as X, x as Plus } from "../_libs/lucide-react.mjs";
 import { t as cleanError } from "./utils-DLpWP-3B.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/product.new-Cc-kEQR_.js

@@ -431,11 +431,15 @@ function EditProduct() {
               >
                 {videoFile ? (
                   <div className="flex flex-col items-center gap-2">
+                    <video src={URL.createObjectURL(videoFile)} className="max-h-32 rounded-lg mb-1" controls />
                     <p className="font-mono text-[10px] text-chrome-dim">{videoFile.name}</p>
                     <button onClick={(e) => { e.stopPropagation(); setVideoFile(null); }} className="font-mono text-[9px] uppercase tracking-[0.2em] text-red-400 hover:text-red-300">Remove</button>
                   </div>
-                ) : product.video ? (
-                  <p className="font-mono text-[10px] text-chrome-dim">Video uploaded. Click to replace.</p>
+                ) : product.videoUrl ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <video src={product.videoUrl} className="max-h-32 rounded-lg mb-1" controls />
+                    <button onClick={(e) => { e.stopPropagation(); videoInputRef.current?.click(); }} className="font-mono text-[9px] uppercase tracking-[0.2em] text-red-400 hover:text-red-300">Replace</button>
+                  </div>
                 ) : (
                   <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Click to upload video</p>
                 )}

@@ -5370,6 +5370,29 @@ function RouterProvider({ router, ...rest }) {
 	});
 }
 //#endregion
+//#region node_modules/@tanstack/react-router/dist/esm/useRouterState.js
+/**
+* Subscribe to the router's state store with optional selection and
+* structural sharing for render optimization.
+*
+* Options:
+* - `select`: Project the full router state to a derived slice
+* - `structuralSharing`: Replace-equal semantics for stable references
+* - `router`: Read state from a specific router instance instead of context
+*
+* @returns The selected router state (or the full state by default).
+* @link https://tanstack.com/router/latest/docs/framework/react/api/router/useRouterStateHook
+*/
+function useRouterState(opts) {
+	const contextRouter = useRouter({ warn: opts?.router === void 0 });
+	const router = opts?.router || contextRouter;
+	{
+		const state = router.stores.__store.get();
+		return opts?.select ? opts.select(state) : state;
+	}
+	return useStore(router.stores.__store, useStructuralSharing(opts, router));
+}
+//#endregion
 //#region node_modules/@tanstack/react-router/dist/esm/useLocation.js
 /**
 * Read the current location from the router state with optional selection.
@@ -14734,4 +14757,4 @@ var renderRouterToStream = async ({ request, router, responseHeaders, children }
 	throw new Error("No renderToReadableStream or renderToPipeableStream found in react-dom/server. Ensure you are using a version of react-dom that supports streaming.");
 };
 //#endregion
-export { redirect as A, getScriptPreloadAttrs as C, executeRewriteInput as D, resolveManifestCssLink as E, decodePath as F, isNotFound as M, createLRUCache as N, isRedirect as O, invariant as P, createInlineCssStyleAsset as S, resolveManifestAssetLink as T, useNavigate as _, replaceSsrResponse as a, TSR_SCRIPT_BARRIER_ID as b, HeadContent as c, createRouter as d, Outlet as f, Link as g, createRootRouteWithContext as h, normalizeSsrResponse as i, rootRouteId as j, isResolvedRedirect as k, useLocation as l, createFileRoute as m, defineHandlerCallback as n, stripSsrResponseBody as o, lazyRouteComponent as p, isSsrResponse as r, Scripts as s, renderRouterToStream as t, RouterProvider as u, useRouter as v, getStylesheetHref as w, createInlineCssPlaceholderAsset as x, GLOBAL_TSR as y };
+export { isResolvedRedirect as A, createInlineCssStyleAsset as C, resolveManifestCssLink as D, resolveManifestAssetLink as E, invariant as F, decodePath as I, rootRouteId as M, isNotFound as N, executeRewriteInput as O, createLRUCache as P, createInlineCssPlaceholderAsset as S, getStylesheetHref as T, Link as _, replaceSsrResponse as a, GLOBAL_TSR as b, HeadContent as c, RouterProvider as d, createRouter as f, createRootRouteWithContext as g, createFileRoute as h, normalizeSsrResponse as i, redirect as j, isRedirect as k, useLocation as l, lazyRouteComponent as m, defineHandlerCallback as n, stripSsrResponseBody as o, Outlet as p, isSsrResponse as r, Scripts as s, renderRouterToStream as t, useRouterState as u, useNavigate as v, getScriptPreloadAttrs as w, TSR_SCRIPT_BARRIER_ID as x, useRouter as y };

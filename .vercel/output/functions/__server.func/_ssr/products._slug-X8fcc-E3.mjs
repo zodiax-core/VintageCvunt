@@ -1,5 +1,5 @@
 import { g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
-import { g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
+import { _ as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/products._slug-X8fcc-E3.js
 var import_jsx_runtime = require_jsx_runtime();
 var SplitNotFoundComponent = () => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {

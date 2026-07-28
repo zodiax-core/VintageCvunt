@@ -2,7 +2,7 @@ import { i as useQuery } from "../_libs/convex.mjs";
 import { t as api } from "./api-xr_VpTVu.mjs";
 import { g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
 import { n as useAuthContext } from "./auth-context-Dc0i5OIR.mjs";
-import { g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
+import { _ as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { u as Star } from "../_libs/lucide-react.mjs";
 import { t as CustomerLayout } from "./CustomerLayout-Duu_HWWl.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/reviews-BZM2yY9e.js

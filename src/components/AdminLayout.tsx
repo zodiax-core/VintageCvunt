@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -35,6 +35,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuthContext();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const isLoading = useRouterState({ select: (s) => s.isLoading });
 
   useEffect(() => {
     const check = () => {
@@ -124,8 +125,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           >
             <motion.aside
               initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="absolute left-0 top-0 h-full w-64 border-r border-chrome/20 bg-background"
+              transition={{ type: "spring", damping: 28, stiffness: 250 }}
+              className="absolute left-0 top-0 h-full w-72 border-r border-chrome/20 bg-background shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <SidebarContent col={false} />
@@ -135,9 +136,19 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       </AnimatePresence>
 
       <div className="flex flex-1 flex-col min-w-0">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-chrome/20 bg-background/80 backdrop-blur-xl px-4 lg:px-6">
-          <button onClick={() => setSidebarOpen(true)} className="md:hidden flex items-center justify-center h-9 w-9 rounded-lg hover:bg-foreground/5 transition-colors">
-            <Menu size={18} />
+        {isLoading && (
+          <div className="fixed top-0 left-0 right-0 z-50 h-0.5 bg-chrome-h/60 overflow-hidden">
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: "100%" }}
+              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+              className="h-full w-1/2 bg-chrome-h"
+            />
+          </div>
+        )}
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-chrome/20 bg-background backdrop-blur-xl px-3 lg:px-6">
+          <button onClick={() => setSidebarOpen(true)} className="md:hidden flex items-center justify-center h-10 w-10 rounded-xl hover:bg-foreground/10 active:bg-foreground/15 transition-colors" aria-label="Open menu">
+            <Menu size={20} />
           </button>
           <button onClick={() => setCollapsed(!collapsed)} className="hidden md:flex items-center justify-center h-9 w-9 rounded-lg hover:bg-foreground/5 transition-colors">
             <ChevronLeft size={18} className={`transition-transform ${collapsed ? "rotate-180" : ""}`} />
@@ -162,9 +173,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </header>
-        <main className="flex-1 p-4 lg:p-6 overflow-auto pb-20 md:pb-6">{children}</main>
+        <main className="flex-1 px-3 py-4 lg:p-6 overflow-auto pb-24 md:pb-6">{children}</main>
 
-        <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-chrome/20 bg-background/95 backdrop-blur-xl px-1 py-1 md:hidden">
+        <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-chrome/20 bg-background backdrop-blur-xl px-2 py-2 md:hidden">
           {MOBILE_NAV.map((item) => {
             const active = isActive(item.to);
             const Icon = item.icon;
@@ -173,10 +184,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 <button
                   key={item.label}
                   onClick={() => setSidebarOpen(true)}
-                  className="flex flex-col items-center gap-0.5 rounded-lg px-3 py-2 transition-colors text-chrome-dim"
+                  className="flex flex-col items-center gap-1 rounded-xl px-3 py-2 transition-colors text-chrome-dim hover:text-foreground active:bg-foreground/5"
                 >
-                  <Icon size={16} />
-                  <span className="font-mono text-[8px] uppercase tracking-[0.15em]">{item.label}</span>
+                  <Icon size={18} />
+                  <span className="font-mono text-[9px] uppercase tracking-[0.15em]">{item.label}</span>
                 </button>
               );
             }
@@ -184,12 +195,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex flex-col items-center gap-0.5 rounded-lg px-3 py-2 transition-colors ${
-                  active ? "text-foreground" : "text-chrome-dim"
+                className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2 transition-colors ${
+                  active ? "text-foreground bg-foreground/8" : "text-chrome-dim hover:text-foreground"
                 }`}
               >
-                <Icon size={16} />
-                <span className="font-mono text-[8px] uppercase tracking-[0.15em]">{item.label}</span>
+                <Icon size={18} />
+                <span className="font-mono text-[9px] uppercase tracking-[0.15em]">{item.label}</span>
               </Link>
             );
           })}
@@ -197,10 +208,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
         <a
           href="/"
-          className="fixed bottom-24 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-chrome-h text-background shadow-lg shadow-black/20 hover:bg-chrome-h/90 transition-colors md:hidden"
-          aria-label="Go to website"
+          className="fixed bottom-24 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-white text-black shadow-xl hover:scale-105 active:scale-95 transition-all md:hidden"
+          aria-label="Go to homepage"
         >
-          <Home size={16} />
+          <Home size={18} />
         </a>
       </div>
     </div>

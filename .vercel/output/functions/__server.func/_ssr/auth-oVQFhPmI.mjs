@@ -3,7 +3,7 @@ import { r as useMutation } from "../_libs/convex.mjs";
 import { t as api } from "./api-xr_VpTVu.mjs";
 import { _ as require_react, g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
 import { n as useAuthContext } from "./auth-context-Dc0i5OIR.mjs";
-import { _ as useNavigate } from "../_libs/@tanstack/react-router+[...].mjs";
+import { v as useNavigate } from "../_libs/@tanstack/react-router+[...].mjs";
 import { a as AnimatePresence, i as motion } from "../_libs/framer-motion.mjs";
 import { n as SiteFooter, r as SiteNav } from "./SiteFooter-DXdzIAJ-.mjs";
 import { t as cleanError } from "./utils-DLpWP-3B.mjs";

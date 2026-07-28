@@ -1,6 +1,6 @@
 import { g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
 import { n as useCartContext } from "./cart-context-CAiE_2vy.mjs";
-import { g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
+import { _ as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { i as motion } from "../_libs/framer-motion.mjs";
 import { n as SiteFooter, r as SiteNav, t as OptimizedImage } from "./SiteFooter-DXdzIAJ-.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/cart-lJRaOgS8.js

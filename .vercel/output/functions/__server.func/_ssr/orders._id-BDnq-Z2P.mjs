@@ -1,4 +1,4 @@
-import { m as createFileRoute, p as lazyRouteComponent } from "../_libs/@tanstack/react-router+[...].mjs";
+import { h as createFileRoute, m as lazyRouteComponent } from "../_libs/@tanstack/react-router+[...].mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/orders._id-BDnq-Z2P.js
 var $$splitComponentImporter = () => import("./orders._id-D08-Yke7.mjs");
 var Route = createFileRoute("/orders/$id")({

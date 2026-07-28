@@ -1,4 +1,4 @@
-import { A as redirect } from "../_libs/@tanstack/react-router+[...].mjs";
+import { j as redirect } from "../_libs/@tanstack/react-router+[...].mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/auth-guard-DrhmoJF1.js
 function getStoredUser() {
 	if (typeof window === "undefined") return null;

@@ -2,7 +2,7 @@ import { o as __toESM } from "../_runtime.mjs";
 import { i as useQuery } from "../_libs/convex.mjs";
 import { t as api } from "./api-xr_VpTVu.mjs";
 import { _ as require_react, g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
-import { g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
+import { _ as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { i as motion, n as useTransform, r as useScroll, t as useSpring } from "../_libs/framer-motion.mjs";
 import { n as SiteFooter, r as SiteNav, t as OptimizedImage } from "./SiteFooter-DXdzIAJ-.mjs";
 import { n as butterfly_img_default$1, t as butterfly_img_default } from "./butterfly-img-DGXirbV2.mjs";
