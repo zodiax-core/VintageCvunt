@@ -209,46 +209,73 @@ function Content() {
           </div>
 
           <div className="bg-graphite border border-chrome/20 rounded-2xl overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-chrome/10">
-                  <th className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim text-left px-5 py-4">Question</th>
-                  <th className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim text-left px-5 py-4">Category</th>
-                  <th className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim text-right px-5 py-4">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {faqs.length === 0 ? (
-                  <tr>
-                    <td colSpan={3} className="px-5 py-10 text-center font-mono text-[11px] text-chrome-dim">No FAQs yet</td>
+            <div className="hidden md:block">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-chrome/10">
+                    <th className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim text-left px-5 py-4">Question</th>
+                    <th className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim text-left px-5 py-4">Category</th>
+                    <th className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim text-right px-5 py-4">Actions</th>
                   </tr>
-                ) : (
-                  faqs.map((faq) => (
-                    <tr key={faq._id} className="border-b border-chrome/10 hover:bg-chrome/5">
-                      <td className="px-5 py-4">
-                        <p className="font-mono text-[11px] text-foreground">{faq.question}</p>
-                        <p className="font-mono text-[9px] text-chrome-dim mt-0.5 line-clamp-1">{faq.answer}</p>
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className="inline-flex items-center gap-1 rounded-full border border-chrome/20 bg-chrome/5 px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim">
-                          {faq.category}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => startEditFaq(faq)} className="btn-chrome btn-chrome-inner p-2 rounded-lg">
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button onClick={() => removeFaq({ id: faq._id })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
+                </thead>
+                <tbody>
+                  {faqs.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="px-5 py-10 text-center font-mono text-[11px] text-chrome-dim">No FAQs yet</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    faqs.map((faq) => (
+                      <tr key={faq._id} className="border-b border-chrome/10 hover:bg-chrome/5">
+                        <td className="px-5 py-4">
+                          <p className="font-mono text-[11px] text-foreground">{faq.question}</p>
+                          <p className="font-mono text-[9px] text-chrome-dim mt-0.5 line-clamp-1">{faq.answer}</p>
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-chrome/20 bg-chrome/5 px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim">
+                            {faq.category}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <button onClick={() => startEditFaq(faq)} className="btn-chrome btn-chrome-inner p-2 rounded-lg">
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button onClick={() => removeFaq({ id: faq._id })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="md:hidden divide-y divide-chrome/10">
+              {faqs.length === 0 ? (
+                <p className="px-5 py-10 text-center font-mono text-[11px] text-chrome-dim">No FAQs yet</p>
+              ) : (
+                faqs.map((faq) => (
+                  <div key={faq._id} className="px-4 py-3 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-mono text-[11px] text-foreground flex-1">{faq.question}</p>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button onClick={() => startEditFaq(faq)} className="btn-chrome btn-chrome-inner p-1.5 rounded-lg">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={() => removeFaq({ id: faq._id })} className="btn-chrome btn-chrome-inner p-1.5 rounded-lg text-red-400">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="font-mono text-[9px] text-chrome-dim line-clamp-2">{faq.answer}</p>
+                    <span className="inline-flex items-center gap-1 rounded-full border border-chrome/20 bg-chrome/5 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim">
+                      {faq.category}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>

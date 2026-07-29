@@ -120,7 +120,7 @@ export function generateReceiptPDF(
     billingAddress?: { street: string; city: string; zip: string; country: string };
     shipping: number;
     tax: number;
-    items: Array<{ name?: string; product?: string; price: number; quantity?: number; qty?: number; subtotal?: number; sku?: string }>;
+    items: Array<{ name?: string; product?: string; price: number; quantity?: number; qty?: number; subtotal?: number; sku?: string; size?: string; color?: string }>;
     paymentMethod?: string;
     subtotal?: number;
     total?: number;
@@ -264,22 +264,30 @@ export function generateReceiptPDF(
     sku: item.sku || "N/A",
     qty: item.quantity || item.qty || 1,
     price: item.price || 0,
-    subtotal: item.subtotal || ((item.quantity || item.qty || 1) * (item.price || 0))
+    subtotal: item.subtotal || ((item.quantity || item.qty || 1) * (item.price || 0)),
+    variant: [item.size, item.color].filter(Boolean).join(" / ") || ""
   }));
 
   const subtotal = order.subtotal || normalizedItems.reduce((s, i) => s + i.subtotal, 0);
   const total = order.total || (subtotal + order.shipping + order.tax);
 
+  const hasVariant = normalizedItems.some(i => i.variant);
+  const receiptHeaders = hasVariant ? ["#", "Product", "Variant", "Qty", "Unit Price", "Total"] : ["#", "Product", "Qty", "Unit Price", "Total"];
+
   autoTable(doc, {
     startY: y,
-    head: [["#", "Product", "Qty", "Unit Price", "Total"]],
-    body: normalizedItems.map((item, idx) => [
-      String(idx + 1),
-      item.name,
-      String(item.qty),
-      fmt(item.price),
-      fmt(item.subtotal),
-    ]),
+    head: [receiptHeaders],
+    body: normalizedItems.map((item, idx) => {
+      const row = [
+        String(idx + 1),
+        item.name,
+        String(item.qty),
+        fmt(item.price),
+        fmt(item.subtotal),
+      ];
+      if (hasVariant) row.splice(2, 0, item.variant);
+      return row;
+    }),
     headStyles: {
       fillColor: [250, 250, 250],
       textColor: C.BLACK,
@@ -298,7 +306,14 @@ export function generateReceiptPDF(
     },
     theme: "plain",
     margin: { left: 14, right: 14 },
-    columnStyles: {
+    columnStyles: hasVariant ? {
+      0: { halign: "center", cellWidth: 10, textColor: C.GRAY },
+      1: { cellWidth: "auto" },
+      2: { cellWidth: 30, fontStyle: "bold", textColor: C.GRAY, fontSize: 7 },
+      3: { halign: "center", cellWidth: 14 },
+      4: { halign: "right", cellWidth: 28 },
+      5: { halign: "right", cellWidth: 28, textColor: C.BLACK, fontStyle: "bold" },
+    } : {
       0: { halign: "center", cellWidth: 10, textColor: C.GRAY },
       1: { cellWidth: "auto" },
       2: { halign: "center", cellWidth: 16 },
@@ -613,7 +628,7 @@ export function generateDetailedOrdersPDF(
     phone?: string;
     createdAt: number;
     status: string;
-    items: Array<{ name: string; productId: string; price: number; quantity: number }>;
+    items: Array<{ name: string; productId: string; price: number; quantity: number; size?: string; color?: string }>;
     total: number;
     shipping: number;
     tax: number;
@@ -728,17 +743,27 @@ export function generateDetailedOrdersPDF(
     doc.text("ORDER ITEMS", 14, y);
     y += 4;
 
+    const hasVariant = order.items.some(i => i.size || i.color);
+    const detailHeaders = hasVariant
+      ? ["#", "Product", "Variant", "SKU", "Price", "Qty", "Subtotal"]
+      : ["#", "Product", "SKU / ProductID", "Price", "Qty", "Subtotal"];
+
     autoTable(doc, {
       startY: y,
-      head: [["#", "Product", "SKU / ProductID", "Price", "Qty", "Subtotal"]],
-      body: order.items.map((item, i) => [
-        String(i + 1),
-        item.name,
-        item.productId,
-        fmt(item.price),
-        String(item.quantity),
-        fmt(item.price * item.quantity),
-      ]),
+      head: [detailHeaders],
+      body: order.items.map((item, i) => {
+        const variant = [item.size, item.color].filter(Boolean).join(" / ");
+        const row = [
+          String(i + 1),
+          item.name,
+          item.productId.slice(0, 8),
+          fmt(item.price),
+          String(item.quantity),
+          fmt(item.price * item.quantity),
+        ];
+        if (hasVariant) row.splice(2, 0, variant || "—");
+        return row;
+      }),
       headStyles: {
         fillColor: [250, 250, 250],
         textColor: C.BLACK,
@@ -757,7 +782,15 @@ export function generateDetailedOrdersPDF(
       },
       theme: "plain",
       margin: { left: 14, right: 14 },
-      columnStyles: {
+      columnStyles: hasVariant ? {
+        0: { halign: "center", cellWidth: 10, textColor: C.GRAY },
+        1: { cellWidth: "auto" },
+        2: { cellWidth: 28, fontStyle: "bold", textColor: C.GRAY, fontSize: 7 },
+        3: { cellWidth: 24, fontStyle: "bold", textColor: C.GRAY, fontSize: 7 },
+        4: { halign: "right", cellWidth: 26 },
+        5: { halign: "center", cellWidth: 12 },
+        6: { halign: "right", cellWidth: 28, textColor: C.BLACK, fontStyle: "bold" },
+      } : {
         0: { halign: "center", cellWidth: 10, textColor: C.GRAY },
         1: { cellWidth: "auto" },
         2: { cellWidth: 36, fontStyle: "bold", textColor: C.GRAY, fontSize: 7 },

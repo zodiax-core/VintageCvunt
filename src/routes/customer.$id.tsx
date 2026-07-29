@@ -156,43 +156,73 @@ function CustomerDetail() {
                   Order History
                 </span>
               </div>
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-chrome/10">
-                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Order ID</TableHead>
-                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Date</TableHead>
-                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground text-right">Items</TableHead>
-                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground text-right">Total</TableHead>
-                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(orders ?? []).map((o) => (
-                    <TableRow key={o._id} className="border-chrome/10 hover:bg-chrome/5">
-                      <TableCell>
-                        <Link
-                          to="/order/$id"
-                          params={{ id: o._id }}
-                          className="font-medium text-foreground hover:text-blue-400 transition-colors"
-                        >
-                          {o.orderNumber}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{new Date(o.createdAt).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right text-muted-foreground">{o.items.length}</TableCell>
-                      <TableCell className="text-right text-foreground">PKR {o.total.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] ${statusColors[o.status]}`}
-                        >
-                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                          {o.status}
-                        </span>
-                      </TableCell>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-chrome/10">
+                      <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Order ID</TableHead>
+                      <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Date</TableHead>
+                      <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground text-right">Items</TableHead>
+                      <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground text-right">Total</TableHead>
+                      <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Status</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {(orders ?? []).map((o) => (
+                      <TableRow key={o._id} className="border-chrome/10 hover:bg-chrome/5">
+                        <TableCell>
+                          <Link
+                            to="/order/$id"
+                            params={{ id: o._id }}
+                            className="font-medium text-foreground hover:text-blue-400 transition-colors"
+                          >
+                            {o.orderNumber}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{new Date(o.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right text-muted-foreground">{o.items.length}</TableCell>
+                        <TableCell className="text-right text-foreground">PKR {o.total.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <span
+                            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] ${statusColors[o.status]}`}
+                          >
+                            <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                            {o.status}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="md:hidden divide-y divide-chrome/10">
+                {(orders ?? []).map((o) => (
+                  <div key={o._id} className="px-4 py-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <Link
+                        to="/order/$id"
+                        params={{ id: o._id }}
+                        className="font-medium text-foreground hover:text-chrome-h transition-colors text-sm"
+                      >
+                        {o.orderNumber}
+                      </Link>
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] ${statusColors[o.status]}`}
+                      >
+                        <span className="h-1 w-1 rounded-full bg-current" />
+                        {o.status}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>{new Date(o.createdAt).toLocaleDateString()}</span>
+                      <span>{o.items.length} items</span>
+                    </div>
+                    <div className="text-right mt-1">
+                      <span className="text-foreground font-semibold">PKR {o.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

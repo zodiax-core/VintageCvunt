@@ -285,37 +285,65 @@ function Settings() {
               </button>
             </div>
 
-            <Table>
-              <TableHeader>
-                <TableRow className="border-chrome/10">
-                  <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Name</TableHead>
-                  <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Description</TableHead>
-                  <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Price</TableHead>
-                  <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Est. Days</TableHead>
-                  <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {shippingRatesData.map((rate) => (
-                  <TableRow key={rate._id} className="border-chrome/10">
-                    <TableCell className="text-foreground">{rate.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{rate.description}</TableCell>
-                    <TableCell className="text-foreground font-mono">{currency} {rate.price.toFixed(2)}</TableCell>
-                    <TableCell className="text-muted-foreground">{rate.estimatedDays}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => editShipping(rate)} className="btn-chrome btn-chrome-inner p-2 rounded-lg">
-                          <Pencil className="h-4 w-4" />
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-chrome/10">
+                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Name</TableHead>
+                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Description</TableHead>
+                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Price</TableHead>
+                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Est. Days</TableHead>
+                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {shippingRatesData.map((rate) => (
+                    <TableRow key={rate._id} className="border-chrome/10">
+                      <TableCell className="text-foreground">{rate.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{rate.description}</TableCell>
+                      <TableCell className="text-foreground font-mono">{currency} {rate.price.toFixed(2)}</TableCell>
+                      <TableCell className="text-muted-foreground">{rate.estimatedDays}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button onClick={() => editShipping(rate)} className="btn-chrome btn-chrome-inner p-2 rounded-lg">
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button onClick={() => removeShippingRate({ id: rate._id })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="md:hidden space-y-3">
+              {shippingRatesData.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">No shipping rates yet</p>
+              ) : (
+                shippingRatesData.map((rate) => (
+                  <div key={rate._id} className="border border-chrome/10 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-foreground text-sm">{rate.name}</span>
+                      <span className="font-mono text-[11px] text-foreground">{currency} {rate.price.toFixed(2)}</span>
+                    </div>
+                    {rate.description && <p className="text-xs text-muted-foreground">{rate.description}</p>}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">{rate.estimatedDays || "—"}</span>
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => editShipping(rate)} className="btn-chrome btn-chrome-inner p-1.5 rounded-lg">
+                          <Pencil className="h-3.5 w-3.5" />
                         </button>
-                        <button onClick={() => removeShippingRate({ id: rate._id })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
-                          <Trash2 className="h-4 w-4" />
+                        <button onClick={() => removeShippingRate({ id: rate._id })} className="btn-chrome btn-chrome-inner p-1.5 rounded-lg text-red-400">
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         )}
 

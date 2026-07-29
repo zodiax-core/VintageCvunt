@@ -12,7 +12,13 @@ export const list = query({
 export const getById = query({
   args: { id: v.id("orders") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const order = await ctx.db.get(args.id);
+    if (!order) return null;
+    if (order.screenshot) {
+      const screenshotUrl = await ctx.storage.getUrl(order.screenshot as any);
+      return { ...order, screenshot: screenshotUrl };
+    }
+    return order;
   },
 });
 

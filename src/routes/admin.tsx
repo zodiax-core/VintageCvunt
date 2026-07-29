@@ -274,28 +274,47 @@ function AdminDashboard() {
 
       <div className="bg-graphite border border-chrome/20 rounded-2xl p-4 md:p-6 mb-6">
         <h2 className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim mb-4">Recent Orders</h2>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Order ID</span></TableHead>
-              <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Customer</span></TableHead>
-              <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Date</span></TableHead>
-              <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Status</span></TableHead>
-              <TableHead className="text-right"><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Total</span></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {recentOrders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell><span className="font-mono text-[11px]">{order.id}</span></TableCell>
-                <TableCell><span className="font-mono text-[11px]">{order.customer}</span></TableCell>
-                <TableCell><span className="font-mono text-[11px] text-chrome-dim">{order.date}</span></TableCell>
-                <TableCell>{statusBadge(order.status)}</TableCell>
-                <TableCell className="text-right"><span className="font-mono text-[11px]">{order.total}</span></TableCell>
+        <div className="hidden md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Order ID</span></TableHead>
+                <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Customer</span></TableHead>
+                <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Date</span></TableHead>
+                <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Status</span></TableHead>
+                <TableHead className="text-right"><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Total</span></TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {recentOrders.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell><span className="font-mono text-[11px]">{order.id}</span></TableCell>
+                  <TableCell><span className="font-mono text-[11px]">{order.customer}</span></TableCell>
+                  <TableCell><span className="font-mono text-[11px] text-chrome-dim">{order.date}</span></TableCell>
+                  <TableCell>{statusBadge(order.status)}</TableCell>
+                  <TableCell className="text-right"><span className="font-mono text-[11px]">{order.total}</span></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        <div className="md:hidden space-y-3">
+          {recentOrders.map((order) => (
+            <div key={order.id} className="border border-chrome/10 rounded-xl p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[11px] font-medium text-foreground">{order.id}</span>
+                {statusBadge(order.status)}
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-chrome-dim">{order.customer}</span>
+                <span className="text-chrome-dim">{order.date}</span>
+              </div>
+              <div className="text-right">
+                <span className="font-mono text-[11px] text-foreground font-semibold">{order.total}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3">
