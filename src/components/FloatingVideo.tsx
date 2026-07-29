@@ -17,6 +17,7 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const constraintsRef = useRef<HTMLDivElement>(null);
   const touchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const hoverLock = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -31,6 +32,14 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
   }, []);
 
   const showHover = isHovered || touchHover;
+
+  const handleHoverStart = useCallback(() => {
+    if (!isScaling) { setIsHovered(true); hoverLock.current = false; }
+  }, [isScaling]);
+
+  const handleHoverEnd = useCallback(() => {
+    if (!isScaling && !hoverLock.current) { setIsHovered(false); setTouchHover(false); }
+  }, [isScaling]);
 
   const togglePlay = useCallback(() => {
     const v = videoRef.current;
@@ -50,6 +59,7 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
   const enterFullscreen = useCallback(() => {
     setIsScaling(true);
     setTouchHover(false);
+    setIsHovered(false);
   }, []);
 
   const exitFullscreen = useCallback(() => {
@@ -63,27 +73,28 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
     <>
       <div ref={constraintsRef} className="fixed inset-0 z-40 pointer-events-none" />
       <motion.div
+        layout
         drag={!isScaling}
         dragMomentum
         dragElastic={0.2}
         dragConstraints={constraintsRef}
+        onHoverStart={handleHoverStart}
+        onHoverEnd={handleHoverEnd}
         onDragEnd={() => {
           if (touchTimer.current) clearTimeout(touchTimer.current);
         }}
+        onTap={() => { if (!isScaling) showControlsTemporarily(); }}
         initial={{ opacity: 0, scale: 0 }}
         animate={
           isScaling
             ? { top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", borderRadius: 0, opacity: 1, scale: 1 }
             : showHover
-            ? { width: expandedW, height: expandedH, borderRadius: 16, opacity: 1, scale: 1 }
-            : { width: 160, height: 160 / videoRatio, borderRadius: 16, opacity: 1, scale: 1 }
+            ? { bottom: 16, right: 16, width: expandedW, height: expandedH, borderRadius: 16, opacity: 1, scale: 1 }
+            : { bottom: 16, right: 16, width: 160, height: 160 / videoRatio, borderRadius: 16, opacity: 1, scale: 1 }
         }
         transition={{ type: "spring", stiffness: 350, damping: 30, mass: 1.2 }}
-        onMouseEnter={() => !isScaling && setIsHovered(true)}
-        onMouseLeave={() => !isScaling && setIsHovered(false)}
-        onTouchStart={() => { if (!isScaling) showControlsTemporarily(); }}
         className="fixed z-50 overflow-hidden bg-black shadow-2xl border border-white/20 cursor-grab active:cursor-grabbing"
-        style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.5)", bottom: 16, right: 16 }}
+        style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}
       >
         <AnimatePresence>
           {isScaling && (
@@ -107,6 +118,8 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
           muted={isMuted}
           playsInline
           onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+          onMouseEnter={() => { hoverLock.current = true; }}
+          onMouseLeave={() => { hoverLock.current = false; }}
           onLoadedMetadata={() => {
             if (videoRef.current) {
               setVideoRatio(videoRef.current.videoWidth / videoRef.current.videoHeight);
