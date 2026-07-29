@@ -1,16 +1,5 @@
 {
-  "functions": [
-    {
-      "path": "convex/email.ts",
-      "function": "sendVerificationCode",
-      "isEnvRequired": true
-    },
-    {
-      "path": "convex/email.ts", 
-      "function": "sendOrderConfirmation",
-      "isEnvRequired": true
-    }
-  ],
+  "functions": "convex/",
   "envVarRequirements": {
     "EMAILJS_SERVICE_ID": {
       "description": "EmailJS Service ID for email sending",
