@@ -427,11 +427,14 @@ function Categories() {
 
   const cats = useMemo(() => {
     if (collections.length > 0) {
-      return collections.filter((c) => c.isActive).map((c) => ({
-        name: c.name,
-        count: `${c.productIds.length} piece${c.productIds.length !== 1 ? "s" : ""}`,
-        link: "/shop",
-      }));
+      return collections.filter((c) => c.isActive).map((c) => {
+        const count = categoryCounts[c.name] || 0;
+        return {
+          name: c.name,
+          count: `${count} piece${count !== 1 ? "s" : ""}`,
+          link: "/shop",
+        };
+      });
     }
     return Object.entries(categoryCounts).map(([name, count]) => ({
       name,

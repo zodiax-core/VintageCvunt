@@ -1,9 +1,11 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface FloatingVideoProps {
   videoUrl: string;
 }
+
+const EASE = [0.16, 1, 0.3, 1] as const;
 
 export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -11,15 +13,32 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [videoRatio, setVideoRatio] = useState(16 / 9);
+  const [touchHover, setTouchHover] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const constraintsRef = useRef<HTMLDivElement>(null);
+  const touchTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    return () => {
+      if (touchTimer.current) clearTimeout(touchTimer.current);
+    };
+  }, []);
+
+  const showControlsTemporarily = useCallback(() => {
+    setTouchHover(true);
+    if (touchTimer.current) clearTimeout(touchTimer.current);
+    touchTimer.current = setTimeout(() => setTouchHover(false), 3000);
+  }, []);
+
+  const showHover = isHovered || touchHover;
 
   const togglePlay = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
     if (v.paused) { v.play(); setIsPlaying(true); }
     else { v.pause(); setIsPlaying(false); }
-  }, []);
+    showControlsTemporarily();
+  }, [showControlsTemporarily]);
 
   const toggleMute = useCallback(() => {
     const v = videoRef.current;
@@ -30,13 +49,14 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
 
   const enterFullscreen = useCallback(() => {
     setIsScaling(true);
+    setTouchHover(false);
   }, []);
 
   const exitFullscreen = useCallback(() => {
     setIsScaling(false);
   }, []);
 
-  const expandedW = Math.min(360, Math.round(320 * videoRatio));
+  const expandedW = Math.min(360, Math.round(320 * videoRatio), window.innerWidth - 32);
   const expandedH = Math.round(expandedW / videoRatio);
 
   return (
@@ -44,21 +64,25 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
       <div ref={constraintsRef} className="fixed inset-0 z-40 pointer-events-none" />
       <motion.div
         drag={!isScaling}
-        dragMomentum={false}
-        dragElastic={0}
+        dragMomentum
+        dragElastic={0.2}
         dragConstraints={constraintsRef}
-        initial={{ opacity: 0, scale: 0.8 }}
+        onDragEnd={() => {
+          if (touchTimer.current) clearTimeout(touchTimer.current);
+        }}
+        initial={{ opacity: 0, scale: 0 }}
         animate={
           isScaling
             ? { top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", borderRadius: 0, opacity: 1, scale: 1 }
-            : isHovered
+            : showHover
             ? { width: expandedW, height: expandedH, borderRadius: 16, opacity: 1, scale: 1 }
             : { width: 160, height: 160 / videoRatio, borderRadius: 16, opacity: 1, scale: 1 }
         }
-        transition={{ type: "spring", stiffness: 350, damping: 30 }}
+        transition={{ type: "spring", stiffness: 350, damping: 30, mass: 1.2 }}
         onMouseEnter={() => !isScaling && setIsHovered(true)}
         onMouseLeave={() => !isScaling && setIsHovered(false)}
-        className="fixed z-50 overflow-hidden bg-black shadow-2xl border border-white/20"
+        onTouchStart={() => { if (!isScaling) showControlsTemporarily(); }}
+        className="fixed z-50 overflow-hidden bg-black shadow-2xl border border-white/20 cursor-grab active:cursor-grabbing"
         style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.5)", bottom: 16, right: 16 }}
       >
         <AnimatePresence>
@@ -82,18 +106,18 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
           loop
           muted={isMuted}
           playsInline
-          onClick={togglePlay}
+          onClick={(e) => { e.stopPropagation(); togglePlay(); }}
           onLoadedMetadata={() => {
             if (videoRef.current) {
               setVideoRatio(videoRef.current.videoWidth / videoRef.current.videoHeight);
             }
           }}
-          className={`h-full w-full bg-black ${isScaling ? "object-contain" : "object-cover"}`}
+          className="h-full w-full object-contain"
         />
 
-        {/* Floating controls (shown when hovered, not fullscreen) */}
+        {/* Floating controls (shown when hovered/touched, not fullscreen) */}
         <AnimatePresence>
-          {!isScaling && isHovered && (
+          {!isScaling && showHover && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -158,7 +182,7 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
         )}
 
         {/* Paused overlay (minimized, not playing) */}
-        {!isScaling && !isHovered && !isPlaying && (
+        {!isScaling && !showHover && !isPlaying && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="h-9 w-9 rounded-full bg-black/60 text-white grid place-items-center">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3" /></svg>

@@ -57,6 +57,8 @@ function EditProduct() {
   const updateProduct = useMutation(api.products.update);
   const generateUploadUrl = useMutation(api.products.generateUploadUrl);
   const createFaq = useMutation(api.faq.create);
+  const addToCollection = useMutation(api.collections.addProductToCollection);
+  const removeFromCollection = useMutation(api.collections.removeProductFromCollection);
 
   useEffect(() => {
     if (product) {
@@ -161,6 +163,7 @@ function EditProduct() {
         }
       }
 
+      const oldCategory = product?.category;
       await updateProduct({
         id: id as any,
         name: form.name.trim(),
@@ -180,6 +183,13 @@ function EditProduct() {
         stockCount: Number(form.stock),
         images,
       });
+
+      if (oldCategory && oldCategory !== form.category) {
+        await removeFromCollection({ category: oldCategory, productId: id });
+      }
+      if (form.category) {
+        await addToCollection({ category: form.category, productId: id });
+      }
 
       for (const faq of form.faqs) {
         try {

@@ -200,38 +200,23 @@ function Contact() {
             {/* Sidebar */}
             <div className="col-span-12 md:col-span-4 md:col-start-9 space-y-8 md:space-y-10">
               <div>
-                <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">§ Atelier</span>
-                <div className="mt-4 space-y-1 font-display text-lg">
-                  <p>Casa d'Argento</p>
-                  <p>42 Clifton Avenue</p>
-                  <p>Karachi, Pakistan</p>
-                </div>
-                <a href="https://maps.google.com/?q=Clifton+Karachi+Pakistan" target="_blank" rel="noopener noreferrer" className="mt-4 inline-block font-mono text-[10px] md:text-[11px] uppercase tracking-[0.24em] text-chrome hover:text-foreground transition-colors">View on Map ↗</a>
-              </div>
-
-              <div>
                 <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">§ Contact</span>
                 <div className="mt-4 space-y-3">
                   <a href="mailto:studio@vintagecvunt.com" className="block font-mono text-sm text-chrome hover:text-foreground transition-colors">studio@vintagecvunt.com</a>
-                  <a href="tel:+922111234567" className="block font-mono text-sm text-chrome hover:text-foreground transition-colors">+92 21 1123 4567</a>
                 </div>
               </div>
 
               <div>
                 <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">§ Hours</span>
-                <div className="mt-4 space-y-1 font-mono text-xs text-chrome-dim">
-                  <p>Mon — Fri: 10:00 — 19:00</p>
-                  <p>Saturday: 11:00 — 17:00</p>
-                  <p>Sunday: By appointment</p>
+                <div className="mt-4 font-mono text-xs text-chrome-dim">
+                  <p>24/7 — Always open</p>
                 </div>
               </div>
 
               <div>
                 <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">§ Follow</span>
-                <div className="mt-4 space-y-2">
-                  {["Instagram", "Journal", "Pinterest", "Discord"].map((s) => (
-                    <a key={s} href="#" className="block font-display text-lg hover:text-chrome transition-colors">{s}</a>
-                  ))}
+                <div className="mt-4">
+                  <a href="https://instagram.com/vintagecvunt" target="_blank" rel="noopener noreferrer" className="block font-display text-lg hover:text-chrome transition-colors">Instagram</a>
                 </div>
               </div>
             </div>

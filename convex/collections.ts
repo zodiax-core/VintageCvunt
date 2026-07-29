@@ -58,6 +58,43 @@ export const remove = mutation({
   },
 });
 
+export const getByName = query({
+  args: { name: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("collections")
+      .filter((q) => q.eq(q.field("name"), args.name))
+      .first();
+  },
+});
+
+export const addProductToCollection = mutation({
+  args: { category: v.string(), productId: v.string() },
+  handler: async (ctx, args) => {
+    const collection = await ctx.db
+      .query("collections")
+      .filter((q) => q.eq(q.field("name"), args.category))
+      .first();
+    if (!collection) return;
+    const ids = new Set(collection.productIds);
+    ids.add(args.productId);
+    await ctx.db.patch(collection._id, { productIds: Array.from(ids) });
+  },
+});
+
+export const removeProductFromCollection = mutation({
+  args: { category: v.string(), productId: v.string() },
+  handler: async (ctx, args) => {
+    const collection = await ctx.db
+      .query("collections")
+      .filter((q) => q.eq(q.field("name"), args.category))
+      .first();
+    if (!collection) return;
+    const ids = collection.productIds.filter((id) => id !== args.productId);
+    await ctx.db.patch(collection._id, { productIds: ids });
+  },
+});
+
 export const generateUploadUrl = mutation({
   handler: async (ctx) => {
     return await ctx.storage.generateUploadUrl();

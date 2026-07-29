@@ -53,6 +53,7 @@ function AddProduct() {
   const createProduct = useMutation(api.products.create);
   const generateUploadUrl = useMutation(api.products.generateUploadUrl);
   const createFaq = useMutation(api.faq.create);
+  const addToCollection = useMutation(api.collections.addProductToCollection);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -164,7 +165,7 @@ function AddProduct() {
         }
       }
 
-      await createProduct({
+      const productId = await createProduct({
         name: form.name.trim(),
         slug: form.slug || form.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
         category: form.category,
@@ -184,6 +185,10 @@ function AddProduct() {
         featured: false,
         images,
       });
+
+      if (form.category) {
+        await addToCollection({ category: form.category, productId });
+      }
 
       for (const faq of form.faqs) {
         try {

@@ -18,7 +18,6 @@ export const Route = createFileRoute("/shop")({
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-const categories = ["All", "Outerwear", "Silverwork", "Footwear", "Adornment"];
 const priceRanges = [
   { label: "All Prices", min: 0, max: Infinity },
   { label: "Under PKR 500k", min: 0, max: 500000 },
@@ -31,6 +30,8 @@ const priceLabel = (p: number) => "PKR " + p.toLocaleString("en-PK");
 
 function Shop() {
   const allProducts = useQuery(api.products.list) ?? [];
+  const collections = useQuery(api.collections.list) ?? [];
+  const categories = useMemo(() => ["All", ...collections.filter((c) => c.isActive).map((c) => c.name)], [collections]);
   const [catOpen, setCatOpen] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
@@ -104,7 +105,7 @@ function Shop() {
                     initial={{ opacity: 0, y: -8, height: 0 }}
                     animate={{ opacity: 1, y: 0, height: 'auto' }}
                     exit={{ opacity: 0, y: -8, height: 0 }}
-                    className="absolute top-full left-0 max-md:right-0 max-md:left-auto mt-2 z-50 min-w-[160px] md:min-w-[220px] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-chrome bg-graphite-2"
+                    className="absolute top-full left-0 mt-2 z-50 min-w-[160px] md:min-w-[220px] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-chrome bg-graphite-2"
                     style={{ boxShadow: "var(--shadow-heavy)" }}
                   >
                     {categories.map((c) => (
