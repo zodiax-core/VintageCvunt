@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Package, Receipt, Trash2, Check, X, Phone, ChevronRight, ExternalLink } from "lucide-react";
+import { ArrowLeft, Package, Receipt, Trash2, Check, X, Phone, ExternalLink, Maximize2, XCircle } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Id } from "../../convex/_generated/dataModel";
@@ -61,6 +61,7 @@ function OrderDetail() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+  const [lightboxImg, setLightboxImg] = useState<string | null>(null);
 
   const productMap = useMemo(() => {
     const map = new Map<string, { slug: string; imageUrl?: string }>();
@@ -360,11 +361,18 @@ function OrderDetail() {
                   <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Payment</p>
                   <p className="text-foreground text-sm mt-1">{order.paymentMethod}</p>
                   {order.screenshot && (
-                    <img
-                      src={order.screenshot}
-                      alt="Payment proof"
-                      className="mt-2 max-h-32 rounded-xl object-contain border border-chrome/20 bg-background"
-                    />
+                    <button onClick={() => setLightboxImg(order.screenshot)} className="mt-2 w-full group relative">
+                      <img
+                        src={order.screenshot}
+                        alt="Payment proof"
+                        className="max-h-32 w-full rounded-xl object-contain border border-chrome/20 bg-background transition-opacity group-hover:opacity-80"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="btn-chrome btn-chrome-inner inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs">
+                          <Maximize2 className="h-3 w-3" /> View Full
+                        </span>
+                      </div>
+                    </button>
                   )}
                 </div>
               ) : null}
@@ -431,6 +439,26 @@ function OrderDetail() {
           </div>
         </div>
       </div>
+
+      {lightboxImg && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 md:p-8"
+          onClick={() => setLightboxImg(null)}
+        >
+          <button
+            onClick={() => setLightboxImg(null)}
+            className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
+          >
+            <XCircle className="h-8 w-8" />
+          </button>
+          <img
+            src={lightboxImg}
+            alt="Payment proof full view"
+            className="max-h-full max-w-full rounded-2xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
 
       <ConfirmDialog
         open={deleteTarget}

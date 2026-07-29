@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query, mutation } from "./_generated/server";
+import { query, mutation, action, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 
 async function hashPassword(password: string, salt?: string): Promise<{ hash: string; salt: string }> {
@@ -89,7 +89,7 @@ export const create = mutation({
   },
 });
 
-export const register = mutation({
+export const registerCustomer = internalMutation({
   args: {
     name: v.string(),
     email: v.string(),
@@ -118,12 +118,9 @@ export const register = mutation({
     const now = Date.now();
     const { hash, salt } = await hashPassword(args.password);
 
-    // Generate a 6-digit OTP valid for 15 minutes
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpiresAt = now + 15 * 60 * 1000;
-    const isEmailVerified = isAdmin; // Auto-verify admin
-
-    console.log(`[OTP] Generated OTP for ${normalizedEmail}: ${otp}`);
+    const isEmailVerified = isAdmin;
 
     const newId = await ctx.db.insert("customers", {
       name: safeName,
@@ -136,20 +133,11 @@ export const register = mutation({
       status: "Active",
       role,
       isEmailVerified,
-      otp,
-      otpExpiresAt,
+      otp: isAdmin ? undefined : otp,
+      otpExpiresAt: isAdmin ? undefined : otpExpiresAt,
       createdAt: now,
       updatedAt: now,
     });
-
-    if (!isAdmin) {
-      // @ts-ignore
-      await ctx.scheduler.runAfter(0, internal.email.sendVerificationCode, {
-        email: normalizedEmail,
-        passcode: otp,
-        time: "15 minutes",
-      });
-    }
 
     return {
       _id: newId,
@@ -157,6 +145,38 @@ export const register = mutation({
       email: normalizedEmail,
       role,
       isEmailVerified,
+      otp: isAdmin ? undefined : otp,
+    };
+  },
+});
+
+export const register = action({
+  args: {
+    name: v.string(),
+    email: v.string(),
+    password: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.runMutation(internal.customers.registerCustomer, args);
+
+    if (!user.isEmailVerified && user.otp) {
+      const emailResult = await ctx.runAction(internal.email.sendVerificationCode, {
+        email: user.email,
+        passcode: user.otp,
+        time: "15 minutes",
+      });
+
+      if (!emailResult.success) {
+        throw new Error(emailResult.reason || "Failed to send verification email. Please try resending the code.");
+      }
+    }
+
+    return {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isEmailVerified: user.isEmailVerified,
     };
   },
 });
@@ -213,7 +233,7 @@ export const verifyEmail = mutation({
   },
 });
 
-export const resendVerification = mutation({
+export const prepareResendVerification = internalMutation({
   args: { email: v.string() },
   handler: async (ctx, args) => {
     const normalizedEmail = args.email.toLowerCase().trim();
@@ -228,7 +248,7 @@ export const resendVerification = mutation({
     if (existing.isEmailVerified) throw new Error("Email is already verified.");
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiresAt = Date.now() + 15 * 60 * 1000; // 15 mins
+    const otpExpiresAt = Date.now() + 15 * 60 * 1000;
 
     await ctx.db.patch(existing._id, {
       otp,
@@ -236,12 +256,24 @@ export const resendVerification = mutation({
       updatedAt: Date.now(),
     });
 
-    // @ts-ignore
-    await ctx.scheduler.runAfter(0, internal.email.sendVerificationCode, {
-      email: normalizedEmail,
+    return { email: normalizedEmail, otp };
+  },
+});
+
+export const resendVerification = action({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    const { email, otp } = await ctx.runMutation(internal.customers.prepareResendVerification, args);
+
+    const emailResult = await ctx.runAction(internal.email.sendVerificationCode, {
+      email,
       passcode: otp,
       time: "15 minutes",
     });
+
+    if (!emailResult.success) {
+      throw new Error(emailResult.reason || "Failed to resend verification email.");
+    }
 
     return { success: true };
   },
@@ -420,7 +452,7 @@ export const updatePassword = mutation({
   },
 });
 
-export const requestPasswordReset = mutation({
+export const preparePasswordReset = internalMutation({
   args: { email: v.string() },
   handler: async (ctx, args) => {
     const normalizedEmail = args.email.toLowerCase().trim();
@@ -432,13 +464,11 @@ export const requestPasswordReset = mutation({
       .first();
 
     if (!customer) {
-      return { success: true };
+      return { email: normalizedEmail, otp: undefined };
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiresAt = Date.now() + 15 * 60 * 1000; // 15 mins
-
-    console.log(`[Password Reset] OTP for ${normalizedEmail}: ${otp}`);
+    const otpExpiresAt = Date.now() + 15 * 60 * 1000;
 
     await ctx.db.patch(customer._id, {
       otp,
@@ -446,12 +476,26 @@ export const requestPasswordReset = mutation({
       updatedAt: Date.now(),
     });
 
-    // @ts-ignore
-    await ctx.scheduler.runAfter(0, internal.email.sendVerificationCode, {
-      email: normalizedEmail,
-      passcode: otp,
-      time: "15 minutes",
-    });
+    return { email: normalizedEmail, otp };
+  },
+});
+
+export const requestPasswordReset = action({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    const { email, otp } = await ctx.runMutation(internal.customers.preparePasswordReset, args);
+
+    if (otp) {
+      const emailResult = await ctx.runAction(internal.email.sendVerificationCode, {
+        email,
+        passcode: otp,
+        time: "15 minutes",
+      });
+
+      if (!emailResult.success) {
+        throw new Error(emailResult.reason || "Failed to send password reset email.");
+      }
+    }
 
     return { success: true };
   },

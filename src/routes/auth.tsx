@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMutation } from "convex/react";
+import { useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { cleanError } from "@/lib/utils";
@@ -23,11 +23,11 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 function Auth() {
   const navigate = useNavigate();
   const { login } = useAuthContext();
-  const registerMutation = useMutation(api.customers.register);
+  const registerAction = useAction(api.customers.register);
   const authenticateMutation = useMutation(api.customers.authenticate);
   const verifyMutation = useMutation(api.customers.verifyEmail);
-  const resendVerificationMutation = useMutation(api.customers.resendVerification);
-  const requestResetMutation = useMutation(api.customers.requestPasswordReset);
+  const resendVerificationAction = useAction(api.customers.resendVerification);
+  const requestResetAction = useAction(api.customers.requestPasswordReset);
   const resetPasswordMutation = useMutation(api.customers.resetPassword);
 
   const [mode, setMode] = useState<"login" | "register" | "verify" | "forgot" | "reset">("login");
@@ -77,7 +77,7 @@ function Auth() {
 
     try {
       if (mode === "register") {
-        const user = await registerMutation({
+        const user = await registerAction({
           name: form.name.trim(),
           email: form.email.trim(),
           password: form.password,
@@ -112,7 +112,7 @@ function Auth() {
         setTimeout(() => navigate({ to: "/account" }), 1000);
 
       } else if (mode === "forgot") {
-        await requestResetMutation({ email: form.email.trim() });
+        await requestResetAction({ email: form.email.trim() });
         setSuccessMsg("If an account exists, a verification code has been sent to your email.");
         setMode("reset");
         setForm(f => ({ ...f, otp: "", password: "", confirmPassword: "" }));
@@ -167,7 +167,7 @@ function Auth() {
     setErrors({});
     setSuccessMsg("");
     try {
-      await resendVerificationMutation({ email: form.email.trim() });
+      await resendVerificationAction({ email: form.email.trim() });
       setSuccessMsg("Verification code resent! Please check your email.");
     } catch (err) {
       setErrors({ form: cleanError(err) });

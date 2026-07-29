@@ -1,0 +1,36 @@
+{
+  "functions": [
+    {
+      "path": "convex/email.ts",
+      "function": "sendVerificationCode",
+      "isEnvRequired": true
+    },
+    {
+      "path": "convex/email.ts", 
+      "function": "sendOrderConfirmation",
+      "isEnvRequired": true
+    }
+  ],
+  "envVarRequirements": {
+    "EMAILJS_SERVICE_ID": {
+      "description": "EmailJS Service ID for email sending",
+      "required": true
+    },
+    "EMAILJS_PUBLIC_KEY": {
+      "description": "EmailJS Public Key",
+      "required": true
+    },
+    "EMAILJS_PRIVATE_KEY": {
+      "description": "EmailJS Private Key (required for server-side requests)",
+      "required": true
+    },
+    "EMAILJS_VERIFICATION_TEMPLATE_ID": {
+      "description": "EmailJS Template ID for verification/OTP emails",
+      "required": true
+    },
+    "EMAILJS_ORDER_TEMPLATE_ID": {
+      "description": "EmailJS Template ID for order confirmation emails",
+      "required": true
+    }
+  }
+}

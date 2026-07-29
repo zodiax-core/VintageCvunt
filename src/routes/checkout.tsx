@@ -157,6 +157,7 @@ function Checkout() {
           name: item.name,
           price: item.price,
           quantity: item.quantity,
+          image: item.src,
         })),
         subtotal: cartTotal,
         shipping: shippingCost,
