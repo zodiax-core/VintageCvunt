@@ -4,10 +4,11 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import type { Doc } from "../../convex/_generated/dataModel";
 
 export function SiteFooter() {
   const settings = useQuery(api.settings.get);
-  const collections = useQuery(api.collections.list) ?? [];
+  const collections = (useQuery(api.collections.list) ?? []) as Doc<"collections">[];
   const activeCollections = collections.filter((c) => c.isActive);
   const storeName = settings?.storeName || "VintageCvunt";
 

@@ -8,6 +8,7 @@ import {
 } from "recharts";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import type { Doc } from "../../convex/_generated/dataModel";
 
 export const Route = createFileRoute("/analytics")({
   beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/analytics")({
 type Range = "7D" | "30D" | "12M";
 const ranges: Range[] = ["7D", "30D", "12M"];
 
-function computePeriodOrders(orders: typeof allOrders, range: Range) {
+function computePeriodOrders(orders: Doc<"orders">[], range: Range) {
   const now = Date.now();
   const msMap: Record<Range, number> = {
     "7D": 7 * 86400000,
