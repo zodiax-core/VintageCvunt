@@ -5,6 +5,7 @@ import {
   createRootRouteWithContext,
   useRouter,
   useNavigate,
+  useLocation,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -17,6 +18,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { CartProvider } from "../lib/cart-context";
 import { AuthProvider } from "../lib/auth-context";
 import { getConvexClient } from "../lib/convex";
+import { FloatingInstagram } from "../components/FloatingInstagram";
 
 function NotFoundComponent() {
   return (
@@ -132,6 +134,8 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const [convexClient] = useState(() => getConvexClient());
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAdminRoute = location.pathname === "/admin" || location.pathname === "/coupon" || location.pathname === "/collection" || location.pathname === "/product/new" || /^\/product\/[^/]+\/edit$/.test(location.pathname);
 
   useEffect(() => {
     const lenis = new Lenis();
@@ -168,6 +172,7 @@ function RootComponent() {
         <AuthProvider>
           <CartProvider>
             <Outlet />
+            {!isAdminRoute && <FloatingInstagram />}
           </CartProvider>
         </AuthProvider>
       </ConvexProvider>
