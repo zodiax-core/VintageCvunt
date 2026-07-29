@@ -135,7 +135,7 @@ function RootComponent() {
   const [convexClient] = useState(() => getConvexClient());
   const navigate = useNavigate();
   const location = useLocation();
-  const isAdminRoute = location.pathname === "/admin" || location.pathname === "/coupon" || location.pathname === "/collection" || location.pathname === "/product/new" || /^\/product\/[^/]+\/edit$/.test(location.pathname);
+  const isAdminRoute = /^\/(admin|analytics|collection|content|coupon|customer|message|order|product|review|setting)(\/|$)/.test(location.pathname);
 
   useEffect(() => {
     const lenis = new Lenis();
