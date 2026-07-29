@@ -548,7 +548,7 @@ function Checkout() {
 
 // Helper to query coupon validation via Convex
 async function queryValidateCoupon(code: string, subtotal: number) {
-  const { convex } = await import("@/lib/convex");
+  const { getConvexClient } = await import("@/lib/convex");
   const { api } = await import("../../convex/_generated/api");
-  return await convex.query(api.coupons.validateCoupon, { code, subtotal });
+  return await getConvexClient().query(api.coupons.validateCoupon, { code, subtotal });
 }
