@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
-import { type CurrencyCode, formatPrice, convertPrice, CURRENCIES } from "./currency";
+import { createContext, useContext, useState, useCallback, useSyncExternalStore, type ReactNode } from "react";
+import { type CurrencyCode, formatPrice as fmtPrice, convertPrice as convPrice, CURRENCIES } from "./currency";
 
 interface CurrencyContextValue {
   currency: CurrencyCode;
@@ -23,7 +23,7 @@ function getStoredCurrency(): CurrencyCode {
 }
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
-  const [currency, setCurrencyState] = useState<CurrencyCode>(getStoredCurrency);
+  const [currency, setCurrencyState] = useState<CurrencyCode>(() => getStoredCurrency());
 
   const setCurrency = useCallback((c: CurrencyCode) => {
     setCurrencyState(c);
@@ -31,19 +31,28 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toggleCurrency = useCallback(() => {
-    setCurrency(currency === "PKR" ? "USD" : "PKR");
-  }, [currency, setCurrency]);
-
-  useEffect(() => {
-    const stored = getStoredCurrency();
-    if (stored !== currency) setCurrencyState(stored);
+    setCurrencyState(prev => {
+      const next = prev === "PKR" ? "USD" : "PKR";
+      try { localStorage.setItem(STORAGE_KEY, next); } catch {}
+      return next;
+    });
   }, []);
+
+  const formatPrice = useCallback(
+    (amountPKR: number) => fmtPrice(amountPKR, currency),
+    [currency]
+  );
+
+  const convertPrice = useCallback(
+    (amountPKR: number) => convPrice(amountPKR, currency),
+    [currency]
+  );
 
   const value: CurrencyContextValue = {
     currency,
     setCurrency,
-    formatPrice: (amountPKR) => formatPrice(amountPKR, currency),
-    convertPrice: (amountPKR) => convertPrice(amountPKR, currency),
+    formatPrice,
+    convertPrice,
     currencies: CURRENCIES,
     toggleCurrency,
   };

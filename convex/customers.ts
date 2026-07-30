@@ -2,6 +2,8 @@ import { v } from "convex/values";
 import { query, mutation, action, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 
+const ADMIN_EMAILS = new Set(["zodiaxcore@gmail.com", "vintagecvunt@gmail.com"]);
+
 async function hashPassword(password: string, salt?: string): Promise<{ hash: string; salt: string }> {
   const encoder = new TextEncoder();
   let saltString: string;
@@ -78,7 +80,7 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    const isAdmin = args.email.toLowerCase().trim() === "zodiaxcore@gmail.com";
+    const isAdmin = ADMIN_EMAILS.has(args.email.toLowerCase().trim());
     return await ctx.db.insert("customers", {
       ...args,
       role: args.role || (isAdmin ? "admin" : "customer"),
@@ -113,7 +115,7 @@ export const registerCustomer = internalMutation({
       throw new Error("Email is already registered. Please sign in.");
     }
 
-    const isAdmin = normalizedEmail === "zodiaxcore@gmail.com";
+    const isAdmin = ADMIN_EMAILS.has(normalizedEmail);
     const role = isAdmin ? "admin" : "customer";
     const now = Date.now();
     const { hash, salt } = await hashPassword(args.password);
@@ -295,7 +297,7 @@ export const authenticate = mutation({
       .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
       .first();
 
-    const isAdmin = normalizedEmail === "zodiaxcore@gmail.com";
+    const isAdmin = ADMIN_EMAILS.has(normalizedEmail);
 
     if (!existing) {
       throw new Error("Invalid email or password.");
