@@ -72,7 +72,7 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
             : { bottom: 16, right: 16, width: 160, height: 160 / videoRatio, borderRadius: 16, opacity: 1, scale: 1 }
         }
         transition={{ type: "spring", stiffness: 350, damping: 30, mass: 1.2 }}
-        className="fixed z-50 overflow-hidden bg-black shadow-2xl border border-white/20 cursor-grab active:cursor-grabbing"
+        className="fixed bottom-4 right-4 z-50 overflow-hidden bg-black shadow-2xl border border-white/20 cursor-grab active:cursor-grabbing"
         style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}
       >
         <video

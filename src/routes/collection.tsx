@@ -34,17 +34,19 @@ function Collections() {
   const [description, setDescription] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetForm = () => {
     setEditingId(null); setName(""); setSlug(""); setDescription("");
-    setIsActive(true); setImageFile(null);
+    setIsActive(true); setImageFile(null); setExistingImageUrl("");
   };
 
   const startEdit = (c: typeof allCollections[number]) => {
     setEditingId(c._id); setName(c.name); setSlug(c.slug);
     setDescription(c.description ?? ""); setIsActive(c.isActive); setImageFile(null);
+    setExistingImageUrl((c as any).imageUrl || "");
   };
 
   const handleSave = async () => {
@@ -114,8 +116,12 @@ function Collections() {
         <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" className="rounded-xl border border-chrome/20 bg-graphite-2 px-4 py-2.5 font-mono text-sm outline-none focus:border-chrome/50 w-full min-h-[80px] resize-none" />
         <div className="flex flex-wrap items-center gap-4">
           <div onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 rounded-xl border border-dashed border-chrome/20 px-4 py-2.5 cursor-pointer hover:border-chrome/50 transition-colors">
-            <Upload size={14} className="text-chrome-dim" />
-            <span className="font-mono text-[10px] text-chrome-dim">{imageFile ? imageFile.name : "Upload image"}</span>
+            {existingImageUrl && !imageFile ? (
+              <img src={existingImageUrl} alt="" className="h-8 w-8 rounded object-cover" />
+            ) : (
+              <Upload size={14} className="text-chrome-dim" />
+            )}
+            <span className="font-mono text-[10px] text-chrome-dim">{imageFile ? imageFile.name : existingImageUrl ? "Change image" : "Upload image"}</span>
           </div>
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
           <label className="flex items-center gap-2 cursor-pointer">
