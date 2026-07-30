@@ -198,10 +198,8 @@ function Settings() {
                   onChange={(e) => setCurrency(e.target.value)}
                   className="w-full rounded-xl border border-chrome/20 bg-background px-4 py-2.5 font-mono text-sm outline-none focus:border-chrome/50"
                 >
-                  <option value="PKR">PKR (Rs)</option>
-                  <option value="USD">USD ($)</option>
-                  <option value="EUR">EUR (€)</option>
-                  <option value="GBP">GBP (£)</option>
+                   <option value="PKR">PKR (Rs)</option>
+                   <option value="USD">USD ($)</option>
                 </select>
               </div>
               <div className="space-y-2">

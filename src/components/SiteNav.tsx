@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCartContext } from "@/lib/cart-context";
 import { useAuthContext } from "@/lib/auth-context";
+import { useCurrency } from "@/lib/currency-context";
 import { SearchOverlay } from "@/components/SearchOverlay";
 import { CartDrawer } from "@/components/CartDrawer";
 
@@ -15,6 +16,7 @@ export function SiteNav() {
   const [cartOpen, setCartOpen] = useState(false);
   const { cartCount } = useCartContext();
   const { user, isAdmin } = useAuthContext();
+  const { currency, toggleCurrency } = useCurrency();
   const navigate = useNavigate();
   const headerRef = useRef<HTMLDivElement>(null);
 
@@ -60,6 +62,14 @@ export function SiteNav() {
           </nav>
 
           <div className="flex items-center justify-end gap-5 font-mono text-[11px] uppercase tracking-[0.24em] text-black">
+            <button
+              onClick={toggleCurrency}
+              className="hover:opacity-70 transition-opacity text-[10px] tracking-[0.15em]"
+              aria-label="Toggle currency"
+            >
+              {currency === "PKR" ? "PKR" : "USD"}
+            </button>
+
             <button
               onClick={() => setSearchOpen(true)}
               className="hover:opacity-70 transition-opacity"
@@ -127,6 +137,7 @@ export function SiteNav() {
                     <Link to="/auth" onClick={() => setMenuOpen(false)} className="hover:text-black transition-colors">Account</Link>
                   )}
                   <button className="text-left hover:text-black transition-colors" onClick={() => { setMenuOpen(false); handleCartClick(); }}>Cart ({cartCount})</button>
+                  <button className="text-left hover:text-black transition-colors" onClick={toggleCurrency}>Currency: {currency}</button>
                 </div>
               </div>
             </motion.div>

@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { useCurrency } from "@/lib/currency-context";
 
 export const Route = createFileRoute("/shop")({
   component: Shop,
@@ -26,9 +27,10 @@ const priceRanges = [
 ];
 const sortOptions = ["Featured", "Newest", "Price: Low — High", "Price: High — Low"];
 
-const priceLabel = (p: number) => "PKR " + p.toLocaleString("en-PK");
+
 
 function Shop() {
+  const { formatPrice } = useCurrency();
   const allProducts = useQuery(api.products.list) ?? [];
   const collections = useQuery(api.collections.list) ?? [];
   const categories = useMemo(() => ["All", ...collections.filter((c) => c.isActive).map((c) => c.name)], [collections]);
@@ -245,7 +247,7 @@ function Shop() {
                       </div>
                     </div>
                     <div className="mt-4">
-                      <p className="font-mono text-xs tracking-[0.14em] text-chrome">{priceLabel(product.price)}</p>
+                      <p className="font-mono text-xs tracking-[0.14em] text-chrome">{formatPrice(product.price)}</p>
                     </div>
                   </motion.div>
                 </Link>

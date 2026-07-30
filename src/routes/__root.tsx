@@ -17,6 +17,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { CartProvider } from "../lib/cart-context";
 import { AuthProvider } from "../lib/auth-context";
+import { CurrencyProvider } from "../lib/currency-context";
 import { getConvexClient } from "../lib/convex";
 import { FloatingInstagram } from "../components/FloatingInstagram";
 
@@ -170,10 +171,12 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ConvexProvider client={convexClient}>
         <AuthProvider>
-          <CartProvider>
-            <Outlet />
-            {!isAdminRoute && <FloatingInstagram />}
-          </CartProvider>
+          <CurrencyProvider>
+            <CartProvider>
+              <Outlet />
+              {!isAdminRoute && <FloatingInstagram />}
+            </CartProvider>
+          </CurrencyProvider>
         </AuthProvider>
       </ConvexProvider>
     </QueryClientProvider>

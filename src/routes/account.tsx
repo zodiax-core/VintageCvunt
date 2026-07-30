@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAuthContext } from "@/lib/auth-context";
+import { useCurrency } from "@/lib/currency-context";
 import { CustomerLayout } from "@/components/CustomerLayout";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -30,6 +31,7 @@ function statusBadge(status: string) {
 
 function AccountDashboard() {
   const { user } = useAuthContext();
+  const { formatPrice } = useCurrency();
   const orders = useQuery(api.orders.getByEmail, { email: user?.email || "" }) ?? [];
   
   const recentOrders = orders.slice(0, 3);
@@ -50,7 +52,7 @@ function AccountDashboard() {
         </div>
         <div className="bg-chrome/5 border border-chrome/10 rounded-2xl p-6 transition-colors hover:bg-chrome/10">
           <ShoppingBag size={20} className="text-chrome-dim mb-4" />
-          <p className="font-display text-3xl mb-1">PKR {totalSpent.toLocaleString("en-PK")}</p>
+          <p className="font-display text-3xl mb-1">{formatPrice(totalSpent)}</p>
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Total Spent</p>
         </div>
       </div>
@@ -79,7 +81,7 @@ function AccountDashboard() {
                   <p className="font-mono text-[10px] text-chrome-dim mt-1">{new Date(order.createdAt).toLocaleDateString("en-PK", { month: "long", day: "numeric", year: "numeric" })}</p>
                 </div>
                 <div className="flex items-center justify-between sm:justify-end gap-6 shrink-0 w-full sm:w-auto">
-                  <span className="font-mono text-[12px]">PKR {order.total.toLocaleString("en-PK")}</span>
+                  <span className="font-mono text-[12px]">{formatPrice(order.total)}</span>
                   {statusBadge(order.status.charAt(0).toUpperCase() + order.status.slice(1))}
                 </div>
               </Link>

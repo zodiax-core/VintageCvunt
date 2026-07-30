@@ -5,6 +5,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { FloatingVideo } from "@/components/FloatingVideo";
 import { useCartContext } from "@/lib/cart-context";
+import { useCurrency } from "@/lib/currency-context";
 import { api } from "../../convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
 
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/products/$slug")({
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-const priceLabel = (p: number) => "PKR " + p.toLocaleString("en-PK");
+
 
 function ProductPage() {
   const { slug } = Route.useParams();
@@ -52,6 +53,7 @@ function ProductPage() {
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
   const { addToCart } = useCartContext();
+  const { formatPrice } = useCurrency();
 
   const detailsList = useMemo(() => {
     if (!product?.details) return [];
@@ -145,10 +147,10 @@ function ProductPage() {
               >
                 <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">{product.category}</span>
                 <h1 className="mt-3 font-display text-3xl md:text-6xl leading-[0.95] tracking-tight">{product.name}</h1>
-                <p className="mt-4 md:mt-6 font-mono text-lg md:text-xl tracking-[0.08em] text-chrome">{priceLabel(product.price)}</p>
+                <p className="mt-4 md:mt-6 font-mono text-lg md:text-xl tracking-[0.08em] text-chrome">{formatPrice(product.price)}</p>
 
                 {product.compareAtPrice && product.compareAtPrice > product.price && (
-                  <p className="mt-1 font-mono text-sm text-chrome-dim line-through">{priceLabel(product.compareAtPrice)}</p>
+                  <p className="mt-1 font-mono text-sm text-chrome-dim line-through">{formatPrice(product.compareAtPrice)}</p>
                 )}
 
                 {/* Tags */}
@@ -267,7 +269,7 @@ function ProductPage() {
                   }}
                   className="btn-chrome btn-chrome-inner w-full justify-center text-sm !py-4"
                 >
-                  <span className="btn-label">{addedToCart ? "Added ✓" : `Add to Cart — ${priceLabel(product.price)}`}</span>
+                  <span className="btn-label">{addedToCart ? "Added ✓" : `Add to Cart — ${formatPrice(product.price)}`}</span>
                 </button>
                 <p className="mt-3 text-center font-mono text-[9px] uppercase tracking-[0.24em] text-chrome-dim">
                   Free shipping on orders over PKR 500,000 · 14-day return policy · Serving all Pakistan
@@ -462,6 +464,7 @@ function ProductPage() {
 }
 
 function RelatedProductCard({ product, index }: { product: any; index: number }) {
+  const { formatPrice } = useCurrency();
   const imgUrl = product.imageUrls?.[0] || "/placeholder.svg";
   return (
     <Link
@@ -482,7 +485,7 @@ function RelatedProductCard({ product, index }: { product: any; index: number })
         </div>
         <div className="mt-3">
           <p className="font-mono text-[11px] text-chrome-dim truncate">{product.name}</p>
-          <p className="font-mono text-xs tracking-[0.14em] text-chrome mt-1">{priceLabel(product.price)}</p>
+          <p className="font-mono text-xs tracking-[0.14em] text-chrome mt-1">{formatPrice(product.price)}</p>
         </div>
       </motion.div>
     </Link>

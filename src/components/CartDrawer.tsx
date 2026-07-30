@@ -2,13 +2,14 @@ import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useCartContext } from "@/lib/cart-context";
+import { useCurrency } from "@/lib/currency-context";
 import { OptimizedImage } from "@/components/OptimizedImage";
 
 const EASE = [0.32, 0.72, 0, 1] as const;
-const priceLabel = (p: number) => "PKR " + p.toLocaleString("en-PK");
 
 export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { cart, removeFromCart, updateQuantity, cartTotal, cartCount } = useCartContext();
+  const { formatPrice } = useCurrency();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -90,7 +91,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                             {[item.selectedSize, item.selectedColor].filter(Boolean).join(" / ")}
                           </p>
                         )}
-                        <p className="font-mono text-xs text-chrome mt-0.5">{priceLabel(item.price)}</p>
+                        <p className="font-mono text-xs text-chrome mt-0.5">{formatPrice(item.price)}</p>
                         <div className="flex items-center gap-2 mt-2">
                           <div className="flex items-center gap-0 rounded-lg border border-chrome/30 overflow-hidden">
                             <button
@@ -134,7 +135,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
               <div className="border-t border-chrome/30 px-6 py-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Subtotal</span>
-                  <span className="font-mono text-lg text-chrome">{priceLabel(cartTotal)}</span>
+                  <span className="font-mono text-lg text-chrome">{formatPrice(cartTotal)}</span>
                 </div>
                 <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim/50">Shipping calculated at checkout</p>
                 <button onClick={handleCheckout} className="btn-chrome btn-chrome-inner w-full justify-center">

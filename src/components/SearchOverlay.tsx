@@ -3,16 +3,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { useCurrency } from "@/lib/currency-context";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
-
-const priceLabel = (p: number) => "PKR " + p.toLocaleString("en-PK");
 
 export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
   const allProducts = useQuery(api.products.list, open ? {} : "skip") ?? [];
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { formatPrice } = useCurrency();
 
   useEffect(() => {
     if (open) {
@@ -126,7 +126,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
                         <p className="font-display text-lg md:text-xl text-foreground group-hover:text-chrome transition-colors truncate">{p.name}</p>
                         <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.22em] text-chrome-dim">{p.category}</p>
                       </div>
-                      <span className="font-mono text-sm text-chrome shrink-0">{priceLabel(p.price)}</span>
+                      <span className="font-mono text-sm text-chrome shrink-0">{formatPrice(p.price)}</span>
                     </button>
                   ))}
                 </div>

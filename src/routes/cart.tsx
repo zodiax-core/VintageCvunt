@@ -4,6 +4,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useCartContext } from "@/lib/cart-context";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { useCurrency } from "@/lib/currency-context";
 
 export const Route = createFileRoute("/cart")({
   component: CartPage,
@@ -16,9 +17,9 @@ export const Route = createFileRoute("/cart")({
 });
 
 const EASE = [0.16, 1, 0.3, 1] as const;
-const priceLabel = (p: number) => "PKR " + p.toLocaleString("en-PK");
 
 function CartPage() {
+  const { formatPrice } = useCurrency();
   const { cart, removeFromCart, updateQuantity, cartTotal, cartCount } = useCartContext();
 
   return (
@@ -83,7 +84,7 @@ function CartPage() {
                       <Link to="/products/$slug" params={{ slug: item.slug }} className="font-display text-base md:text-xl text-foreground hover:text-chrome transition-colors truncate block">
                         {item.name}
                       </Link>
-                      <p className="font-mono text-sm text-chrome mt-1">{priceLabel(item.price)}</p>
+                      <p className="font-mono text-sm text-chrome mt-1">{formatPrice(item.price)}</p>
                       <div className="flex items-center gap-3 mt-3">
                         <div className="flex items-center gap-0 rounded-lg border border-chrome/30 overflow-hidden">
                           <button
@@ -117,7 +118,7 @@ function CartPage() {
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-mono text-sm text-chrome">{priceLabel(item.price * item.quantity)}</p>
+                      <p className="font-mono text-sm text-chrome">{formatPrice(item.price * item.quantity)}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -132,14 +133,14 @@ function CartPage() {
                     {cart.items.map((item) => (
                       <div key={item.id} className="flex items-center justify-between">
                         <span className="font-mono text-xs text-chrome-dim truncate max-w-[180px]">{item.name} × {item.quantity}</span>
-                        <span className="font-mono text-xs text-chrome shrink-0 ml-2">{priceLabel(item.price * item.quantity)}</span>
+                        <span className="font-mono text-xs text-chrome shrink-0 ml-2">{formatPrice(item.price * item.quantity)}</span>
                       </div>
                     ))}
                   </div>
                   <div className="divider-chrome my-6" />
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Subtotal</span>
-                    <span className="font-mono text-lg text-chrome">{priceLabel(cartTotal)}</span>
+                    <span className="font-mono text-lg text-chrome">{formatPrice(cartTotal)}</span>
                   </div>
                   <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim/50">Shipping calculated at checkout</p>
                   <Link to="/checkout" className="mt-6 btn-chrome btn-chrome-inner w-full justify-center">

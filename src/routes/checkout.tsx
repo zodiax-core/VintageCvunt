@@ -7,6 +7,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useCartContext } from "@/lib/cart-context";
 import { useAuthContext } from "@/lib/auth-context";
+import { useCurrency } from "@/lib/currency-context";
 import type { Id } from "../../convex/_generated/dataModel";
 
 export const Route = createFileRoute("/checkout")({
@@ -20,9 +21,9 @@ export const Route = createFileRoute("/checkout")({
 });
 
 const EASE = [0.16, 1, 0.3, 1] as const;
-const priceLabel = (p: number) => "PKR " + p.toLocaleString("en-PK");
 
 function Checkout() {
+  const { formatPrice } = useCurrency();
   const { cart, cartTotal, cartCount, clearCart } = useCartContext();
   const { user } = useAuthContext();
   const navigate = useNavigate();
@@ -408,7 +409,7 @@ function Checkout() {
                           )}
                           <p className="font-mono text-[10px] text-chrome">× {item.quantity}</p>
                         </div>
-                        <span className="font-mono text-xs text-chrome shrink-0">{priceLabel(item.price * item.quantity)}</span>
+                        <span className="font-mono text-xs text-chrome shrink-0">{formatPrice(item.price * item.quantity)}</span>
                       </div>
                     ))}
                   </div>
@@ -418,7 +419,7 @@ function Checkout() {
                   <div>
                     {appliedCoupon ? (
                       <div className="flex items-center justify-between rounded-xl border border-green-500/30 bg-green-500/10 px-3 py-2">
-                        <span className="font-mono text-[10px] text-green-400">{appliedCoupon.code} (-{priceLabel(discount)})</span>
+                        <span className="font-mono text-[10px] text-green-400">{appliedCoupon.code} (-{formatPrice(discount)})</span>
                         <button
                           type="button"
                           onClick={() => setAppliedCoupon(null)}
@@ -481,7 +482,7 @@ function Checkout() {
                                 <p className="font-mono text-[9px] text-chrome-dim/60">{rate.estimatedDays} days</p>
                               )}
                             </div>
-                            <span className="font-mono text-[11px] text-chrome shrink-0">{priceLabel(rate.price)}</span>
+                            <span className="font-mono text-[11px] text-chrome shrink-0">{formatPrice(rate.price)}</span>
                           </label>
                         ))}
                       </div>
@@ -492,29 +493,29 @@ function Checkout() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Subtotal</span>
-                      <span className="font-mono text-sm text-chrome">{priceLabel(cartTotal)}</span>
+                      <span className="font-mono text-sm text-chrome">{formatPrice(cartTotal)}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Shipping</span>
-                      <span className="font-mono text-xs text-chrome">{shippingCost === 0 ? "Free" : priceLabel(shippingCost)}</span>
+                      <span className="font-mono text-xs text-chrome">{shippingCost === 0 ? "Free" : formatPrice(shippingCost)}</span>
                     </div>
                     {tax > 0 && (
                       <div className="flex items-center justify-between">
                         <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Tax</span>
-                        <span className="font-mono text-xs text-chrome">{priceLabel(tax)}</span>
+                        <span className="font-mono text-xs text-chrome">{formatPrice(tax)}</span>
                       </div>
                     )}
                     {discount > 0 && (
                       <div className="flex items-center justify-between">
                         <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-green-400">Discount</span>
-                        <span className="font-mono text-xs text-green-400">-{priceLabel(discount)}</span>
+                        <span className="font-mono text-xs text-green-400">-{formatPrice(discount)}</span>
                       </div>
                     )}
                   </div>
                   <div className="divider-chrome my-5" />
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Total</span>
-                    <span className="font-mono text-lg text-chrome">{priceLabel(grandTotal)}</span>
+                    <span className="font-mono text-lg text-chrome">{formatPrice(grandTotal)}</span>
                   </div>
 
                   <button

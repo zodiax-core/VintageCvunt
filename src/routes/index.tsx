@@ -14,6 +14,7 @@ import { ChromeCursor } from "@/components/ChromeCursor";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { useCurrency } from "@/lib/currency-context";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -30,7 +31,6 @@ export const Route = createFileRoute("/")({
 });
 
 const EASE = [0.16, 1, 0.3, 1] as const;
-const priceLabel = (p: number) => "PKR " + p.toLocaleString("en-PK");
 
 function Home() {
   return (
@@ -190,6 +190,7 @@ function Marquee() {
 /* ---------------- FEATURED ---------------- */
 function Featured() {
   const featured = useQuery(api.products.getFeatured) ?? [];
+  const { formatPrice } = useCurrency();
 
   if (featured.length === 0) {
     return (
@@ -242,7 +243,7 @@ function Featured() {
               imageUrl={first.imageUrls?.[0] || "/placeholder.svg"}
               number="No. 001"
               name={first.name}
-              price={priceLabel(first.price)}
+              price={formatPrice(first.price)}
               tall
               priority
             />
@@ -253,7 +254,7 @@ function Featured() {
                 imageUrl={p.imageUrls?.[0] || "/placeholder.svg"}
                 number=""
                 name={p.name}
-                price={priceLabel(p.price)}
+                price={formatPrice(p.price)}
               />
             </Link>
           ))}
@@ -354,6 +355,7 @@ function SculptureSection() {
 /* ---------------- BEST SELLERS ---------------- */
 function BestSellers() {
   const allProducts = useQuery(api.products.list) ?? [];
+  const { formatPrice } = useCurrency();
 
   return (
     <section className="relative border-b border-chrome py-28 md:py-40">
@@ -375,7 +377,7 @@ function BestSellers() {
                 <SmallCase
                   imageUrl={p.imageUrls?.[0] || "/placeholder.svg"}
                   name={p.name}
-                  price={priceLabel(p.price)}
+                  price={formatPrice(p.price)}
                 />
               </Link>
             ))}
