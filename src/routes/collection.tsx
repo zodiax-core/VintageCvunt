@@ -78,7 +78,7 @@ function Collections() {
           description: description.trim(),
           productIds: [],
           isActive,
-          image,
+          ...(image ? { image } : {}),
         });
       }
       resetForm();

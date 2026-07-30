@@ -3,9 +3,14 @@ import { query, mutation } from "./_generated/server";
 
 async function enrichCollection(ctx: any, collection: any) {
   if (!collection) return null;
+  let imageUrl: string | undefined;
+  if (collection.image) {
+    const url = await ctx.storage.getUrl(collection.image as any);
+    if (url) imageUrl = url;
+  }
   return {
     ...collection,
-    imageUrl: collection.image ? await ctx.storage.getUrl(collection.image as any) : undefined,
+    imageUrl,
   };
 }
 
