@@ -3,7 +3,7 @@ import { t as api } from "./api-xr_VpTVu.mjs";
 import { g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
 import { n as useAuthContext } from "./auth-context-Dc0i5OIR.mjs";
 import { _ as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { D as Package, W as Clock, et as ArrowRight, p as ShoppingBag } from "../_libs/lucide-react.mjs";
+import { D as Package, W as Clock, p as ShoppingBag, tt as ArrowRight } from "../_libs/lucide-react.mjs";
 import { t as CustomerLayout } from "./CustomerLayout-Con9CEYp.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/account-DXRIkUeF.js
 var import_jsx_runtime = require_jsx_runtime();

@@ -463,7 +463,7 @@ function Categories() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {cats.map((c, i) => (
+            {cats.map((c, i) => (
               <Link key={i} to={c.link} data-cursor="hover" className="group relative block overflow-hidden rounded-3xl border border-chrome">
                 <div className="aspect-[3/4] overflow-hidden bg-graphite-2 flex items-center justify-center">
                   {c.imageUrl ? (

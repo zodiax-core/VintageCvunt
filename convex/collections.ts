@@ -8,10 +8,7 @@ async function enrichCollection(ctx: any, collection: any) {
     const url = await ctx.storage.getUrl(collection.image as any);
     if (url) imageUrl = url;
   }
-  return {
-    ...collection,
-    imageUrl,
-  };
+  return { ...collection, imageUrl };
 }
 
 async function enrichCollections(ctx: any, collections: any[]) {

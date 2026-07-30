@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { useState, useMemo, useRef } from "react";
-import { Plus, Search, Edit3, Trash2, Upload, Save } from "lucide-react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { Plus, Search, Edit3, Trash2, Upload, Save, AlertCircle } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQuery, useMutation } from "convex/react";
@@ -18,6 +18,11 @@ export const Route = createFileRoute("/collection")({
   }),
 });
 
+function CollImage({ url, size = "h-10 w-10" }: { url?: string; size?: string }) {
+  if (!url) return <div className={`${size} rounded-lg bg-chrome/10 flex items-center justify-center font-mono text-xs text-chrome-dim`}>—</div>;
+  return <img src={url} alt="" className={`${size} rounded-lg object-cover border border-chrome/20`} />;
+}
+
 function Collections() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -29,24 +34,38 @@ function Collections() {
   const generateUploadUrl = useMutation(api.collections.generateUploadUrl);
 
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string>("");
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [existingImageUrl, setExistingImageUrl] = useState<string>("");
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string>("");
+  const [saveError, setSaveError] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetForm = () => {
     setEditingId(null); setName(""); setSlug(""); setDescription("");
-    setIsActive(true); setImageFile(null); setExistingImageUrl("");
+    setIsActive(true); setImageFile(null); setImagePreviewUrl(""); setExistingImageUrl("");
+    setSaveError("");
   };
+
+  const handleFileChange = (file: File | null) => {
+    if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+    setImageFile(file);
+    setImagePreviewUrl(file ? URL.createObjectURL(file) : "");
+  };
+
+  useEffect(() => {
+    return () => { if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl); };
+  }, [imagePreviewUrl]);
 
   const startEdit = (c: typeof allCollections[number]) => {
     setEditingId(c._id); setName(c.name); setSlug(c.slug);
-    setDescription(c.description ?? ""); setIsActive(c.isActive); setImageFile(null);
+    setDescription(c.description ?? ""); setIsActive(c.isActive); setImageFile(null); setImagePreviewUrl("");
     setExistingImageUrl((c as any).imageUrl || "");
+    setSaveError("");
   };
 
   const handleSave = async () => {
@@ -82,8 +101,10 @@ function Collections() {
         });
       }
       resetForm();
+      setSaveError("");
     } catch (err) {
-      console.error("Failed to save collection", err);
+      const message = err instanceof Error ? err.message : "Failed to save collection";
+      setSaveError(message);
     } finally {
       setSaving(false);
     }
@@ -116,14 +137,16 @@ function Collections() {
         <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" className="rounded-xl border border-chrome/20 bg-graphite-2 px-4 py-2.5 font-mono text-sm outline-none focus:border-chrome/50 w-full min-h-[80px] resize-none" />
         <div className="flex flex-wrap items-center gap-4">
           <div onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 rounded-xl border border-dashed border-chrome/20 px-4 py-2.5 cursor-pointer hover:border-chrome/50 transition-colors">
-            {existingImageUrl && !imageFile ? (
+            {imagePreviewUrl ? (
+              <img src={imagePreviewUrl} alt="" className="h-8 w-8 rounded object-cover" />
+            ) : existingImageUrl ? (
               <img src={existingImageUrl} alt="" className="h-8 w-8 rounded object-cover" />
             ) : (
               <Upload size={14} className="text-chrome-dim" />
             )}
             <span className="font-mono text-[10px] text-chrome-dim">{imageFile ? imageFile.name : existingImageUrl ? "Change image" : "Upload image"}</span>
           </div>
-          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e.target.files?.[0] || null)} />
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="rounded" />
             <span className="font-mono text-[10px] text-chrome-dim">Active</span>
@@ -135,6 +158,12 @@ function Collections() {
               <span className="btn-label">{saving ? "Saving..." : editingId ? "Update" : "Create"}</span>
             </button>
           </div>
+          {saveError && (
+            <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 w-full">
+              <AlertCircle size={14} className="text-red-400 shrink-0" />
+              <span className="font-mono text-[10px] text-red-400">{saveError}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -147,11 +176,7 @@ function Collections() {
           {allCollections.map((c) => (
             <div key={c._id} className="bg-graphite border border-chrome/20 rounded-2xl p-4 space-y-2">
               <div className="flex items-center gap-3">
-                {(c as any).imageUrl ? (
-                  <img src={(c as any).imageUrl} alt={c.name} className="h-12 w-12 rounded-lg object-cover border border-chrome/20 shrink-0" />
-                ) : (
-                  <div className="h-12 w-12 rounded-lg bg-chrome/10 flex items-center justify-center font-mono text-sm text-chrome-dim shrink-0">{c.name.charAt(0)}</div>
-                )}
+                <CollImage url={(c as any).imageUrl} size="h-12 w-12" />
                 <div className="flex-1 min-w-0">
                   <span className="font-display text-lg block truncate">{c.name}</span>
                   <span className={`h-2 w-2 rounded-full inline-block ${c.isActive ? "bg-green-400" : "bg-gray-500"}`} />
@@ -186,11 +211,7 @@ function Collections() {
               {allCollections.map((c) => (
                 <TableRow key={c._id}>
                   <TableCell>
-                    {(c as any).imageUrl ? (
-                      <img src={(c as any).imageUrl} alt={c.name} className="h-10 w-10 rounded-lg object-cover border border-chrome/20" />
-                    ) : (
-                      <div className="h-10 w-10 rounded-lg bg-chrome/10 flex items-center justify-center font-mono text-xs text-chrome-dim">{c.name.charAt(0)}</div>
-                    )}
+                    <CollImage url={(c as any).imageUrl} size="h-10 w-10" />
                   </TableCell>
                   <TableCell><span className="font-mono text-[11px]">{c.name}</span></TableCell>
                   <TableCell><span className="font-mono text-[11px] text-chrome-dim">{c.slug}</span></TableCell>

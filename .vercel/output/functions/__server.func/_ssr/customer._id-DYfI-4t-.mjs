@@ -2,7 +2,7 @@ import { a as useQuery } from "../_libs/convex.mjs";
 import { t as api } from "./api-xr_VpTVu.mjs";
 import { g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
 import { _ as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { H as DollarSign, V as Download, Z as Calendar, n as Users, p as ShoppingBag, tt as ArrowLeft, y as Receipt } from "../_libs/lucide-react.mjs";
+import { H as DollarSign, Q as Calendar, V as Download, n as Users, nt as ArrowLeft, p as ShoppingBag, y as Receipt } from "../_libs/lucide-react.mjs";
 import { t as AdminLayout } from "./AdminLayout-BhQ-pVpk.mjs";
 import { a as TableHeader, i as TableHead, n as TableBody, o as TableRow, r as TableCell, t as Table } from "./table-BCmSA03j.mjs";
 import { t as Route } from "./customer._id-D6z03m5U.mjs";

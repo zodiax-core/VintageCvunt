@@ -3,7 +3,7 @@ import { a as useQuery, i as useMutation } from "../_libs/convex.mjs";
 import { t as api } from "./api-xr_VpTVu.mjs";
 import { _ as require_react, g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
 import { _ as Link, l as useLocation, p as Outlet } from "../_libs/@tanstack/react-router+[...].mjs";
-import { K as ChevronRight, T as PenLine, c as Trash2, g as Search, q as ChevronLeft, u as Star, x as Plus } from "../_libs/lucide-react.mjs";
+import { J as ChevronLeft, T as PenLine, c as Trash2, g as Search, q as ChevronRight, u as Star, x as Plus } from "../_libs/lucide-react.mjs";
 import { t as AdminLayout } from "./AdminLayout-BhQ-pVpk.mjs";
 import { a as TableHeader, i as TableHead, n as TableBody, o as TableRow, r as TableCell, t as Table } from "./table-BCmSA03j.mjs";
 import { t as useIsMobile } from "./use-mobile-DM96sOa1.mjs";
