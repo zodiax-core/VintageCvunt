@@ -2,7 +2,7 @@ import { a as useQuery } from "../_libs/convex.mjs";
 import { t as api } from "./api-xr_VpTVu.mjs";
 import { g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
 import { _ as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { nt as ArrowLeft } from "../_libs/lucide-react.mjs";
+import { rt as ArrowLeft } from "../_libs/lucide-react.mjs";
 import { t as CustomerLayout } from "./CustomerLayout-C4eL2Ge6.mjs";
 import { a as TableHeader, i as TableHead, n as TableBody, o as TableRow, r as TableCell, t as Table } from "./table-BCmSA03j.mjs";
 import { t as Route } from "./orders._id-CGoD8ZmC.mjs";

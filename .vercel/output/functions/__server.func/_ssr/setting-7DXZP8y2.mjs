@@ -2,7 +2,7 @@ import { o as __toESM } from "../_runtime.mjs";
 import { a as useQuery, i as useMutation } from "../_libs/convex.mjs";
 import { t as api } from "./api-xr_VpTVu.mjs";
 import { _ as require_react, g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
-import { I as Globe, U as CreditCard, _ as Save, c as Trash2, m as Ship, w as Pencil, x as Plus, y as Receipt } from "../_libs/lucide-react.mjs";
+import { I as Globe, W as CreditCard, _ as Save, c as Trash2, m as Ship, w as Pencil, x as Plus, y as Receipt } from "../_libs/lucide-react.mjs";
 import { t as AdminLayout } from "./AdminLayout-BhQ-pVpk.mjs";
 import { a as TableHeader, i as TableHead, n as TableBody, o as TableRow, r as TableCell, t as Table } from "./table-BCmSA03j.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/setting-7DXZP8y2.js

@@ -439,6 +439,30 @@ var ExternalLink = createLucideIcon("external-link", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var EyeOff = createLucideIcon("eye-off", [
+	["path", {
+		d: "M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49",
+		key: "ct8e1f"
+	}],
+	["path", {
+		d: "M14.084 14.158a3 3 0 0 1-4.242-4.242",
+		key: "151rxh"
+	}],
+	["path", {
+		d: "M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143",
+		key: "13bj9a"
+	}],
+	["path", {
+		d: "m2 2 20 20",
+		key: "1ooewy"
+	}]
+]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Eye = createLucideIcon("eye", [["path", {
 	d: "M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0",
 	key: "1nclc0"
@@ -1174,4 +1198,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { Bell as $, Maximize2 as A, Ellipsis as B, Percent as C, Package as D, PanelsTopLeft as E, House as F, CircleX as G, DollarSign as H, Globe as I, ChevronLeft as J, CircleAlert as K, FileText as L, MailOpen as M, LogOut as N, MessageSquare as O, LayoutDashboard as P, Calendar as Q, Eye as R, Phone as S, PenLine as T, CreditCard as U, Download as V, Clock as W, Check as X, ChevronDown as Y, ChartColumn as Z, Save as _, Truck as a, Quote as b, Trash2 as c, SquareCheckBig as d, ArrowUpRight as et, SlidersHorizontal as f, Search as g, Settings as h, Upload as i, Mail as j, Menu as k, Tag as l, Ship as m, Users as n, ArrowLeft as nt, TriangleAlert as o, ShoppingBag as p, ChevronRight as q, User as r, ArrowDownRight as rt, TrendingUp as s, X as t, ArrowRight as tt, Star as u, Reply as v, Pencil as w, Plus as x, Receipt as y, ExternalLink as z };
+export { Calendar as $, Maximize2 as A, ExternalLink as B, Percent as C, Package as D, PanelsTopLeft as E, House as F, Clock as G, Download as H, Globe as I, ChevronRight as J, CircleX as K, FileText as L, MailOpen as M, LogOut as N, MessageSquare as O, LayoutDashboard as P, ChartColumn as Q, Eye as R, Phone as S, PenLine as T, DollarSign as U, Ellipsis as V, CreditCard as W, ChevronDown as X, ChevronLeft as Y, Check as Z, Save as _, Truck as a, Quote as b, Trash2 as c, SquareCheckBig as d, Bell as et, SlidersHorizontal as f, Search as g, Settings as h, Upload as i, ArrowDownRight as it, Mail as j, Menu as k, Tag as l, Ship as m, Users as n, ArrowRight as nt, TriangleAlert as o, ShoppingBag as p, CircleAlert as q, User as r, ArrowLeft as rt, TrendingUp as s, X as t, ArrowUpRight as tt, Star as u, Reply as v, Pencil as w, Plus as x, Receipt as y, EyeOff as z };

@@ -2,7 +2,7 @@ import { o as __toESM } from "../_runtime.mjs";
 import { a as useQuery } from "../_libs/convex.mjs";
 import { t as api } from "./api-xr_VpTVu.mjs";
 import { _ as require_react, g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
-import { H as DollarSign, n as Users, p as ShoppingBag, s as TrendingUp } from "../_libs/lucide-react.mjs";
+import { U as DollarSign, n as Users, p as ShoppingBag, s as TrendingUp } from "../_libs/lucide-react.mjs";
 import { t as AdminLayout } from "./AdminLayout-BhQ-pVpk.mjs";
 import { a as XAxis, c as CartesianGrid, d as Tooltip, i as YAxis, l as Bar, n as BarChart, o as Area, r as LineChart, s as Line, t as AreaChart, u as ResponsiveContainer } from "../_libs/recharts+[...].mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/analytics-CZxLKgCf.js

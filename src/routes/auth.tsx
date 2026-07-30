@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
 import { useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAuthContext } from "@/lib/auth-context";
@@ -36,6 +37,8 @@ function Auth() {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -292,13 +295,16 @@ function Auth() {
                       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={form.password}
                       onChange={(e) => setForm({ ...form, password: e.target.value })}
                       onBlur={() => handleBlur("password")}
                       placeholder="••••••••"
-                      className={`w-full rounded-xl border bg-graphite pl-10 pr-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.password && errors.password ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
+                      className={`w-full rounded-xl border bg-graphite pl-10 pr-10 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.password && errors.password ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
                     />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-chrome-dim/50 hover:text-chrome-dim transition-colors" tabIndex={-1}>
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
                   </div>
                   {touched.password && errors.password && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.password}</p>}
                 </div>
@@ -313,13 +319,16 @@ function Auth() {
                       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
                     <input
-                      type="password"
+                      type={showConfirmPassword ? "text" : "password"}
                       value={form.confirmPassword}
                       onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
                       onBlur={() => handleBlur("confirmPassword")}
                       placeholder="••••••••"
-                      className={`w-full rounded-xl border bg-graphite pl-10 pr-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.confirmPassword && errors.confirmPassword ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
+                      className={`w-full rounded-xl border bg-graphite pl-10 pr-10 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.confirmPassword && errors.confirmPassword ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
                     />
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-chrome-dim/50 hover:text-chrome-dim transition-colors" tabIndex={-1}>
+                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
                   </div>
                   {touched.confirmPassword && errors.confirmPassword && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.confirmPassword}</p>}
                 </div>

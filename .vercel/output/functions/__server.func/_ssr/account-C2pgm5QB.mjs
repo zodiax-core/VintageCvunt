@@ -4,7 +4,7 @@ import { g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[..
 import { i as useCurrency } from "./currency-context-Bd4Aavn6.mjs";
 import { n as useAuthContext } from "./auth-context-Dc0i5OIR.mjs";
 import { _ as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { D as Package, W as Clock, p as ShoppingBag, tt as ArrowRight } from "../_libs/lucide-react.mjs";
+import { D as Package, G as Clock, nt as ArrowRight, p as ShoppingBag } from "../_libs/lucide-react.mjs";
 import { t as CustomerLayout } from "./CustomerLayout-C4eL2Ge6.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/account-C2pgm5QB.js
 var import_jsx_runtime = require_jsx_runtime();
