@@ -84,7 +84,7 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
           if (touchTimer.current) clearTimeout(touchTimer.current);
         }}
         onTap={() => { if (!isScaling) showControlsTemporarily(); }}
-        initial={{ opacity: 0, scale: 0 }}
+        initial={{ opacity: 0, scale: 0, bottom: 16, right: 16 }}
         animate={
           isScaling
             ? { top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", borderRadius: 0, opacity: 1, scale: 1 }

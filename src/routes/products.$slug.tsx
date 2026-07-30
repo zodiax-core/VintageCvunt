@@ -43,6 +43,9 @@ function ProductPage() {
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [selectedColor, setSelectedColor] = useState<string>("");
+  const [defaultsSet, setDefaultsSet] = useState(false);
   const productFaqs = useQuery(api.faq.getByCategory, { category: slug }) ?? [];
   const [reviewForm, setReviewForm] = useState({ name: "", email: "", rating: 5, text: "" });
   const [reviewErrors, setReviewErrors] = useState<Record<string, string>>({});
@@ -61,6 +64,12 @@ function ProductPage() {
   }, [product?.material]);
 
   if (!product) return null;
+
+  if (!defaultsSet) {
+    if (product.sizes?.length > 0) setSelectedSize(product.sizes[0]);
+    if (product.colors?.length > 0) setSelectedColor(product.colors[0]);
+    setDefaultsSet(true);
+  }
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -199,7 +208,17 @@ function ProductPage() {
                     <h3 className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim mb-2">Sizes</h3>
                     <div className="flex flex-wrap gap-2">
                       {product.sizes.map((s) => (
-                        <span key={s} className="rounded-lg border border-chrome/30 bg-graphite px-3 py-1.5 font-mono text-[11px] text-chrome">{s}</span>
+                        <button
+                          key={s}
+                          onClick={() => setSelectedSize(s)}
+                          className={`rounded-lg border px-3 py-1.5 font-mono text-[11px] transition-colors ${
+                            selectedSize === s
+                              ? "border-chrome bg-chrome text-background"
+                              : "border-chrome/30 bg-graphite text-chrome hover:border-chrome/60"
+                          }`}
+                        >
+                          {s}
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -211,7 +230,17 @@ function ProductPage() {
                     <h3 className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim mb-2">Colors</h3>
                     <div className="flex flex-wrap gap-2">
                       {product.colors.map((c) => (
-                        <span key={c} className="rounded-lg border border-chrome/30 bg-graphite px-3 py-1.5 font-mono text-[11px] text-chrome">{c}</span>
+                        <button
+                          key={c}
+                          onClick={() => setSelectedColor(c)}
+                          className={`rounded-lg border px-3 py-1.5 font-mono text-[11px] transition-colors ${
+                            selectedColor === c
+                              ? "border-chrome bg-chrome text-background"
+                              : "border-chrome/30 bg-graphite text-chrome hover:border-chrome/60"
+                          }`}
+                        >
+                          {c}
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -223,12 +252,15 @@ function ProductPage() {
                 <button
                   onClick={() => {
                     addToCart({
-                      id: product._id,
+                      id: `${product._id}_${selectedSize || ''}_${selectedColor || ''}`,
+                      productId: product._id,
                       name: product.name,
                       slug: product.slug,
                       src: product.imageUrls?.[0] || "/placeholder.svg",
                       webp: product.imageUrls?.[0] || "/placeholder.svg",
                       price: product.price,
+                      selectedSize: selectedSize || undefined,
+                      selectedColor: selectedColor || undefined,
                     });
                     setAddedToCart(true);
                     setTimeout(() => setAddedToCart(false), 2000);

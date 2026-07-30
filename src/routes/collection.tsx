@@ -140,9 +140,16 @@ function Collections() {
         <div className="space-y-3">
           {allCollections.map((c) => (
             <div key={c._id} className="bg-graphite border border-chrome/20 rounded-2xl p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-display text-lg">{c.name}</span>
-                <span className={`h-2 w-2 rounded-full ${c.isActive ? "bg-green-400" : "bg-gray-500"}`} />
+              <div className="flex items-center gap-3">
+                {(c as any).imageUrl ? (
+                  <img src={(c as any).imageUrl} alt={c.name} className="h-12 w-12 rounded-lg object-cover border border-chrome/20 shrink-0" />
+                ) : (
+                  <div className="h-12 w-12 rounded-lg bg-chrome/10 flex items-center justify-center font-mono text-sm text-chrome-dim shrink-0">{c.name.charAt(0)}</div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <span className="font-display text-lg block truncate">{c.name}</span>
+                  <span className={`h-2 w-2 rounded-full inline-block ${c.isActive ? "bg-green-400" : "bg-gray-500"}`} />
+                </div>
               </div>
               <p className="font-mono text-[10px] text-chrome-dim">{c.slug} · {c.productIds.length} products</p>
               <div className="flex items-center gap-2 pt-2 border-t border-chrome/10">
@@ -161,6 +168,7 @@ function Collections() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Image</span></TableHead>
                 <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Name</span></TableHead>
                 <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Slug</span></TableHead>
                 <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Products</span></TableHead>
@@ -171,6 +179,13 @@ function Collections() {
             <TableBody>
               {allCollections.map((c) => (
                 <TableRow key={c._id}>
+                  <TableCell>
+                    {(c as any).imageUrl ? (
+                      <img src={(c as any).imageUrl} alt={c.name} className="h-10 w-10 rounded-lg object-cover border border-chrome/20" />
+                    ) : (
+                      <div className="h-10 w-10 rounded-lg bg-chrome/10 flex items-center justify-center font-mono text-xs text-chrome-dim">{c.name.charAt(0)}</div>
+                    )}
+                  </TableCell>
                   <TableCell><span className="font-mono text-[11px]">{c.name}</span></TableCell>
                   <TableCell><span className="font-mono text-[11px] text-chrome-dim">{c.slug}</span></TableCell>
                   <TableCell><span className="font-mono text-[11px]">{c.productIds.length}</span></TableCell>

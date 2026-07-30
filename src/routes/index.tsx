@@ -431,6 +431,7 @@ function Categories() {
         const count = categoryCounts[c.name] || 0;
         return {
           name: c.name,
+          imageUrl: (c as any).imageUrl,
           count: `${count} piece${count !== 1 ? "s" : ""}`,
           link: "/shop",
         };
@@ -438,6 +439,7 @@ function Categories() {
     }
     return Object.entries(categoryCounts).map(([name, count]) => ({
       name,
+      imageUrl: undefined,
       count: `${count} piece${count !== 1 ? "s" : ""}`,
       link: "/shop",
     }));
@@ -461,10 +463,14 @@ function Categories() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {cats.map((c, i) => (
+              {cats.map((c, i) => (
               <Link key={i} to={c.link} data-cursor="hover" className="group relative block overflow-hidden rounded-3xl border border-chrome">
                 <div className="aspect-[3/4] overflow-hidden bg-graphite-2 flex items-center justify-center">
-                  <div className="font-display text-6xl text-chrome-dim/20 italic">{c.name.charAt(0)}</div>
+                  {c.imageUrl ? (
+                    <img src={c.imageUrl} alt={c.name} className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]" />
+                  ) : (
+                    <div className="font-display text-6xl text-chrome-dim/20 italic">{c.name.charAt(0)}</div>
+                  )}
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-6">

@@ -153,11 +153,13 @@ function Checkout() {
         customerEmail: billing.email,
         phone: billing.phone,
         items: cart.items.map((item) => ({
-          productId: String(item.id),
+          productId: item.productId || String(item.id),
           name: item.name,
           price: item.price,
           quantity: item.quantity,
           image: item.src,
+          size: item.selectedSize,
+          color: item.selectedColor,
         })),
         subtotal: cartTotal,
         shipping: shippingCost,
@@ -399,6 +401,11 @@ function Checkout() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="font-mono text-[11px] text-chrome-dim truncate">{item.name}</p>
+                          {(item.selectedSize || item.selectedColor) && (
+                            <p className="font-mono text-[9px] text-chrome-dim/60">
+                              {[item.selectedSize, item.selectedColor].filter(Boolean).join(" / ")}
+                            </p>
+                          )}
                           <p className="font-mono text-[10px] text-chrome">× {item.quantity}</p>
                         </div>
                         <span className="font-mono text-xs text-chrome shrink-0">{priceLabel(item.price * item.quantity)}</span>

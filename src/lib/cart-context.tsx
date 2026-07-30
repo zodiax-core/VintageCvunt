@@ -2,12 +2,15 @@ import { createContext, useContext, useReducer, useEffect, type ReactNode } from
 
 export type CartItem = {
   id: string;
+  productId: string;
   name: string;
   slug: string;
   src: string;
   webp: string;
   price: number;
   quantity: number;
+  selectedSize?: string;
+  selectedColor?: string;
 };
 
 type CartState = { items: CartItem[] };

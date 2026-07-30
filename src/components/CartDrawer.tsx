@@ -85,6 +85,11 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                         <Link to="/products/$slug" params={{ slug: item.slug }} onClick={onClose} className="font-display text-base text-foreground hover:text-chrome transition-colors truncate block">
                           {item.name}
                         </Link>
+                        {(item.selectedSize || item.selectedColor) && (
+                          <p className="font-mono text-[9px] text-chrome-dim/60 mt-0.5">
+                            {[item.selectedSize, item.selectedColor].filter(Boolean).join(" / ")}
+                          </p>
+                        )}
                         <p className="font-mono text-xs text-chrome mt-0.5">{priceLabel(item.price)}</p>
                         <div className="flex items-center gap-2 mt-2">
                           <div className="flex items-center gap-0 rounded-lg border border-chrome/30 overflow-hidden">

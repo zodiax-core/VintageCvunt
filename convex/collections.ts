@@ -1,20 +1,34 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 
+async function enrichCollection(ctx: any, collection: any) {
+  if (!collection) return null;
+  return {
+    ...collection,
+    imageUrl: collection.image ? await ctx.storage.getUrl(collection.image as any) : undefined,
+  };
+}
+
+async function enrichCollections(ctx: any, collections: any[]) {
+  return Promise.all(collections.map((c) => enrichCollection(ctx, c)));
+}
+
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("collections").collect();
+    const collections = await ctx.db.query("collections").collect();
+    return await enrichCollections(ctx, collections);
   },
 });
 
 export const getBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const collection = await ctx.db
       .query("collections")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .first();
+    return await enrichCollection(ctx, collection);
   },
 });
 
