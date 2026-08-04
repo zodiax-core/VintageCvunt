@@ -44,7 +44,18 @@ function Checkout() {
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [screenshotPreview, setScreenshotPreview] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+  const [copied, setCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const copyBankNumber = async () => {
+    try {
+      await navigator.clipboard.writeText("03316809983");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  };
 
   // Coupon
   const [couponCode, setCouponCode] = useState("");
@@ -339,6 +350,50 @@ function Checkout() {
                   <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">§ Payment Proof</span>
                   <p className="mt-2 font-mono text-[10px] text-chrome-dim/60">Upload a screenshot of your payment transaction to confirm your order.</p>
                   <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim/40">Other payment methods coming soon.</p>
+
+                  <div className="mt-5 rounded-2xl border border-chrome bg-graphite p-5">
+                    <div className="flex items-center gap-2">
+                      <svg className="text-chrome-dim/60" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="2" />
+                        <line x1="2" y1="10" x2="22" y2="10" />
+                      </svg>
+                      <span className="font-mono text-[11px] uppercase tracking-[0.24em] text-chrome">JazzCash</span>
+                    </div>
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim/60">Account Number</p>
+                        <p className="mt-1 font-mono text-base text-chrome">0331 6809983</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={copyBankNumber}
+                        className="grid h-9 w-9 place-items-center rounded-xl border border-chrome/30 text-chrome-dim transition-colors hover:border-chrome/70 hover:text-chrome"
+                        title="Copy account number"
+                      >
+                        {copied ? (
+                          <svg className="text-emerald-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        ) : (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" />
+                            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-3 border-t border-chrome/15 pt-3">
+                      <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim/60">Account Holder</p>
+                      <p className="font-mono text-xs text-chrome">ANABIYA KASHIF</p>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-3 border-t border-chrome/15 pt-3">
+                      <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim/60">Amount to Pay</p>
+                      <p className="font-mono text-xs text-chrome">{formatPrice(grandTotal)}</p>
+                    </div>
+                    {copied && (
+                      <p className="mt-3 font-mono text-[9px] uppercase tracking-[0.2em] text-emerald-400">✓ Copied to clipboard</p>
+                    )}
+                  </div>
 
                   <div className="mt-5">
                     <label className="block font-mono text-[10px] uppercase tracking-[0.24em] text-chrome-dim mb-2">Payment Screenshot *</label>
