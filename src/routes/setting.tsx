@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
+import { getSessionToken } from "@/lib/admin";
 import { Save, Plus, Globe, Ship, CreditCard, Receipt, Trash2, Pencil } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -73,6 +74,7 @@ function Settings() {
     setSaving(true);
     try {
       await upsertSettings({
+        sessionToken: getSessionToken() ?? "",
         storeName,
         storeEmail,
         currency,
@@ -126,6 +128,7 @@ function Settings() {
     setSaving(true);
     try {
       await upsertSettings({
+        sessionToken: getSessionToken() ?? "",
         storeName,
         storeEmail,
         currency,

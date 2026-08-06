@@ -197,4 +197,114 @@ export default defineSchema({
     taxInclusive: v.boolean(),
     updatedAt: v.number(),
   }),
+
+  adminSessions: defineTable({
+    customerId: v.id("customers"),
+    tokenHash: v.string(),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+  })
+    .index("by_tokenHash", ["tokenHash"])
+    .index("by_customerId", ["customerId"]),
+
+  investors: defineTable({
+    fullName: v.string(),
+    cnicEncrypted: v.string(),
+    cnicMasked: v.string(),
+    cnicHash: v.string(),
+    phoneNumber: v.string(),
+    email: v.optional(v.string()),
+    relationshipToOwner: v.string(),
+    dateAdded: v.number(),
+    investmentAmount: v.number(),
+    investmentDate: v.number(),
+    investmentModel: v.string(),
+    status: v.string(),
+    notes: v.optional(v.string()),
+    interestRate: v.optional(v.number()),
+    repaymentPeriodMonths: v.optional(v.number()),
+    repaymentFrequency: v.optional(v.string()),
+    preMoneyValuation: v.optional(v.number()),
+    profitSharePercentage: v.optional(v.number()),
+    payoutFrequency: v.optional(v.string()),
+    profitDefinitionNotes: v.optional(v.string()),
+    batchNameOrId: v.optional(v.string()),
+    batchProfitSharePercentage: v.optional(v.number()),
+    expectedBatchDuration: v.optional(v.string()),
+    profitSharePercentageAfterPrincipal: v.optional(v.number()),
+    principalRecovered: v.number(),
+    cumulativeProfitLogged: v.number(),
+    totalPaidToDate: v.number(),
+    batchSoldOutAt: v.optional(v.number()),
+    closedAt: v.optional(v.number()),
+    withdrawnAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_cnicHash", ["cnicHash"])
+    .index("by_model", ["investmentModel"])
+    .index("by_status", ["status"]),
+
+  payouts: defineTable({
+    investorId: v.id("investors"),
+    cycleDate: v.number(),
+    grossRevenue: v.number(),
+    costs: v.number(),
+    netProfit: v.number(),
+    payoutAmount: v.number(),
+    kind: v.string(),
+    note: v.optional(v.string()),
+    principalRecoveredAfter: v.number(),
+    remainingBalanceAfter: v.number(),
+    runningTotalPaid: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_investorId", ["investorId"])
+    .index("by_investor_created", ["investorId", "createdAt"]),
+
+  auditLogs: defineTable({
+    actorEmail: v.string(),
+    action: v.string(),
+    targetType: v.string(),
+    targetId: v.string(),
+    changes: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_target", ["targetType", "targetId"])
+    .index("by_created", ["createdAt"]),
+
+  capitalContributions: defineTable({
+    investorId: v.id("investors"),
+    amountReceived: v.number(),
+    receivedDate: v.number(),
+    method: v.string(),
+    note: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_investorId", ["investorId"])
+    .index("by_date", ["receivedDate"]),
+
+  expenses: defineTable({
+    title: v.string(),
+    category: v.string(),
+    amount: v.number(),
+    expenseDate: v.number(),
+    note: v.optional(v.string()),
+    createdBy: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_date", ["expenseDate"])
+    .index("by_category", ["category"]),
+
+  assets: defineTable({
+    name: v.string(),
+    category: v.string(),
+    purchaseDate: v.number(),
+    purchaseValue: v.number(),
+    currentValue: v.number(),
+    note: v.optional(v.string()),
+    createdBy: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_category", ["category"]),
 });

@@ -23,6 +23,8 @@ import { Route as ContentRouteImport } from './routes/content'
 import { Route as CouponRouteImport } from './routes/coupon'
 import { Route as CustomerRouteImport } from './routes/customer'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as FinanceRouteImport } from './routes/finance'
+import { Route as InvestorRouteImport } from './routes/investor'
 import { Route as MessageRouteImport } from './routes/message'
 import { Route as OrderRouteImport } from './routes/order'
 import { Route as OrderConfirmedRouteImport } from './routes/order-confirmed'
@@ -38,6 +40,9 @@ import { Route as SizeGuideRouteImport } from './routes/size-guide'
 import { Route as TermsConditionsRouteImport } from './routes/terms-conditions'
 import { Route as CustomerIndexRouteImport } from './routes/customer.index'
 import { Route as CustomerIdRouteImport } from './routes/customer.$id'
+import { Route as InvestorIndexRouteImport } from './routes/investor.index'
+import { Route as InvestorIdRouteImport } from './routes/investor.$id'
+import { Route as InvestorNewRouteImport } from './routes/investor.new'
 import { Route as OrderIndexRouteImport } from './routes/order.index'
 import { Route as OrderIdRouteImport } from './routes/order.$id'
 import { Route as OrdersIndexRouteImport } from './routes/orders.index'
@@ -116,6 +121,16 @@ const FaqRoute = FaqRouteImport.update({
   path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FinanceRoute = FinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvestorRoute = InvestorRouteImport.update({
+  id: '/investor',
+  path: '/investor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MessageRoute = MessageRouteImport.update({
   id: '/message',
   path: '/message',
@@ -191,6 +206,21 @@ const CustomerIdRoute = CustomerIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => CustomerRoute,
 } as any)
+const InvestorIndexRoute = InvestorIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => InvestorRoute,
+} as any)
+const InvestorIdRoute = InvestorIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => InvestorRoute,
+} as any)
+const InvestorNewRoute = InvestorNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => InvestorRoute,
+} as any)
 const OrderIndexRoute = OrderIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -242,6 +272,8 @@ export interface FileRoutesByFullPath {
   '/coupon': typeof CouponRoute
   '/customer': typeof CustomerRouteWithChildren
   '/faq': typeof FaqRoute
+  '/finance': typeof FinanceRoute
+  '/investor': typeof InvestorRouteWithChildren
   '/message': typeof MessageRoute
   '/order': typeof OrderRouteWithChildren
   '/order-confirmed': typeof OrderConfirmedRoute
@@ -256,11 +288,14 @@ export interface FileRoutesByFullPath {
   '/size-guide': typeof SizeGuideRoute
   '/terms-conditions': typeof TermsConditionsRoute
   '/customer/$id': typeof CustomerIdRoute
+  '/investor/$id': typeof InvestorIdRoute
+  '/investor/new': typeof InvestorNewRoute
   '/order/$id': typeof OrderIdRoute
   '/orders/$id': typeof OrdersIdRoute
   '/product/new': typeof ProductNewRoute
   '/products/$slug': typeof ProductsSlugRoute
   '/customer/': typeof CustomerIndexRoute
+  '/investor/': typeof InvestorIndexRoute
   '/order/': typeof OrderIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/product/$id/edit': typeof ProductIdEditRoute
@@ -279,6 +314,7 @@ export interface FileRoutesByTo {
   '/content': typeof ContentRoute
   '/coupon': typeof CouponRoute
   '/faq': typeof FaqRoute
+  '/finance': typeof FinanceRoute
   '/message': typeof MessageRoute
   '/order-confirmed': typeof OrderConfirmedRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -292,11 +328,14 @@ export interface FileRoutesByTo {
   '/size-guide': typeof SizeGuideRoute
   '/terms-conditions': typeof TermsConditionsRoute
   '/customer/$id': typeof CustomerIdRoute
+  '/investor/$id': typeof InvestorIdRoute
+  '/investor/new': typeof InvestorNewRoute
   '/order/$id': typeof OrderIdRoute
   '/orders/$id': typeof OrdersIdRoute
   '/product/new': typeof ProductNewRoute
   '/products/$slug': typeof ProductsSlugRoute
   '/customer': typeof CustomerIndexRoute
+  '/investor': typeof InvestorIndexRoute
   '/order': typeof OrderIndexRoute
   '/orders': typeof OrdersIndexRoute
   '/product/$id/edit': typeof ProductIdEditRoute
@@ -317,6 +356,8 @@ export interface FileRoutesById {
   '/coupon': typeof CouponRoute
   '/customer': typeof CustomerRouteWithChildren
   '/faq': typeof FaqRoute
+  '/finance': typeof FinanceRoute
+  '/investor': typeof InvestorRouteWithChildren
   '/message': typeof MessageRoute
   '/order': typeof OrderRouteWithChildren
   '/order-confirmed': typeof OrderConfirmedRoute
@@ -331,11 +372,14 @@ export interface FileRoutesById {
   '/size-guide': typeof SizeGuideRoute
   '/terms-conditions': typeof TermsConditionsRoute
   '/customer/$id': typeof CustomerIdRoute
+  '/investor/$id': typeof InvestorIdRoute
+  '/investor/new': typeof InvestorNewRoute
   '/order/$id': typeof OrderIdRoute
   '/orders/$id': typeof OrdersIdRoute
   '/product/new': typeof ProductNewRoute
   '/products/$slug': typeof ProductsSlugRoute
   '/customer/': typeof CustomerIndexRoute
+  '/investor/': typeof InvestorIndexRoute
   '/order/': typeof OrderIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/product/$id/edit': typeof ProductIdEditRoute
@@ -357,6 +401,8 @@ export interface FileRouteTypes {
     | '/coupon'
     | '/customer'
     | '/faq'
+    | '/finance'
+    | '/investor'
     | '/message'
     | '/order'
     | '/order-confirmed'
@@ -371,11 +417,14 @@ export interface FileRouteTypes {
     | '/size-guide'
     | '/terms-conditions'
     | '/customer/$id'
+    | '/investor/$id'
+    | '/investor/new'
     | '/order/$id'
     | '/orders/$id'
     | '/product/new'
     | '/products/$slug'
     | '/customer/'
+    | '/investor/'
     | '/order/'
     | '/orders/'
     | '/product/$id/edit'
@@ -394,6 +443,7 @@ export interface FileRouteTypes {
     | '/content'
     | '/coupon'
     | '/faq'
+    | '/finance'
     | '/message'
     | '/order-confirmed'
     | '/privacy-policy'
@@ -407,11 +457,14 @@ export interface FileRouteTypes {
     | '/size-guide'
     | '/terms-conditions'
     | '/customer/$id'
+    | '/investor/$id'
+    | '/investor/new'
     | '/order/$id'
     | '/orders/$id'
     | '/product/new'
     | '/products/$slug'
     | '/customer'
+    | '/investor'
     | '/order'
     | '/orders'
     | '/product/$id/edit'
@@ -431,6 +484,8 @@ export interface FileRouteTypes {
     | '/coupon'
     | '/customer'
     | '/faq'
+    | '/finance'
+    | '/investor'
     | '/message'
     | '/order'
     | '/order-confirmed'
@@ -445,11 +500,14 @@ export interface FileRouteTypes {
     | '/size-guide'
     | '/terms-conditions'
     | '/customer/$id'
+    | '/investor/$id'
+    | '/investor/new'
     | '/order/$id'
     | '/orders/$id'
     | '/product/new'
     | '/products/$slug'
     | '/customer/'
+    | '/investor/'
     | '/order/'
     | '/orders/'
     | '/product/$id/edit'
@@ -470,6 +528,8 @@ export interface RootRouteChildren {
   CouponRoute: typeof CouponRoute
   CustomerRoute: typeof CustomerRouteWithChildren
   FaqRoute: typeof FaqRoute
+  FinanceRoute: typeof FinanceRoute
+  InvestorRoute: typeof InvestorRouteWithChildren
   MessageRoute: typeof MessageRoute
   OrderRoute: typeof OrderRouteWithChildren
   OrderConfirmedRoute: typeof OrderConfirmedRoute
@@ -588,6 +648,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/finance': {
+      id: '/finance'
+      path: '/finance'
+      fullPath: '/finance'
+      preLoaderRoute: typeof FinanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/investor': {
+      id: '/investor'
+      path: '/investor'
+      fullPath: '/investor'
+      preLoaderRoute: typeof InvestorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/message': {
       id: '/message'
       path: '/message'
@@ -693,6 +767,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomerIdRouteImport
       parentRoute: typeof CustomerRoute
     }
+    '/investor/': {
+      id: '/investor/'
+      path: '/'
+      fullPath: '/investor/'
+      preLoaderRoute: typeof InvestorIndexRouteImport
+      parentRoute: typeof InvestorRoute
+    }
+    '/investor/$id': {
+      id: '/investor/$id'
+      path: '/$id'
+      fullPath: '/investor/$id'
+      preLoaderRoute: typeof InvestorIdRouteImport
+      parentRoute: typeof InvestorRoute
+    }
+    '/investor/new': {
+      id: '/investor/new'
+      path: '/new'
+      fullPath: '/investor/new'
+      preLoaderRoute: typeof InvestorNewRouteImport
+      parentRoute: typeof InvestorRoute
+    }
     '/order/': {
       id: '/order/'
       path: '/'
@@ -759,6 +854,22 @@ const CustomerRouteWithChildren = CustomerRoute._addFileChildren(
   CustomerRouteChildren,
 )
 
+interface InvestorRouteChildren {
+  InvestorIdRoute: typeof InvestorIdRoute
+  InvestorNewRoute: typeof InvestorNewRoute
+  InvestorIndexRoute: typeof InvestorIndexRoute
+}
+
+const InvestorRouteChildren: InvestorRouteChildren = {
+  InvestorIdRoute: InvestorIdRoute,
+  InvestorNewRoute: InvestorNewRoute,
+  InvestorIndexRoute: InvestorIndexRoute,
+}
+
+const InvestorRouteWithChildren = InvestorRoute._addFileChildren(
+  InvestorRouteChildren,
+)
+
 interface OrderRouteChildren {
   OrderIdRoute: typeof OrderIdRoute
   OrderIndexRoute: typeof OrderIndexRoute
@@ -799,6 +910,8 @@ const rootRouteChildren: RootRouteChildren = {
   CouponRoute: CouponRoute,
   CustomerRoute: CustomerRouteWithChildren,
   FaqRoute: FaqRoute,
+  FinanceRoute: FinanceRoute,
+  InvestorRoute: InvestorRouteWithChildren,
   MessageRoute: MessageRoute,
   OrderRoute: OrderRouteWithChildren,
   OrderConfirmedRoute: OrderConfirmedRoute,

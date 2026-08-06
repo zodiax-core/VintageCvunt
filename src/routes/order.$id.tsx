@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Package, Receipt, Trash2, Check, X, Phone, ExternalLink, Maximize2, XCircle } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
+import { getSessionToken } from "@/lib/admin";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Id } from "../../convex/_generated/dataModel";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -113,7 +114,7 @@ function OrderDetail() {
 
   async function handleUpdate() {
     try {
-      await updateOrder({ id: order._id as Id<"orders">, status });
+      await updateOrder({ sessionToken: getSessionToken() ?? "", id: order._id as Id<"orders">, status });
       flashSuccess("Status updated!");
     } catch (err) {
       console.error("Failed to update order", err);
@@ -122,7 +123,7 @@ function OrderDetail() {
 
   async function handleQuickAction(nextStatus: string) {
     try {
-      await updateOrder({ id: order._id as Id<"orders">, status: nextStatus });
+      await updateOrder({ sessionToken: getSessionToken() ?? "", id: order._id as Id<"orders">, status: nextStatus });
       setStatus(nextStatus);
       flashSuccess(`Order ${nextStatus.toLowerCase()}!`);
     } catch (err) {

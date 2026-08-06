@@ -1,6 +1,6 @@
 import { g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
 import { a as AnimatePresence, i as motion } from "../_libs/framer-motion.mjs";
-import { o as TriangleAlert, t as X } from "../_libs/lucide-react.mjs";
+import { c as TriangleAlert, t as X } from "../_libs/lucide-react.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/ConfirmDialog-CUP9yHvC.js
 var import_jsx_runtime = require_jsx_runtime();
 function ConfirmDialog({ open, onClose, onConfirm, title, message, confirmLabel = "Confirm", cancelLabel = "Cancel", variant = "danger" }) {

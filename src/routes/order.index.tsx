@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { Eye, ChevronLeft, ChevronRight, Search, FileText, SlidersHorizontal, X, Check, CheckSquare } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
+import { getSessionToken } from "@/lib/admin";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { generateDetailedOrdersPDF } from "@/lib/pdf-utils";
 import { Id } from "../../convex/_generated/dataModel";
@@ -128,7 +129,7 @@ function Orders() {
   async function handleBulkUpdate() {
     if (!bulkStatus || selectedIds.size === 0) return;
     for (const id of selectedIds) {
-      await updateOrder({ id, status: bulkStatus });
+      await updateOrder({ sessionToken: getSessionToken() ?? "", id, status: bulkStatus });
     }
     setSelectedIds(new Set());
     setBulkStatus("");

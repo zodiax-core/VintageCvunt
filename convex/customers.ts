@@ -1,17 +1,28 @@
 import { v } from "convex/values";
 import { query, mutation, action, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
+import type { Doc, Id } from "./_generated/dataModel";
+import { ADMIN_EMAILS, isAdminCustomer } from "./admin";
 
-const ADMIN_EMAILS = new Set(["zodiaxcore@gmail.com", "vintagecvunt@gmail.com"]);
+function publicCustomer(customer: Doc<"customers"> | null) {
+  if (!customer) return null;
+  const { passwordHash, passwordSalt, otp, otpExpiresAt, lockedUntil, ...safe } = customer;
+  return safe;
+}
 
-async function hashPassword(password: string, salt?: string): Promise<{ hash: string; salt: string }> {
+async function hashPassword(
+  password: string,
+  salt?: string,
+): Promise<{ hash: string; salt: string }> {
   const encoder = new TextEncoder();
   let saltString: string;
   if (salt) {
     saltString = salt;
   } else {
     const saltBytes = crypto.getRandomValues(new Uint8Array(16));
-    saltString = Array.from(saltBytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+    saltString = Array.from(saltBytes)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
   }
   const key = await crypto.subtle.importKey(
     "raw",
@@ -25,7 +36,9 @@ async function hashPassword(password: string, salt?: string): Promise<{ hash: st
     key,
     256,
   );
-  const hash = Array.from(new Uint8Array(derived)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  const hash = Array.from(new Uint8Array(derived))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
   return { hash, salt: saltString };
 }
 
@@ -44,24 +57,26 @@ function isLocked(customer: { loginAttempts: number; lockedUntil?: number }): bo
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("customers").order("desc").collect();
+    const customers = await ctx.db.query("customers").order("desc").collect();
+    return customers.map(publicCustomer);
   },
 });
 
 export const getById = query({
   args: { id: v.id("customers") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    return publicCustomer(await ctx.db.get(args.id));
   },
 });
 
 export const getByEmail = query({
   args: { email: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const customer = await ctx.db
       .query("customers")
       .withIndex("by_email", (q) => q.eq("email", args.email.toLowerCase().trim()))
       .first();
+    return publicCustomer(customer);
   },
 });
 
@@ -97,12 +112,23 @@ export const registerCustomer = internalMutation({
     email: v.string(),
     password: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    _id: Id<"customers">;
+    name: string;
+    email: string;
+    role: string;
+    isEmailVerified: boolean;
+    otp?: string;
+  }> => {
     const normalizedEmail = args.email.toLowerCase().trim();
     const safeName = sanitize(args.name);
 
     if (!normalizedEmail) throw new Error("Email is required.");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) throw new Error("Invalid email format.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail))
+      throw new Error("Invalid email format.");
     if (safeName.length < 1) throw new Error("Name is required.");
     if (args.password.length < 8) throw new Error("Password must be at least 8 characters.");
 
@@ -158,7 +184,16 @@ export const register = action({
     email: v.string(),
     password: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    _id: Id<"customers">;
+    name: string;
+    email: string;
+    role: string;
+    isEmailVerified?: boolean;
+  }> => {
     const user = await ctx.runMutation(internal.customers.registerCustomer, args);
 
     if (!user.isEmailVerified && user.otp) {
@@ -169,7 +204,9 @@ export const register = action({
       });
 
       if (!emailResult.success) {
-        throw new Error(emailResult.reason || "Failed to send verification email. Please try resending the code.");
+        throw new Error(
+          emailResult.reason || "Failed to send verification email. Please try resending the code.",
+        );
       }
     }
 
@@ -265,7 +302,10 @@ export const prepareResendVerification = internalMutation({
 export const resendVerification = action({
   args: { email: v.string() },
   handler: async (ctx, args) => {
-    const { email, otp } = await ctx.runMutation(internal.customers.prepareResendVerification, args);
+    const { email, otp } = await ctx.runMutation(
+      internal.customers.prepareResendVerification,
+      args,
+    );
 
     const emailResult = await ctx.runAction(internal.email.sendVerificationCode, {
       email,
@@ -286,7 +326,19 @@ export const authenticate = mutation({
     email: v.string(),
     password: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (
+    ctx,
+    args,
+  ): Promise<
+    | {
+        _id: Id<"customers">;
+        name: string;
+        email: string;
+        role: "admin" | "customer";
+        sessionToken?: string;
+      }
+    | { needsVerification: boolean; email: string }
+  > => {
     const normalizedEmail = args.email.toLowerCase().trim();
 
     if (!normalizedEmail) throw new Error("Email is required.");
@@ -311,7 +363,10 @@ export const authenticate = mutation({
     if (!existing.passwordHash || !existing.passwordSalt) {
       await ctx.db.patch(existing._id, {
         loginAttempts: (existing.loginAttempts || 0) + 1,
-        lockedUntil: existing.loginAttempts + 1 >= LOCKOUT_THRESHOLD ? Date.now() + LOCKOUT_DURATION_MS : undefined,
+        lockedUntil:
+          existing.loginAttempts + 1 >= LOCKOUT_THRESHOLD
+            ? Date.now() + LOCKOUT_DURATION_MS
+            : undefined,
         updatedAt: Date.now(),
       });
       throw new Error("Invalid email or password.");
@@ -320,14 +375,16 @@ export const authenticate = mutation({
     const { hash } = await hashPassword(args.password, existing.passwordSalt);
     if (hash !== existing.passwordHash) {
       const attempts = (existing.loginAttempts || 0) + 1;
-      const lockedUntil = attempts >= LOCKOUT_THRESHOLD ? Date.now() + LOCKOUT_DURATION_MS : undefined;
+      const lockedUntil =
+        attempts >= LOCKOUT_THRESHOLD ? Date.now() + LOCKOUT_DURATION_MS : undefined;
       await ctx.db.patch(existing._id, {
         loginAttempts: attempts,
         lockedUntil,
         updatedAt: Date.now(),
       });
       const remaining = LOCKOUT_THRESHOLD - attempts;
-      if (remaining <= 0) throw new Error("Account locked due to too many failed attempts. Try again in 15 minutes.");
+      if (remaining <= 0)
+        throw new Error("Account locked due to too many failed attempts. Try again in 15 minutes.");
       throw new Error("Invalid email or password.");
     }
 
@@ -359,11 +416,17 @@ export const authenticate = mutation({
       await ctx.db.patch(existing._id, { role: "admin", updatedAt: Date.now() });
     }
 
+    const isAdminUser = isAdminCustomer(existing);
+    const sessionToken = isAdminUser
+      ? await ctx.runMutation(internal.admin.issueSession, { customerId: existing._id })
+      : undefined;
+
     return {
       _id: existing._id,
       name: existing.name,
       email: existing.email,
-      role: isAdmin ? "admin" : (existing.role || "customer"),
+      role: isAdmin ? "admin" : ((existing.role as "customer") || "customer"),
+      sessionToken,
     };
   },
 });

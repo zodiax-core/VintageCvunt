@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { requireAdmin } from "./admin";
 
 export const get = query({
   args: {},
@@ -11,6 +12,7 @@ export const get = query({
 
 export const upsert = mutation({
   args: {
+    sessionToken: v.string(),
     storeName: v.string(),
     storeEmail: v.string(),
     currency: v.string(),
@@ -19,11 +21,13 @@ export const upsert = mutation({
     taxInclusive: v.boolean(),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
+    const { sessionToken, ...fields } = args;
     const existing = await ctx.db.query("settings").first();
     if (existing) {
-      await ctx.db.patch(existing._id, { ...args, updatedAt: Date.now() });
+      await ctx.db.patch(existing._id, { ...fields, updatedAt: Date.now() });
       return existing._id;
     }
-    return await ctx.db.insert("settings", { ...args, updatedAt: Date.now() });
+    return await ctx.db.insert("settings", { ...fields, updatedAt: Date.now() });
   },
 });

@@ -1,4 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { isAdminEmail, getSessionToken, setSessionToken } from "./admin";
 
 export type AuthUser = {
   id?: string;
@@ -11,7 +14,8 @@ const STORAGE_KEY = "vc_user";
 
 const AuthContext = createContext<{
   user: AuthUser | null;
-  login: (user: AuthUser) => void;
+  sessionToken: string | null;
+  login: (user: AuthUser, sessionToken?: string | null) => void;
   logout: () => void;
   updateUser: (updates: Partial<AuthUser>) => void;
   isAdmin: boolean;
@@ -20,6 +24,8 @@ const AuthContext = createContext<{
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [sessionToken, setToken] = useState<string | null>(null);
+  const revokeSession = useMutation(api.admin.revokeSession);
 
   useEffect(() => {
     try {
@@ -27,28 +33,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && parsed.email) {
-          if (parsed.email.toLowerCase() === "zodiaxcore@gmail.com") {
+          if (isAdminEmail(parsed.email)) {
             parsed.role = "admin";
           }
           setUser(parsed);
         }
       }
+      setToken(getSessionToken());
     } catch {}
   }, []);
 
-  const login = (userData: AuthUser) => {
-    const isAdmin = userData.email.toLowerCase() === "zodiaxcore@gmail.com" || userData.role === "admin";
+  const login = (userData: AuthUser, token?: string | null) => {
+    const isAdmin = isAdminEmail(userData.email) || userData.role === "admin";
     const fullUser: AuthUser = {
       ...userData,
       role: isAdmin ? "admin" : "customer",
     };
     setUser(fullUser);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(fullUser));
+    if (token) {
+      setSessionToken(token);
+      setToken(token);
+    }
   };
 
   const logout = () => {
+    const token = sessionToken || getSessionToken();
+    if (token) {
+      revokeSession({ sessionToken: token }).catch(() => {});
+    }
     setUser(null);
+    setToken(null);
     localStorage.removeItem(STORAGE_KEY);
+    setSessionToken(null);
   };
 
   const updateUser = (updates: Partial<AuthUser>) => {
@@ -60,11 +77,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const isAdmin = Boolean(user && (user.role === "admin" || user.email.toLowerCase() === "zodiaxcore@gmail.com"));
+  const isAdmin = Boolean(user && (user.role === "admin" || isAdminEmail(user.email)));
   const isCustomer = Boolean(user && user.role === "customer");
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser, isAdmin, isCustomer }}>
+    <AuthContext.Provider
+      value={{ user, sessionToken, login, logout, updateUser, isAdmin, isCustomer }}
+    >
       {children}
     </AuthContext.Provider>
   );

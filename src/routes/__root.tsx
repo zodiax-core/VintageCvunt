@@ -19,6 +19,7 @@ import { CartProvider } from "../lib/cart-context";
 import { AuthProvider } from "../lib/auth-context";
 import { CurrencyProvider } from "../lib/currency-context";
 import { getConvexClient } from "../lib/convex";
+import { isAdminEmail } from "../lib/admin";
 import { FloatingInstagram } from "../components/FloatingInstagram";
 
 function NotFoundComponent() {
@@ -50,7 +51,8 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
-  const isConvexError = error?.message?.includes("Could not find public function") ||
+  const isConvexError =
+    error?.message?.includes("Could not find public function") ||
     error?.message?.includes("CONVEX") ||
     error?.message?.includes("Server Error");
 
@@ -93,10 +95,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "VintageCvunt — Modern Gothic Luxury" },
-      { name: "description", content: "VintageCvunt. A modern gothic luxury house. Chrome, leather, silver — an interactive fashion campaign." },
+      {
+        name: "description",
+        content:
+          "VintageCvunt. A modern gothic luxury house. Chrome, leather, silver — an interactive fashion campaign.",
+      },
       { name: "author", content: "VintageCvunt" },
       { property: "og:title", content: "VintageCvunt — Modern Gothic Luxury" },
-      { property: "og:description", content: "An interactive luxury fashion campaign. Chrome, leather, silver." },
+      {
+        property: "og:description",
+        content: "An interactive luxury fashion campaign. Chrome, leather, silver.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -108,7 +117,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Oswald:wght@400;500;600;700&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Oswald:wght@400;500;600;700&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -136,7 +148,10 @@ function RootComponent() {
   const [convexClient] = useState(() => getConvexClient());
   const navigate = useNavigate();
   const location = useLocation();
-  const isAdminRoute = /^\/(admin|analytics|collection|content|coupon|customer|message|order|product|review|setting)(\/|$)/.test(location.pathname);
+  const isAdminRoute =
+    /^\/(admin|analytics|collection|content|coupon|customer|message|order|product|review|setting|investor|finance)(\/|$)/.test(
+      location.pathname,
+    );
 
   useEffect(() => {
     const lenis = new Lenis();
@@ -156,7 +171,7 @@ function RootComponent() {
         if (!raw) return;
         try {
           const u = JSON.parse(raw);
-          if (u.email?.toLowerCase() === "zodiaxcore@gmail.com") {
+          if (isAdminEmail(u.email)) {
             const isOnAdmin = window.location.pathname.startsWith("/admin");
             navigate({ to: isOnAdmin ? "/" : "/admin" });
           }

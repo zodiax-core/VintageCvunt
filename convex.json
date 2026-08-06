@@ -20,6 +20,10 @@
     "EMAILJS_ORDER_TEMPLATE_ID": {
       "description": "EmailJS Template ID for order confirmation emails",
       "required": true
+    },
+    "INVESTOR_CNIC_KEY": {
+      "description": "64-char hex AES-256 key used to encrypt investor CNICs at rest. Generate with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"",
+      "required": true
     }
   }
 }

@@ -2,10 +2,27 @@ import { Link, useLocation, useNavigate, useRouterState } from "@tanstack/react-
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  LayoutDashboard, ShoppingBag, Package, Users, BarChart3,
-  MessageSquare, Star, Tag, FileText, Settings, LogOut,
-  Menu, ChevronLeft, Bell, Search, User, ExternalLink,
-  MoreHorizontal, Home,
+  LayoutDashboard,
+  ShoppingBag,
+  Package,
+  Users,
+  BarChart3,
+  MessageSquare,
+  Star,
+  Tag,
+  FileText,
+  Settings,
+  LogOut,
+  Menu,
+  ChevronLeft,
+  Bell,
+  Search,
+  User,
+  ExternalLink,
+  MoreHorizontal,
+  Home,
+  HandCoins,
+  PiggyBank,
 } from "lucide-react";
 import { useAuthContext } from "@/lib/auth-context";
 
@@ -21,6 +38,8 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/product", label: "Products", icon: Package },
   { to: "/collection", label: "Collections", icon: FileText },
   { to: "/customer", label: "Customers", icon: Users },
+  { to: "/investor", label: "Investors", icon: HandCoins },
+  { to: "/finance", label: "Finance", icon: PiggyBank },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/message", label: "Messages", icon: MessageSquare },
   { to: "/review", label: "Reviews", icon: Star },
@@ -40,8 +59,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const check = () => {
       const w = window.innerWidth;
-      if (w < 768) { setCollapsed(false); }
-      else if (w < 1024) setCollapsed(true);
+      if (w < 768) {
+        setCollapsed(false);
+      } else if (w < 1024) setCollapsed(true);
       else setCollapsed(false);
     };
     check();
@@ -53,6 +73,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { to: "/order", label: "Orders", icon: ShoppingBag },
     { to: "/product", label: "Products", icon: Package },
+    { to: "/investor", label: "Investors", icon: HandCoins },
+    { to: "/finance", label: "Finance", icon: PiggyBank },
     { to: "/analytics", label: "Analytics", icon: BarChart3 },
     { to: "/setting", label: "Settings", icon: Settings },
     { to: "", label: "Menu", icon: MoreHorizontal, action: "sidebar" },
@@ -72,7 +94,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center gap-3 border-b border-chrome/20 px-4 shrink-0">
         <div className="h-2 w-2 shrink-0 rounded-full bg-chrome" />
-        {!col && <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-chrome truncate">VintageCvunt</span>}
+        {!col && (
+          <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-chrome truncate">
+            VintageCvunt
+          </span>
+        )}
       </div>
       <nav className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-thin">
         {NAV_ITEMS.map((item) => {
@@ -84,11 +110,17 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               to={item.to}
               onClick={() => setSidebarOpen(false)}
               className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 group ${
-                active ? "bg-foreground/10 text-foreground" : "text-chrome-dim hover:text-foreground hover:bg-foreground/5"
+                active
+                  ? "bg-foreground/10 text-foreground"
+                  : "text-chrome-dim hover:text-foreground hover:bg-foreground/5"
               }`}
             >
               <Icon size={18} className="shrink-0" />
-              {!col && <span className="font-mono text-[11px] uppercase tracking-[0.2em] truncate">{item.label}</span>}
+              {!col && (
+                <span className="font-mono text-[11px] uppercase tracking-[0.2em] truncate">
+                  {item.label}
+                </span>
+              )}
               {col && (
                 <div className="pointer-events-none absolute left-16 rounded-lg bg-graphite-2 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-foreground opacity-0 shadow-lg transition-opacity group-hover:opacity-100 whitespace-nowrap z-50 border border-chrome/20">
                   {item.label}
@@ -112,19 +144,25 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
-      <aside className={`hidden md:flex flex-col border-r border-chrome/20 bg-background transition-all duration-300 shrink-0 ${collapsed ? "w-16" : "w-56"}`}>
+      <aside
+        className={`hidden md:flex flex-col border-r border-chrome/20 bg-background transition-all duration-300 shrink-0 ${collapsed ? "w-16" : "w-56"}`}
+      >
         <SidebarContent col={collapsed} />
       </aside>
 
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-black/60 md:hidden"
             onClick={() => setSidebarOpen(false)}
           >
             <motion.aside
-              initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 250 }}
               className="absolute left-0 top-0 h-full w-72 border-r border-chrome/20 bg-background shadow-2xl"
               onClick={(e) => e.stopPropagation()}
@@ -147,15 +185,31 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           </div>
         )}
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-chrome/20 bg-background backdrop-blur-xl px-3 lg:px-6">
-          <button onClick={() => setSidebarOpen(true)} className="md:hidden flex items-center justify-center h-10 w-10 rounded-xl hover:bg-foreground/10 active:bg-foreground/15 transition-colors" aria-label="Open menu">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="md:hidden flex items-center justify-center h-10 w-10 rounded-xl hover:bg-foreground/10 active:bg-foreground/15 transition-colors"
+            aria-label="Open menu"
+          >
             <Menu size={20} />
           </button>
-          <button onClick={() => setCollapsed(!collapsed)} className="hidden md:flex items-center justify-center h-9 w-9 rounded-lg hover:bg-foreground/5 transition-colors">
-            <ChevronLeft size={18} className={`transition-transform ${collapsed ? "rotate-180" : ""}`} />
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="hidden md:flex items-center justify-center h-9 w-9 rounded-lg hover:bg-foreground/5 transition-colors"
+          >
+            <ChevronLeft
+              size={18}
+              className={`transition-transform ${collapsed ? "rotate-180" : ""}`}
+            />
           </button>
           <div className="hidden sm:flex flex-1 max-w-md relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-chrome-dim" />
-            <input placeholder="Search..." className="w-full rounded-xl border border-chrome/20 bg-graphite py-2 pl-9 pr-4 font-mono text-[12px] text-foreground placeholder:text-chrome-dim/40 outline-none focus:border-chrome/50 transition-colors" />
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-chrome-dim"
+            />
+            <input
+              placeholder="Search..."
+              className="w-full rounded-xl border border-chrome/20 bg-graphite py-2 pl-9 pr-4 font-mono text-[12px] text-foreground placeholder:text-chrome-dim/40 outline-none focus:border-chrome/50 transition-colors"
+            />
           </div>
           <div className="flex items-center gap-2 ml-auto">
             <button className="relative flex items-center justify-center h-9 w-9 rounded-lg hover:bg-foreground/5 transition-colors">
@@ -167,8 +221,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 <User size={14} className="text-chrome-dim" />
               </div>
               <div className="hidden lg:block">
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] leading-tight">{user?.name || "Admin"}</p>
-                <p className="font-mono text-[9px] text-chrome-dim">{user?.email || "admin@vintagecvunt.com"}</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] leading-tight">
+                  {user?.name || "Admin"}
+                </p>
+                <p className="font-mono text-[9px] text-chrome-dim">
+                  {user?.email || "admin@vintagecvunt.com"}
+                </p>
               </div>
             </div>
           </div>
@@ -187,7 +245,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                   className="flex flex-col items-center gap-1 rounded-xl px-3 py-2 transition-colors text-chrome-dim hover:text-foreground active:bg-foreground/5"
                 >
                   <Icon size={18} />
-                  <span className="font-mono text-[9px] uppercase tracking-[0.15em]">{item.label}</span>
+                  <span className="font-mono text-[9px] uppercase tracking-[0.15em]">
+                    {item.label}
+                  </span>
                 </button>
               );
             }
@@ -196,11 +256,15 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 key={item.to}
                 to={item.to}
                 className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2 transition-colors ${
-                  active ? "text-foreground bg-foreground/8" : "text-chrome-dim hover:text-foreground"
+                  active
+                    ? "text-foreground bg-foreground/8"
+                    : "text-chrome-dim hover:text-foreground"
                 }`}
               >
                 <Icon size={18} />
-                <span className="font-mono text-[9px] uppercase tracking-[0.15em]">{item.label}</span>
+                <span className="font-mono text-[9px] uppercase tracking-[0.15em]">
+                  {item.label}
+                </span>
               </Link>
             );
           })}
