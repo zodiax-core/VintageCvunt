@@ -19,7 +19,7 @@ import { CartProvider } from "../lib/cart-context";
 import { AuthProvider } from "../lib/auth-context";
 import { CurrencyProvider } from "../lib/currency-context";
 import { getConvexClient } from "../lib/convex";
-import { isAdminEmail } from "../lib/admin";
+import { isAdminEmail, getSessionToken } from "../lib/admin";
 import { FloatingInstagram } from "../components/FloatingInstagram";
 
 function NotFoundComponent() {
@@ -171,7 +171,7 @@ function RootComponent() {
         if (!raw) return;
         try {
           const u = JSON.parse(raw);
-          if (isAdminEmail(u.email)) {
+          if (isAdminEmail(u.email) && getSessionToken()) {
             const isOnAdmin = window.location.pathname.startsWith("/admin");
             navigate({ to: isOnAdmin ? "/" : "/admin" });
           }

@@ -94,6 +94,7 @@ function Settings() {
     const price = Number(shippingForm.price);
     if (editingShippingId) {
       await updateShippingRate({
+        sessionToken: getSessionToken() ?? "",
         id: editingShippingId,
         name: shippingForm.name,
         description: shippingForm.description,
@@ -103,6 +104,7 @@ function Settings() {
       });
     } else {
       await createShippingRate({
+        sessionToken: getSessionToken() ?? "",
         name: shippingForm.name,
         description: shippingForm.description,
         price,
@@ -309,7 +311,7 @@ function Settings() {
                           <button onClick={() => editShipping(rate)} className="btn-chrome btn-chrome-inner p-2 rounded-lg">
                             <Pencil className="h-4 w-4" />
                           </button>
-                          <button onClick={() => removeShippingRate({ id: rate._id })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
+                          <button onClick={() => removeShippingRate({ sessionToken: getSessionToken() ?? "", id: rate._id })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -336,7 +338,7 @@ function Settings() {
                         <button onClick={() => editShipping(rate)} className="btn-chrome btn-chrome-inner p-1.5 rounded-lg">
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
-                        <button onClick={() => removeShippingRate({ id: rate._id })} className="btn-chrome btn-chrome-inner p-1.5 rounded-lg text-red-400">
+                        <button onClick={() => removeShippingRate({ sessionToken: getSessionToken() ?? "", id: rate._id })} className="btn-chrome btn-chrome-inner p-1.5 rounded-lg text-red-400">
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>

@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { requireAdmin } from "./admin";
 
 export const list = query({
   args: {},
@@ -10,14 +11,17 @@ export const list = query({
 
 export const create = mutation({
   args: {
+    sessionToken: v.string(),
     year: v.string(),
     title: v.string(),
     description: v.string(),
     order: v.number(),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
+    const { sessionToken, ...fields } = args;
     return await ctx.db.insert("aboutMilestones", {
-      ...args,
+      ...fields,
       createdAt: Date.now(),
     });
   },
@@ -25,6 +29,7 @@ export const create = mutation({
 
 export const update = mutation({
   args: {
+    sessionToken: v.string(),
     id: v.id("aboutMilestones"),
     year: v.optional(v.string()),
     title: v.optional(v.string()),
@@ -32,14 +37,16 @@ export const update = mutation({
     order: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { id, ...fields } = args;
+    await requireAdmin(ctx, args.sessionToken);
+    const { sessionToken, id, ...fields } = args;
     await ctx.db.patch(id, fields);
   },
 });
 
 export const remove = mutation({
-  args: { id: v.id("aboutMilestones") },
+  args: { sessionToken: v.string(), id: v.id("aboutMilestones") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     await ctx.db.delete(args.id);
   },
 });

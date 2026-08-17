@@ -9,6 +9,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useQuery, useMutation } from "convex/react";
 import type { Id } from "../../convex/_generated/dataModel";
 import { api } from "../../convex/_generated/api";
+import { getSessionToken } from "@/lib/admin";
 
 export const Route = createFileRoute("/review")({
   beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
@@ -38,7 +39,7 @@ function StarDisplay({ rating }: { rating: number }) {
 }
 
 function Reviews() {
-  const reviews = useQuery(api.reviews.list) ?? [];
+  const reviews = useQuery(api.reviews.list, { sessionToken: getSessionToken() ?? "" }) ?? [];
   const updateStatus = useMutation(api.reviews.updateStatus);
   const removeReview = useMutation(api.reviews.remove);
   const [search, setSearch] = useState("");
@@ -47,7 +48,7 @@ function Reviews() {
   const [deleteTarget, setDeleteTarget] = useState<Id<"reviews"> | null>(null);
 
   function handleDelete(id: Id<"reviews">) {
-    removeReview({ id });
+    removeReview({ sessionToken: getSessionToken() ?? "", id });
     setDeleteTarget(null);
   }
 
@@ -213,12 +214,12 @@ function Reviews() {
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         {review.status !== "Approved" && (
-                          <button onClick={() => updateStatus({ id: review._id, status: "Approved" })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-green-400">
+                          <button onClick={() => updateStatus({ sessionToken: getSessionToken() ?? "", id: review._id, status: "Approved" })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-green-400">
                             <Check className="h-4 w-4" />
                           </button>
                         )}
                         {review.status !== "Rejected" && (
-                          <button onClick={() => updateStatus({ id: review._id, status: "Rejected" })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
+                          <button onClick={() => updateStatus({ sessionToken: getSessionToken() ?? "", id: review._id, status: "Rejected" })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
                             <X className="h-4 w-4" />
                           </button>
                         )}
@@ -247,12 +248,12 @@ function Reviews() {
               <div className="text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleDateString()}</div>
               <div className="flex items-center gap-2 pt-1">
                 {review.status !== "Approved" && (
-                  <button onClick={() => updateStatus({ id: review._id, status: "Approved" })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-xs text-green-400">
+                  <button onClick={() => updateStatus({ sessionToken: getSessionToken() ?? "", id: review._id, status: "Approved" })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-xs text-green-400">
                     <Check className="h-3.5 w-3.5 mr-1 inline" /> Approve
                   </button>
                 )}
                 {review.status !== "Rejected" && (
-                  <button onClick={() => updateStatus({ id: review._id, status: "Rejected" })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-xs text-red-400">
+                  <button onClick={() => updateStatus({ sessionToken: getSessionToken() ?? "", id: review._id, status: "Rejected" })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-xs text-red-400">
                     <X className="h-3.5 w-3.5 mr-1 inline" /> Reject
                   </button>
                 )}

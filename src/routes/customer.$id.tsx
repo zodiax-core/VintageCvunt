@@ -7,6 +7,7 @@ import { Id } from "../../convex/_generated/dataModel";
 import { generateCustomerProfilePDF } from "@/lib/pdf-utils";
 import { api } from "../../convex/_generated/api";
 import { useQuery } from "convex/react";
+import { getSessionToken } from "@/lib/admin";
 
 export const Route = createFileRoute("/customer/$id")({
   beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
@@ -28,7 +29,7 @@ const statusColors: Record<string, string> = {
 
 function CustomerDetail() {
   const { id } = Route.useParams();
-  const customer = useQuery(api.customers.getById, { id: id as Id<"customers"> });
+  const customer = useQuery(api.customers.getById, { sessionToken: getSessionToken() ?? "", id: id as Id<"customers"> });
   const orders = useQuery(api.orders.getByEmail, { email: customer?.email ?? "" });
 
   if (customer === undefined) {

@@ -9,6 +9,7 @@ import {
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Doc } from "../../convex/_generated/dataModel";
+import { getSessionToken } from "@/lib/admin";
 
 export const Route = createFileRoute("/analytics")({
   beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
@@ -34,7 +35,7 @@ function computePeriodOrders(orders: Doc<"orders">[], range: Range) {
 
 function Analytics() {
   const [range, setRange] = useState<Range>("30D");
-  const allOrders = useQuery(api.orders.list) ?? [];
+  const allOrders = useQuery(api.orders.list, { sessionToken: getSessionToken() ?? "" }) ?? [];
 
   const periodOrders = useMemo(() => computePeriodOrders(allOrders, range), [allOrders, range]);
 

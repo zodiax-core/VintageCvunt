@@ -133,7 +133,7 @@ function OrderDetail() {
 
   async function handleDelete() {
     try {
-      await removeOrder({ id: order._id as Id<"orders"> });
+      await removeOrder({ sessionToken: getSessionToken() ?? "", id: order._id as Id<"orders"> });
       navigate({ to: "/order" });
     } catch (err) {
       console.error("Failed to delete order", err);

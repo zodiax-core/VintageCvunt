@@ -1,5 +1,19 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { requireAdmin } from "./admin";
+
+export const getFeatured = query({
+  args: {},
+  handler: async (ctx) => {
+    const collections = await ctx.db
+      .query("collections")
+      .filter((q) => q.eq(q.field("featured"), true))
+      .collect();
+    const active = collections.filter((c) => c.isActive).sort((a, b) => b.createdAt - a.createdAt);
+    const featured = active.slice(0, 3);
+    return await enrichCollections(ctx, featured);
+  },
+});
 
 async function enrichCollection(ctx: any, collection: any) {
   if (!collection) return null;
@@ -36,16 +50,20 @@ export const getBySlug = query({
 
 export const create = mutation({
   args: {
+    sessionToken: v.string(),
     name: v.string(),
     slug: v.string(),
     description: v.optional(v.string()),
     image: v.optional(v.string()),
     productIds: v.array(v.string()),
     isActive: v.boolean(),
+    featured: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
+    const { sessionToken, ...fields } = args;
     return await ctx.db.insert("collections", {
-      ...args,
+      ...fields,
       createdAt: Date.now(),
     });
   },
@@ -53,6 +71,7 @@ export const create = mutation({
 
 export const update = mutation({
   args: {
+    sessionToken: v.string(),
     id: v.id("collections"),
     name: v.optional(v.string()),
     slug: v.optional(v.string()),
@@ -60,16 +79,19 @@ export const update = mutation({
     image: v.optional(v.string()),
     productIds: v.optional(v.array(v.string())),
     isActive: v.optional(v.boolean()),
+    featured: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { id, ...fields } = args;
+    await requireAdmin(ctx, args.sessionToken);
+    const { sessionToken, id, ...fields } = args;
     await ctx.db.patch(id, fields);
   },
 });
 
 export const remove = mutation({
-  args: { id: v.id("collections") },
+  args: { sessionToken: v.string(), id: v.id("collections") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     await ctx.db.delete(args.id);
   },
 });
@@ -85,8 +107,9 @@ export const getByName = query({
 });
 
 export const addProductToCollection = mutation({
-  args: { category: v.string(), productId: v.string() },
+  args: { sessionToken: v.string(), category: v.string(), productId: v.string() },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     const collection = await ctx.db
       .query("collections")
       .filter((q) => q.eq(q.field("name"), args.category))
@@ -99,8 +122,9 @@ export const addProductToCollection = mutation({
 });
 
 export const removeProductFromCollection = mutation({
-  args: { category: v.string(), productId: v.string() },
+  args: { sessionToken: v.string(), category: v.string(), productId: v.string() },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     const collection = await ctx.db
       .query("collections")
       .filter((q) => q.eq(q.field("name"), args.category))
@@ -112,7 +136,9 @@ export const removeProductFromCollection = mutation({
 });
 
 export const generateUploadUrl = mutation({
-  handler: async (ctx) => {
+  args: { sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     return await ctx.storage.generateUploadUrl();
   },
 });

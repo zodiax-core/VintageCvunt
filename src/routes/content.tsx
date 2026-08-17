@@ -5,6 +5,7 @@ import { Pencil, Save, X, FileText, Quote, Mail, Layout, HelpCircle, Trash2, Plu
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { getSessionToken } from "@/lib/admin";
 
 export const Route = createFileRoute("/content")({
   beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
@@ -26,7 +27,7 @@ const iconMap: Record<string, typeof FileText> = {
 };
 
 function Content() {
-  const contentBlocks = useQuery(api.content.list) ?? [];
+    const contentBlocks = useQuery(api.content.list, { sessionToken: getSessionToken() ?? "" }) ?? [];
   const upsertContent = useMutation(api.content.upsert);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -47,7 +48,7 @@ function Content() {
   function saveEdit(id: string) {
     const block = contentBlocks.find((b) => b._id === id);
     if (block) {
-      upsertContent({ key: block.key, title: block.title, content: editValue, type: block.type });
+      upsertContent({ sessionToken: getSessionToken() ?? "", key: block.key, title: block.title, content: editValue, type: block.type });
     }
     setEditingId(null);
     setEditValue("");
@@ -72,6 +73,7 @@ function Content() {
     if (!faqForm.question.trim() || !faqForm.answer.trim()) return;
     if (editingFaqId) {
       updateFaq({
+        sessionToken: getSessionToken() ?? "",
         id: editingFaqId,
         question: faqForm.question.trim(),
         answer: faqForm.answer.trim(),
@@ -81,6 +83,7 @@ function Content() {
       });
     } else {
       createFaq({
+        sessionToken: getSessionToken() ?? "",
         question: faqForm.question.trim(),
         answer: faqForm.answer.trim(),
         category: faqForm.category,
@@ -240,7 +243,9 @@ function Content() {
                             <button onClick={() => startEditFaq(faq)} className="btn-chrome btn-chrome-inner p-2 rounded-lg">
                               <Pencil className="h-4 w-4" />
                             </button>
-                            <button onClick={() => removeFaq({ id: faq._id })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
+                            <button onClick={() => removeFaq({ sessionToken: getSessionToken() ?? "", id: faq._id })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
+
+
                               <Trash2 className="h-4 w-4" />
                             </button>
                           </div>
@@ -263,7 +268,7 @@ function Content() {
                         <button onClick={() => startEditFaq(faq)} className="btn-chrome btn-chrome-inner p-1.5 rounded-lg">
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
-                        <button onClick={() => removeFaq({ id: faq._id })} className="btn-chrome btn-chrome-inner p-1.5 rounded-lg text-red-400">
+                        <button onClick={() => removeFaq({ sessionToken: getSessionToken() ?? "", id: faq._id })} className="btn-chrome btn-chrome-inner p-1.5 rounded-lg text-red-400">
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>

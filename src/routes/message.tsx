@@ -11,6 +11,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useQuery, useMutation } from "convex/react";
 import type { Id } from "../../convex/_generated/dataModel";
 import { api } from "../../convex/_generated/api";
+import { getSessionToken } from "@/lib/admin";
 
 export const Route = createFileRoute("/message")({
   beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
@@ -32,7 +33,7 @@ const statusStyles: Record<string, string> = {
 };
 
 function Messages() {
-  const messages = useQuery(api.messages.list) ?? [];
+  const messages = useQuery(api.messages.list, { sessionToken: getSessionToken() ?? "" }) ?? [];
   const markRead = useMutation(api.messages.markRead);
   const markReplied = useMutation(api.messages.markReplied);
   const removeMessage = useMutation(api.messages.remove);
@@ -51,18 +52,18 @@ function Messages() {
   const filtered = filter === "All" ? messages : messages.filter((m) => displayStatus(m) === filter);
 
   function handleDelete(id: Id<"messages">) {
-    removeMessage({ id });
+    removeMessage({ sessionToken: getSessionToken() ?? "", id });
     if (selected?._id === id) setSelected(null);
     setDeleteTarget(null);
   }
 
   function handleMarkRead(id: Id<"messages">) {
-    markRead({ id });
+    markRead({ sessionToken: getSessionToken() ?? "", id });
   }
 
   function handleReply() {
     if (!replyText.trim() || !selected) return;
-    markReplied({ id: selected._id });
+    markReplied({ sessionToken: getSessionToken() ?? "", id: selected._id });
     setReplyText("");
   }
 

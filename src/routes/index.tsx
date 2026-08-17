@@ -189,8 +189,7 @@ function Marquee() {
 
 /* ---------------- FEATURED ---------------- */
 function Featured() {
-  const featured = useQuery(api.products.getFeatured) ?? [];
-  const { formatPrice } = useCurrency();
+  const featured = useQuery(api.collections.getFeatured) ?? [];
 
   if (featured.length === 0) {
     return (
@@ -207,8 +206,8 @@ function Featured() {
           </div>
           <div className="divider-chrome mb-16" />
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <p className="font-display text-3xl text-chrome-dim italic">No featured products</p>
-            <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.24em] text-chrome-dim">Mark products as featured in the admin panel</p>
+            <p className="font-display text-3xl text-chrome-dim italic">No featured categories</p>
+            <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.24em] text-chrome-dim">Mark collections as featured in the admin panel</p>
           </div>
         </div>
       </section>
@@ -238,23 +237,32 @@ function Featured() {
         </div>
         <div className="divider-chrome mb-16" />
         <div className="grid grid-cols-12 gap-6">
-          <Link to="/products/$slug" params={{ slug: first.slug }} className="col-span-12 md:col-span-7 md:row-span-2">
-            <ProductCase
-              imageUrl={first.imageUrls?.[0] || "/placeholder.svg"}
+          <Link
+            to="/shop"
+            search={{ category: first.name }}
+            className="col-span-12 md:col-span-7 md:row-span-2"
+          >
+            <CategoryCase
+              imageUrl={first.imageUrl || "/placeholder.svg"}
               number="No. 001"
               name={first.name}
-              price={formatPrice(first.price)}
+              objects={first.productIds.length}
               tall
               priority
             />
           </Link>
-          {rest.map((p) => (
-            <Link key={p._id} to="/products/$slug" params={{ slug: p.slug }} className="col-span-12 md:col-span-5">
-              <ProductCase
-                imageUrl={p.imageUrls?.[0] || "/placeholder.svg"}
+          {rest.map((c) => (
+            <Link
+              key={c._id}
+              to="/shop"
+              search={{ category: c.name }}
+              className="col-span-12 md:col-span-5"
+            >
+              <CategoryCase
+                imageUrl={c.imageUrl || "/placeholder.svg"}
                 number=""
-                name={p.name}
-                price={formatPrice(p.price)}
+                name={c.name}
+                objects={c.productIds.length}
               />
             </Link>
           ))}
@@ -268,7 +276,21 @@ function SectionTag({ children }: { children: React.ReactNode }) {
   return <span className="font-mono text-[10px] uppercase tracking-[0.32em] text-chrome-dim">{children}</span>;
 }
 
-function ProductCase({ imageUrl, number, name, price, tall, priority }: { imageUrl: string; number: string; name: string; price: string; tall?: boolean; priority?: boolean }) {
+function CategoryCase({
+  imageUrl,
+  number,
+  name,
+  objects,
+  tall,
+  priority,
+}: {
+  imageUrl: string;
+  number: string;
+  name: string;
+  objects: number;
+  tall?: boolean;
+  priority?: boolean;
+}) {
   return (
     <motion.div
       data-cursor="hover"
@@ -279,18 +301,26 @@ function ProductCase({ imageUrl, number, name, price, tall, priority }: { imageU
       className="group relative overflow-hidden rounded-3xl border border-chrome bg-graphite"
       style={{ boxShadow: "var(--shadow-plate)" }}
     >
-      <div className={`relative overflow-hidden ${tall ? "aspect-[3/4] md:aspect-auto md:h-[820px]" : "aspect-[3/4] md:aspect-[4/5]"}`}>
+      <div
+        className={`relative overflow-hidden ${
+          tall ? "aspect-[4/5] md:aspect-auto md:h-[820px]" : "aspect-[16/10] md:aspect-auto md:h-[398px]"
+        }`}
+      >
         <img
           src={imageUrl}
           alt={name}
+          loading={priority ? "eager" : "lazy"}
           className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 group-hover:rotate-[1deg]"
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-background/30" />
         {number && <span className="absolute left-5 top-5 font-mono text-[10px] uppercase tracking-[0.3em] text-chrome">{number}</span>}
         <span className="absolute right-5 top-5 h-6 w-6 rounded-full border border-chrome bg-graphite/60 backdrop-blur grid place-items-center text-[10px]">✦</span>
       </div>
-      <div className="px-6 py-5">
-        <p className="font-mono text-sm tracking-[0.14em] text-chrome">{price}</p>
+      <div className="flex items-center justify-between px-6 py-5">
+        <p className="font-display text-lg md:text-xl text-chrome">{name}</p>
+        <p className="font-mono text-xs tracking-[0.14em] text-chrome-dim">
+          {objects} object{objects !== 1 ? "s" : ""}
+        </p>
       </div>
     </motion.div>
   );

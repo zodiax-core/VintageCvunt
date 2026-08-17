@@ -135,7 +135,7 @@ function Checkout() {
   };
 
   const createOrder = useMutation(api.orders.create);
-  const generateUploadUrl = useMutation(api.products.generateUploadUrl);
+  const generateUploadUrl = useMutation(api.products.generateCheckoutUploadUrl);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

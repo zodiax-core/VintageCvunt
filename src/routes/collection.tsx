@@ -1,11 +1,12 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useRef, useEffect } from "react";
-import { Plus, Search, Edit3, Trash2, Upload, Save, AlertCircle } from "lucide-react";
+import { Plus, Search, Edit3, Trash2, Upload, Save, AlertCircle, Star } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQuery, useMutation } from "convex/react";
 import { toWebP } from "@/lib/image-utils";
 import { api } from "../../convex/_generated/api";
+import { getSessionToken } from "@/lib/admin";
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
@@ -75,7 +76,7 @@ function Collections() {
       let image: string | undefined;
       if (imageFile) {
         const webpFile = await toWebP(imageFile);
-        const uploadUrl = await generateUploadUrl();
+        const uploadUrl = await generateUploadUrl({ sessionToken: getSessionToken() ?? "" });
         const result = await fetch(uploadUrl, { method: "POST", body: webpFile });
         if (!result.ok) throw new Error("Upload failed");
         const { storageId } = await result.json();
@@ -83,6 +84,7 @@ function Collections() {
       }
       if (editingId) {
         await updateCollection({
+          sessionToken: getSessionToken() ?? "",
           id: editingId as any,
           name: name.trim(),
           slug: slug || name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
@@ -92,6 +94,7 @@ function Collections() {
         });
       } else {
         await createCollection({
+          sessionToken: getSessionToken() ?? "",
           name: name.trim(),
           slug: slug || name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
           description: description.trim(),
@@ -112,7 +115,15 @@ function Collections() {
 
   const handleDelete = async (id: string, n: string) => {
     if (!window.confirm(`Delete "${n}"?`)) return;
-    try { await removeCollection({ id: id as any }); } catch (err) { console.error(err); }
+    try { await removeCollection({ sessionToken: getSessionToken() ?? "", id: id as any }); } catch (err) { console.error(err); }
+  };
+
+  const toggleFeatured = async (id: string, current: boolean) => {
+    try {
+      await updateCollection({ sessionToken: getSessionToken() ?? "", id: id as any, featured: !current });
+    } catch (err) {
+      console.error("Failed to toggle featured", err);
+    }
   };
 
   if (pathname !== "/collection") {
@@ -184,6 +195,12 @@ function Collections() {
               </div>
               <p className="font-mono text-[10px] text-chrome-dim">{c.slug} · {c.productIds.length} products</p>
               <div className="flex items-center gap-2 pt-2 border-t border-chrome/10">
+                <button
+                  onClick={() => toggleFeatured(c._id, Boolean(c.featured))}
+                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] transition-colors ${c.featured ? "text-yellow-400" : "text-chrome-dim hover:text-foreground"}`}
+                >
+                  <Star size={12} fill={c.featured ? "currentColor" : "none"} /> {c.featured ? "Featured" : "Feature"}
+                </button>
                 <button onClick={() => startEdit(c)} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] text-chrome-dim hover:text-foreground transition-colors">
                   <Edit3 size={12} /> Edit
                 </button>
@@ -204,6 +221,7 @@ function Collections() {
                 <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Slug</span></TableHead>
                 <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Products</span></TableHead>
                 <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Active</span></TableHead>
+                <TableHead><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Featured</span></TableHead>
                 <TableHead className="text-right"><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Actions</span></TableHead>
               </TableRow>
             </TableHeader>
@@ -217,6 +235,14 @@ function Collections() {
                   <TableCell><span className="font-mono text-[11px] text-chrome-dim">{c.slug}</span></TableCell>
                   <TableCell><span className="font-mono text-[11px]">{c.productIds.length}</span></TableCell>
                   <TableCell><span className={`font-mono text-[11px] ${c.isActive ? "text-green-400" : "text-gray-500"}`}>{c.isActive ? "Yes" : "No"}</span></TableCell>
+                  <TableCell>
+                    <button
+                      onClick={() => toggleFeatured(c._id, Boolean(c.featured))}
+                      className={`flex items-center justify-center h-8 w-8 rounded-lg transition-colors ${c.featured ? "text-yellow-400 hover:text-yellow-300" : "text-chrome-dim hover:text-foreground"}`}
+                    >
+                      <Star size={14} fill={c.featured ? "currentColor" : "none"} />
+                    </button>
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
                       <button onClick={() => startEdit(c)} className="flex items-center justify-center h-8 w-8 rounded-lg hover:bg-foreground/5 transition-colors text-chrome-dim hover:text-foreground">

@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { query, mutation, action, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { ADMIN_EMAILS, isAdminCustomer } from "./admin";
+import { ADMIN_EMAILS, isAdminCustomer, requireAdmin } from "./admin";
 
 function publicCustomer(customer: Doc<"customers"> | null) {
   if (!customer) return null;
@@ -55,16 +55,18 @@ function isLocked(customer: { loginAttempts: number; lockedUntil?: number }): bo
 }
 
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     const customers = await ctx.db.query("customers").order("desc").collect();
     return customers.map(publicCustomer);
   },
 });
 
 export const getById = query({
-  args: { id: v.id("customers") },
+  args: { sessionToken: v.string(), id: v.id("customers") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     return publicCustomer(await ctx.db.get(args.id));
   },
 });
@@ -82,6 +84,7 @@ export const getByEmail = query({
 
 export const create = mutation({
   args: {
+    sessionToken: v.string(),
     name: v.string(),
     email: v.string(),
     phone: v.optional(v.string()),
@@ -94,10 +97,12 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
+    const { sessionToken, ...fields } = args;
     const now = Date.now();
     const isAdmin = ADMIN_EMAILS.has(args.email.toLowerCase().trim());
     return await ctx.db.insert("customers", {
-      ...args,
+      ...fields,
       role: args.role || (isAdmin ? "admin" : "customer"),
       loginAttempts: 0,
       createdAt: now,
@@ -433,6 +438,7 @@ export const authenticate = mutation({
 
 export const update = mutation({
   args: {
+    sessionToken: v.string(),
     id: v.id("customers"),
     name: v.optional(v.string()),
     email: v.optional(v.string()),
@@ -445,7 +451,8 @@ export const update = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { id, ...fields } = args;
+    await requireAdmin(ctx, args.sessionToken);
+    const { sessionToken, id, ...fields } = args;
     const safe: Record<string, unknown> = { updatedAt: Date.now() };
     if (fields.name !== undefined) safe.name = sanitize(fields.name);
     if (fields.email !== undefined) safe.email = fields.email.toLowerCase().trim();
@@ -610,8 +617,9 @@ export const resetPassword = mutation({
 });
 
 export const remove = mutation({
-  args: { id: v.id("customers") },
+  args: { sessionToken: v.string(), id: v.id("customers") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     await ctx.db.delete(args.id);
   },
 });

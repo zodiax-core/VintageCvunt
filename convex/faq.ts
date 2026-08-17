@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { requireAdmin } from "./admin";
 
 export const list = query({
   args: {},
@@ -7,7 +8,6 @@ export const list = query({
     return await ctx.db.query("faq").order("asc").collect();
   },
 });
-
 export const getByCategory = query({
   args: { category: v.string() },
   handler: async (ctx, args) => {
@@ -20,6 +20,7 @@ export const getByCategory = query({
 
 export const create = mutation({
   args: {
+    sessionToken: v.string(),
     question: v.string(),
     answer: v.string(),
     category: v.string(),
@@ -27,8 +28,10 @@ export const create = mutation({
     isActive: v.boolean(),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
+    const { sessionToken, ...fields } = args;
     return await ctx.db.insert("faq", {
-      ...args,
+      ...fields,
       createdAt: Date.now(),
     });
   },
@@ -36,6 +39,7 @@ export const create = mutation({
 
 export const update = mutation({
   args: {
+    sessionToken: v.string(),
     id: v.id("faq"),
     question: v.optional(v.string()),
     answer: v.optional(v.string()),
@@ -44,14 +48,16 @@ export const update = mutation({
     isActive: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { id, ...fields } = args;
+    await requireAdmin(ctx, args.sessionToken);
+    const { sessionToken, id, ...fields } = args;
     await ctx.db.patch(id, fields);
   },
 });
 
 export const remove = mutation({
-  args: { id: v.id("faq") },
+  args: { sessionToken: v.string(), id: v.id("faq") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     await ctx.db.delete(args.id);
   },
 });

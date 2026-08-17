@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { requireAdmin } from "./admin";
 
 async function resolveImages(ctx: any, images: string[]): Promise<string[]> {
   const resolved: string[] = [];
@@ -91,6 +92,7 @@ export const search = query({
 
 export const create = mutation({
   args: {
+    sessionToken: v.string(),
     name: v.string(),
     slug: v.string(),
     description: v.string(),
@@ -112,9 +114,11 @@ export const create = mutation({
     stockCount: v.number(),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
+    const { sessionToken, ...fields } = args;
     const now = Date.now();
     return await ctx.db.insert("products", {
-      ...args,
+      ...fields,
       createdAt: now,
       updatedAt: now,
     });
@@ -123,6 +127,7 @@ export const create = mutation({
 
 export const update = mutation({
   args: {
+    sessionToken: v.string(),
     id: v.id("products"),
     name: v.optional(v.string()),
     slug: v.optional(v.string()),
@@ -145,19 +150,29 @@ export const update = mutation({
     stockCount: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { id, ...fields } = args;
+    await requireAdmin(ctx, args.sessionToken);
+    const { sessionToken, id, ...fields } = args;
     await ctx.db.patch(id, { ...fields, updatedAt: Date.now() });
   },
 });
 
 export const remove = mutation({
-  args: { id: v.id("products") },
+  args: { sessionToken: v.string(), id: v.id("products") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     await ctx.db.delete(args.id);
   },
 });
 
 export const generateUploadUrl = mutation({
+  args: { sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const generateCheckoutUploadUrl = mutation({
   handler: async (ctx) => {
     return await ctx.storage.generateUploadUrl();
   },

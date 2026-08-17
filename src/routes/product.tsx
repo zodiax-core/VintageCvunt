@@ -5,6 +5,7 @@ import { AdminLayout } from "@/components/AdminLayout";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { getSessionToken } from "@/lib/admin";
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
@@ -43,7 +44,7 @@ function Products() {
 
   const toggleFeatured = async (id: string, current: boolean) => {
     try {
-      await updateProduct({ id: id as any, featured: !current });
+      await updateProduct({ sessionToken: getSessionToken() ?? "", id: id as any, featured: !current });
     } catch (err) {
       console.error("Failed to toggle featured", err);
     }
@@ -78,7 +79,7 @@ function Products() {
   const handleDelete = async (id: string, name: string) => {
     if (!window.confirm(`Delete "${name}"?`)) return;
     try {
-      await deleteProduct({ id: id as any });
+      await deleteProduct({ sessionToken: getSessionToken() ?? "", id: id as any });
     } catch (err) {
       console.error("Failed to delete product", err);
     }

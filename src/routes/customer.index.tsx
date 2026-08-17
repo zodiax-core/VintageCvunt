@@ -6,6 +6,7 @@ import { AdminLayout } from "@/components/AdminLayout";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { api } from "../../convex/_generated/api";
 import { useQuery } from "convex/react";
+import { getSessionToken } from "@/lib/admin";
 
 export const Route = createFileRoute("/customer/")({
   component: Customers,
@@ -29,7 +30,7 @@ function isWithinMonths(dateStr: string, months: number): boolean {
 }
 
 function Customers() {
-  const customers = useQuery(api.customers.list) ?? [];
+  const customers = useQuery(api.customers.list, { sessionToken: getSessionToken() ?? "" }) ?? [];
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState<string>("All");

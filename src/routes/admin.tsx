@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { getSessionToken } from "@/lib/admin";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
@@ -96,7 +97,7 @@ function calcTrend(current: number, previous: number): { pct: string; up: boolea
 
 function AdminDashboard() {
   const [range, setRange] = useState<Range>("week");
-  const allOrders = useQuery(api.orders.list) ?? [];
+  const allOrders = useQuery(api.orders.list, { sessionToken: getSessionToken() ?? "" }) ?? [];
   const allProducts = useQuery(api.products.list) ?? [];
 
   const periods = getPeriods(range);

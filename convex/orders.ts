@@ -4,8 +4,9 @@ import { internal } from "./_generated/api";
 import { requireAdmin } from "./admin";
 
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     return await ctx.db.query("orders").order("desc").collect();
   },
 });
@@ -160,15 +161,17 @@ export const update = mutation({
 });
 
 export const remove = mutation({
-  args: { id: v.id("orders") },
+  args: { sessionToken: v.string(), id: v.id("orders") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     await ctx.db.delete(args.id);
   },
 });
 
 export const getStats = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     const orders = await ctx.db.query("orders").collect();
     const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
     const totalOrders = orders.length;
@@ -179,8 +182,9 @@ export const getStats = query({
 });
 
 export const getRevenueByMonth = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     const orders = await ctx.db.query("orders").collect();
     const byMonth: Record<string, number> = {};
     for (const order of orders) {

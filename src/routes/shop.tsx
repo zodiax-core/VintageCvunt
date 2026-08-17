@@ -9,6 +9,9 @@ import { useCurrency } from "@/lib/currency-context";
 
 export const Route = createFileRoute("/shop")({
   component: Shop,
+  validateSearch: (search: Record<string, unknown>): { category?: string } => ({
+    category: typeof search.category === "string" ? search.category : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Shop — VintageCvunt" },
@@ -31,6 +34,7 @@ const sortOptions = ["Featured", "Newest", "Price: Low — High", "Price: High �
 
 function Shop() {
   const { formatPrice } = useCurrency();
+  const search = Route.useSearch();
   const allProducts = useQuery(api.products.list) ?? [];
   const collections = useQuery(api.collections.list) ?? [];
   const categories = useMemo(() => ["All", ...collections.filter((c) => c.isActive).map((c) => c.name)], [collections]);
@@ -38,7 +42,7 @@ function Shop() {
   const [priceOpen, setPriceOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
 
-  const [category, setCategory] = useState("All");
+  const [category, setCategory] = useState<string>(search.category ?? "All");
   const [priceRange, setPriceRange] = useState(priceRanges[0]);
   const [sort, setSort] = useState(sortOptions[0]);
 

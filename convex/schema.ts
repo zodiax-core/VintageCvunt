@@ -152,6 +152,7 @@ export default defineSchema({
     image: v.optional(v.string()),
     productIds: v.array(v.string()),
     isActive: v.boolean(),
+    featured: v.optional(v.boolean()),
     createdAt: v.number(),
   })
     .index("by_slug", ["slug"]),

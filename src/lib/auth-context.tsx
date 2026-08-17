@@ -1,7 +1,13 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { isAdminEmail, getSessionToken, setSessionToken } from "./admin";
+import {
+  isAdminEmail,
+  getSessionToken,
+  setSessionToken,
+  setSessionCookie,
+  clearSessionCookie,
+} from "./admin";
 
 export type AuthUser = {
   id?: string;
@@ -53,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(fullUser));
     if (token) {
       setSessionToken(token);
+      setSessionCookie(token);
       setToken(token);
     }
   };
@@ -66,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     localStorage.removeItem(STORAGE_KEY);
     setSessionToken(null);
+    clearSessionCookie();
   };
 
   const updateUser = (updates: Partial<AuthUser>) => {

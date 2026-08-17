@@ -45,7 +45,7 @@ const statusColors: Record<string, string> = {
 const PAGE_SIZE = 5;
 
 function Orders() {
-  const orders = useQuery(api.orders.list) ?? [];
+  const orders = useQuery(api.orders.list, { sessionToken: getSessionToken() ?? "" }) ?? [];
   const settings = useQuery(api.settings.get);
   const updateOrder = useMutation(api.orders.update);
 

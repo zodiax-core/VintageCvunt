@@ -4,6 +4,7 @@ import { Upload, Save, X, Plus } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
 import { cleanError } from "@/lib/utils";
+import { getSessionToken } from "@/lib/admin";
 
 export const Route = createFileRoute("/product/new")({
   beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
@@ -137,7 +138,7 @@ function AddProduct() {
     try {
       if (imageFile) {
         try {
-          const uploadUrl = await generateUploadUrl();
+          const uploadUrl = await generateUploadUrl({ sessionToken: getSessionToken() ?? "" });
           const result = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": imageFile.type }, body: imageFile });
           if (result.ok) {
             const { storageId } = await result.json();
@@ -152,7 +153,7 @@ function AddProduct() {
 
       if (videoFile) {
         try {
-          const uploadUrl = await generateUploadUrl();
+          const uploadUrl = await generateUploadUrl({ sessionToken: getSessionToken() ?? "" });
           const result = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": videoFile.type }, body: videoFile });
           if (result.ok) {
             const { storageId } = await result.json();
@@ -166,6 +167,7 @@ function AddProduct() {
       }
 
       const productId = await createProduct({
+        sessionToken: getSessionToken() ?? "",
         name: form.name.trim(),
         slug: form.slug || form.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
         category: form.category,
@@ -187,12 +189,13 @@ function AddProduct() {
       });
 
       if (form.category) {
-        await addToCollection({ category: form.category, productId });
+        await addToCollection({ sessionToken: getSessionToken() ?? "", category: form.category, productId });
       }
 
       for (const faq of form.faqs) {
         try {
           await createFaq({
+            sessionToken: getSessionToken() ?? "",
             question: faq.question,
             answer: faq.answer,
             category: form.slug || form.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),

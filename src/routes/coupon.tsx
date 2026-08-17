@@ -12,6 +12,7 @@ import {
 import { useQuery, useMutation } from "convex/react";
 import type { Id } from "../../convex/_generated/dataModel";
 import { api } from "../../convex/_generated/api";
+import { getSessionToken } from "@/lib/admin";
 
 export const Route = createFileRoute("/coupon")({
   beforeLoad: () => import("@/lib/auth-guard").then((m) => m.requireAdmin()),
@@ -47,7 +48,7 @@ const typeColors: Record<string, string> = {
 const emptyForm = { code: "", type: "percentage" as DiscountType, value: "", minOrder: "", usageLimit: "", expiry: "", status: "Active" as CouponStatus };
 
 function Coupons() {
-  const couponsData = useQuery(api.coupons.list) ?? [];
+  const couponsData = useQuery(api.coupons.list, { sessionToken: getSessionToken() ?? "" }) ?? [];
   const createCoupon = useMutation(api.coupons.create);
   const updateCoupon = useMutation(api.coupons.update);
   const removeCoupon = useMutation(api.coupons.remove);
@@ -93,6 +94,7 @@ function Coupons() {
   function handleSave() {
     if (editingId) {
       updateCoupon({
+        sessionToken: getSessionToken() ?? "",
         id: editingId,
         ...(form.code !== undefined && { code: form.code }),
         ...(form.type !== undefined && { type: form.type }),
@@ -105,6 +107,7 @@ function Coupons() {
     } else {
       const expiresAt = form.expiry ? new Date(form.expiry).getTime() : Date.now() + 365 * 24 * 60 * 60 * 1000;
       createCoupon({
+        sessionToken: getSessionToken() ?? "",
         code: form.code,
         type: form.type,
         value: form.type !== "free_shipping" ? Number(form.value) : 0,
@@ -119,7 +122,7 @@ function Coupons() {
   }
 
   function handleDelete(id: Id<"coupons">) {
-    removeCoupon({ id });
+    removeCoupon({ sessionToken: getSessionToken() ?? "", id });
   }
 
   function StatusBadge({ status }: { status: string }) {

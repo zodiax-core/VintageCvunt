@@ -1,9 +1,11 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { requireAdmin } from "./admin";
 
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     return await ctx.db.query("messages").order("desc").collect();
   },
 });
@@ -26,22 +28,25 @@ export const create = mutation({
 });
 
 export const markRead = mutation({
-  args: { id: v.id("messages") },
+  args: { sessionToken: v.string(), id: v.id("messages") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     await ctx.db.patch(args.id, { status: "read" });
   },
 });
 
 export const markReplied = mutation({
-  args: { id: v.id("messages") },
+  args: { sessionToken: v.string(), id: v.id("messages") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     await ctx.db.patch(args.id, { replied: true });
   },
 });
 
 export const remove = mutation({
-  args: { id: v.id("messages") },
+  args: { sessionToken: v.string(), id: v.id("messages") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionToken);
     await ctx.db.delete(args.id);
   },
 });
