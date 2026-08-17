@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { useCartContext } from "@/lib/cart-context";
 import { useAuthContext } from "@/lib/auth-context";
 import { useCurrency } from "@/lib/currency-context";
@@ -452,8 +453,13 @@ function Checkout() {
                   <div className="space-y-3 max-h-48 overflow-y-auto scrollbar-thin">
                     {cart.items.map((item) => (
                       <div key={item.id} className="flex items-center gap-3">
-                        <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden border border-chrome/30 bg-graphite-2 grid place-items-center font-mono text-xs text-chrome-dim">
-                          {item.name.charAt(0)}
+                        <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden border border-chrome/30 bg-graphite-2">
+                          <OptimizedImage
+                            webp={item.webp}
+                            fallback={item.src}
+                            alt={item.name}
+                            className="h-full w-full object-cover"
+                          />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="font-mono text-[11px] text-chrome-dim truncate">{item.name}</p>

@@ -120,7 +120,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
                       className="flex items-center gap-4 w-full rounded-2xl border border-chrome/20 bg-graphite/60 hover:bg-graphite p-3 md:p-4 text-left transition-all group backdrop-blur"
                     >
                       <div className="h-14 w-14 md:h-16 md:w-16 shrink-0 overflow-hidden rounded-xl border border-chrome/30">
-                        <img src={p.images?.[0] || "/placeholder.svg"} alt={p.name} className="h-full w-full object-cover" />
+                        <img src={p.imageUrls?.[0] || "/placeholder.svg"} alt={p.name} className="h-full w-full object-cover" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-display text-lg md:text-xl text-foreground group-hover:text-chrome transition-colors truncate">{p.name}</p>
