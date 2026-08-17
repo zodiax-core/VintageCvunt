@@ -1,0 +1,10 @@
+import { h as createFileRoute, m as lazyRouteComponent } from "../_libs/@tanstack/react-router+[...].mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/customer._id-Qm6t8MZ3.js
+var $$splitComponentImporter = () => import("./customer._id-8OFZc5jA.mjs");
+var Route = createFileRoute("/customer/$id")({
+	beforeLoad: () => import("./auth-guard-h00FEN7l.mjs").then((m) => m.requireAdmin()),
+	component: lazyRouteComponent($$splitComponentImporter, "component"),
+	head: () => ({ meta: [{ title: "Customer Detail — VintageCvunt Admin" }] })
+});
+//#endregion
+export { Route as t };

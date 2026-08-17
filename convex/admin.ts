@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalMutation, internalQuery, mutation } from "./_generated/server";
+import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import type { QueryCtx } from "./_generated/server";
 
 export const ADMIN_EMAILS = new Set(["zodiaxcore@gmail.com", "vintagecvunt@gmail.com"]);
@@ -55,6 +55,18 @@ export const checkSession = internalQuery({
   args: { sessionToken: v.optional(v.string()) },
   handler: async (ctx, args) => {
     return await requireAdmin(ctx, args.sessionToken);
+  },
+});
+
+export const validateSession = query({
+  args: { sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    try {
+      await requireAdmin(ctx, args.sessionToken);
+      return { valid: true };
+    } catch {
+      return { valid: false };
+    }
   },
 });
 
