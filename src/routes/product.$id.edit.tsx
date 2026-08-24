@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
-import { Save, Upload, X, Plus } from "lucide-react";
+import { Save, Upload, X, Plus, GripVertical, ImagePlus } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
 import { cleanError } from "@/lib/utils";
@@ -14,6 +14,18 @@ export const Route = createFileRoute("/product/$id/edit")({
   }),
 });
 
+interface NewImageEntry {
+  type: "new";
+  file: File;
+  preview: string;
+}
+interface ExistingImageEntry {
+  type: "existing";
+  url: string;
+  storageId: string;
+}
+type ImageEntry = NewImageEntry | ExistingImageEntry;
+
 function EditProduct() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
@@ -24,12 +36,14 @@ function EditProduct() {
   const categoryOptions = activeCollections.map((c) => c.name);
 
   const [saving, setSaving] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<string>("");
+  const [imageEntries, setImageEntries] = useState<ImageEntry[]>([]);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saveError, setSaveError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const [initialized, setInitialized] = useState(false);
 
   const [tagInput, setTagInput] = useState("");
   const [sizeInput, setSizeInput] = useState("");
@@ -62,7 +76,7 @@ function EditProduct() {
   const removeFromCollection = useMutation(api.collections.removeProductFromCollection);
 
   useEffect(() => {
-    if (product) {
+    if (product && !initialized) {
       setForm({
         name: product.name,
         slug: product.slug,
@@ -80,8 +94,19 @@ function EditProduct() {
         colors: product.colors ?? [],
         faqs: existingFaqs.map((f) => ({ question: f.question, answer: f.answer })),
       });
+
+      // Pre-populate existing images
+      const existing: ExistingImageEntry[] = (product.imageUrls ?? []).map(
+        (url, i) => ({
+          type: "existing" as const,
+          url,
+          storageId: product.images[i],
+        })
+      );
+      setImageEntries(existing);
+      setInitialized(true);
     }
-  }, [product, existingFaqs]);
+  }, [product, existingFaqs, initialized]);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -117,6 +142,34 @@ function EditProduct() {
     setForm((prev) => ({ ...prev, faqs: prev.faqs.filter((_, idx) => idx !== i) }));
   };
 
+  // ── Multi-image handlers ─────────────────────────────────────────────────
+  const handleImagesSelected = (files: FileList | null) => {
+    if (!files) return;
+    const newEntries: NewImageEntry[] = Array.from(files).map((file) => ({
+      type: "new",
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+    setImageEntries((prev) => [...prev, ...newEntries]);
+  };
+
+  const removeImageEntry = (idx: number) => {
+    setImageEntries((prev) => {
+      const entry = prev[idx];
+      if (entry.type === "new") URL.revokeObjectURL(entry.preview);
+      return prev.filter((_, i) => i !== idx);
+    });
+  };
+
+  const moveImage = (from: number, to: number) => {
+    setImageEntries((prev) => {
+      const arr = [...prev];
+      const [item] = arr.splice(from, 1);
+      arr.splice(to, 0, item);
+      return arr;
+    });
+  };
+
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (!form.name.trim()) errs.name = "Required";
@@ -131,25 +184,33 @@ function EditProduct() {
     if (!validate()) return;
     setSaving(true);
     setSaveError("");
-    let images: string[] | undefined;
+    const finalImages: string[] = [];
     let video: string | undefined;
     try {
-      if (imageFile) {
-        try {
-          const uploadUrl = await generateUploadUrl({ sessionToken: getSessionToken() ?? "" });
-          const result = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": imageFile.type }, body: imageFile });
-          if (result.ok) {
-            const { storageId } = await result.json();
-            if (storageId) images = [storageId];
-          } else {
-            setSaveError("Image upload failed (HTTP " + result.status + "). Product saved without image.");
+      // Build final image list (preserve existing, upload new)
+      for (let i = 0; i < imageEntries.length; i++) {
+        const entry = imageEntries[i];
+        if (entry.type === "existing") {
+          finalImages.push(entry.storageId);
+        } else {
+          setUploadProgress(`Uploading image ${i + 1}/${imageEntries.length}…`);
+          try {
+            const uploadUrl = await generateUploadUrl({ sessionToken: getSessionToken() ?? "" });
+            const result = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": entry.file.type }, body: entry.file });
+            if (result.ok) {
+              const { storageId } = await result.json();
+              if (storageId) finalImages.push(storageId);
+            } else {
+              setSaveError(`Image ${i + 1} upload failed (HTTP ${result.status}).`);
+            }
+          } catch (e) {
+            setSaveError("Image upload error: " + cleanError(e));
           }
-        } catch (e) {
-          setSaveError("Image upload error: " + cleanError(e));
         }
       }
 
       if (videoFile) {
+        setUploadProgress("Uploading video…");
         try {
           const uploadUrl = await generateUploadUrl({ sessionToken: getSessionToken() ?? "" });
           const result = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": videoFile.type }, body: videoFile });
@@ -157,13 +218,14 @@ function EditProduct() {
             const { storageId } = await result.json();
             if (storageId) video = storageId;
           } else {
-            setSaveError("Video upload failed (HTTP " + result.status + "). Product saved without video.");
+            setSaveError("Video upload failed (HTTP " + result.status + ").");
           }
         } catch (e) {
           setSaveError("Video upload error: " + cleanError(e));
         }
       }
 
+      setUploadProgress("Saving product…");
       const oldCategory = product?.category;
       await updateProduct({
         sessionToken: getSessionToken() ?? "",
@@ -176,14 +238,14 @@ function EditProduct() {
         description: form.description.trim(),
         details: form.details.trim() || undefined,
         dimensions: form.dimensions.trim() || undefined,
-        video,
+        video: video ?? (videoFile === null && product?.video ? product.video : undefined),
         tags: form.tags,
         sizes: form.sizes,
         colors: form.colors,
         material: form.materials.trim() || undefined,
         inStock: Number(form.stock) > 0,
         stockCount: Number(form.stock),
-        images,
+        images: finalImages.length > 0 ? finalImages : undefined,
       });
 
       if (oldCategory && oldCategory !== form.category) {
@@ -214,6 +276,7 @@ function EditProduct() {
       console.error("Failed to update product", err);
     } finally {
       setSaving(false);
+      setUploadProgress("");
     }
   };
 
@@ -245,89 +308,47 @@ function EditProduct() {
           <div className="bg-graphite border border-chrome/20 rounded-2xl p-6 space-y-5">
             <div>
               <label className={labelClass}>Product Name <span className="text-red-400">*</span></label>
-              <input
-                value={form.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                className={errors.name ? inputErrorClass : inputClass}
-              />
+              <input value={form.name} onChange={(e) => handleChange("name", e.target.value)} className={errors.name ? inputErrorClass : inputClass} />
               {errors.name && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.name}</p>}
             </div>
             <div>
               <label className={labelClass}>Slug</label>
-              <input
-                value={form.slug}
-                onChange={(e) => handleChange("slug", e.target.value)}
-                className={inputClass}
-              />
+              <input value={form.slug} onChange={(e) => handleChange("slug", e.target.value)} className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>Category <span className="text-red-400">*</span></label>
-              <select
-                value={form.category}
-                onChange={(e) => handleChange("category", e.target.value)}
-                className={errors.category ? inputErrorClass : inputClass}
-              >
+              <select value={form.category} onChange={(e) => handleChange("category", e.target.value)} className={errors.category ? inputErrorClass : inputClass}>
                 <option value="">Select category</option>
-                {categoryOptions.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
+                {categoryOptions.map((c) => (<option key={c} value={c}>{c}</option>))}
               </select>
               {errors.category && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.category}</p>}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>Price ($) <span className="text-red-400">*</span></label>
-                <input
-                  value={form.price}
-                  onChange={(e) => handleChange("price", e.target.value)}
-                  type="number"
-                  step="0.01"
-                  className={errors.price ? inputErrorClass : inputClass}
-                />
+                <input value={form.price} onChange={(e) => handleChange("price", e.target.value)} type="number" step="0.01" className={errors.price ? inputErrorClass : inputClass} />
                 {errors.price && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.price}</p>}
               </div>
               <div>
                 <label className={labelClass}>Compare At Price ($)</label>
-                <input
-                  value={form.comparePrice}
-                  onChange={(e) => handleChange("comparePrice", e.target.value)}
-                  type="number"
-                  step="0.01"
-                  className={inputClass}
-                />
+                <input value={form.comparePrice} onChange={(e) => handleChange("comparePrice", e.target.value)} type="number" step="0.01" className={inputClass} />
               </div>
             </div>
             <div>
               <label className={labelClass}>Description</label>
-              <textarea
-                value={form.description}
-                onChange={(e) => handleChange("description", e.target.value)}
-                className={`${inputClass} min-h-[120px] resize-none`}
-              />
+              <textarea value={form.description} onChange={(e) => handleChange("description", e.target.value)} className={`${inputClass} min-h-[120px] resize-none`} />
             </div>
             <div>
               <label className={labelClass}>Details <span className="text-chrome-dim/50 font-normal normal-case">(one per line)</span></label>
-              <textarea
-                value={form.details}
-                onChange={(e) => handleChange("details", e.target.value)}
-                className={`${inputClass} min-h-[120px] resize-none`}
-              />
+              <textarea value={form.details} onChange={(e) => handleChange("details", e.target.value)} className={`${inputClass} min-h-[120px] resize-none`} />
             </div>
             <div>
               <label className={labelClass}>Materials <span className="text-chrome-dim/50 font-normal normal-case">(one per line)</span></label>
-              <textarea
-                value={form.materials}
-                onChange={(e) => handleChange("materials", e.target.value)}
-                className={`${inputClass} min-h-[80px] resize-none`}
-              />
+              <textarea value={form.materials} onChange={(e) => handleChange("materials", e.target.value)} className={`${inputClass} min-h-[80px] resize-none`} />
             </div>
             <div>
               <label className={labelClass}>Dimensions</label>
-              <input
-                value={form.dimensions}
-                onChange={(e) => handleChange("dimensions", e.target.value)}
-                className={inputClass}
-              />
+              <input value={form.dimensions} onChange={(e) => handleChange("dimensions", e.target.value)} className={inputClass} />
             </div>
 
             <div>
@@ -335,8 +356,7 @@ function EditProduct() {
               <div className="flex gap-2 mb-2 flex-wrap">
                 {form.tags.map((t) => (
                   <span key={t} className="inline-flex items-center gap-1 rounded-full border border-chrome/20 bg-graphite-2 px-2.5 py-1 font-mono text-[10px]">
-                    {t}
-                    <button onClick={() => removeTag(t)} className="text-chrome-dim hover:text-red-400"><X size={10} /></button>
+                    {t}<button onClick={() => removeTag(t)} className="text-chrome-dim hover:text-red-400"><X size={10} /></button>
                   </span>
                 ))}
               </div>
@@ -351,8 +371,7 @@ function EditProduct() {
               <div className="flex gap-2 mb-2 flex-wrap">
                 {form.sizes.map((s) => (
                   <span key={s} className="inline-flex items-center gap-1 rounded-full border border-chrome/20 bg-graphite-2 px-2.5 py-1 font-mono text-[10px]">
-                    {s}
-                    <button onClick={() => removeSize(s)} className="text-chrome-dim hover:text-red-400"><X size={10} /></button>
+                    {s}<button onClick={() => removeSize(s)} className="text-chrome-dim hover:text-red-400"><X size={10} /></button>
                   </span>
                 ))}
               </div>
@@ -367,8 +386,7 @@ function EditProduct() {
               <div className="flex gap-2 mb-2 flex-wrap">
                 {form.colors.map((c) => (
                   <span key={c} className="inline-flex items-center gap-1 rounded-full border border-chrome/20 bg-graphite-2 px-2.5 py-1 font-mono text-[10px]">
-                    {c}
-                    <button onClick={() => removeColor(c)} className="text-chrome-dim hover:text-red-400"><X size={10} /></button>
+                    {c}<button onClick={() => removeColor(c)} className="text-chrome-dim hover:text-red-400"><X size={10} /></button>
                   </span>
                 ))}
               </div>
@@ -404,38 +422,79 @@ function EditProduct() {
 
         <div className="space-y-5">
           <div className="bg-graphite border border-chrome/20 rounded-2xl p-6 space-y-5">
+
+            {/* ── Multi-image panel ── */}
             <div>
-              <label className={labelClass}>Image</label>
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-chrome/20 bg-graphite-2/50 px-6 py-10 text-center cursor-pointer hover:border-chrome/50 transition-colors"
-              >
-                {imageFile ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="h-16 w-16 rounded-lg overflow-hidden border border-chrome/30">
-                      <img src={URL.createObjectURL(imageFile)} alt="Preview" className="h-full w-full object-cover" />
-                    </div>
-                    <p className="font-mono text-[10px] text-chrome-dim">{imageFile.name}</p>
-                    <button onClick={(e) => { e.stopPropagation(); setImageFile(null); }} className="font-mono text-[9px] uppercase tracking-[0.2em] text-red-400 hover:text-red-300">Remove</button>
-                  </div>
-                ) : product.imageUrls?.[0] ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="h-20 w-20 rounded-xl overflow-hidden border border-chrome/30">
-                      <img src={product.imageUrls[0]} alt={product.name} className="h-full w-full object-cover" />
-                    </div>
-                    <p className="font-mono text-[10px] text-chrome-dim">Current image</p>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Click to replace</p>
-                  </div>
-                ) : (
-                  <>
-                    <Upload size={24} className="text-chrome-dim mb-3" />
-                    <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Click to upload</p>
-                  </>
-                )}
+              <div className="flex items-center justify-between mb-1.5">
+                <label className={labelClass + " mb-0"}>
+                  Images <span className="text-chrome-dim/50 font-normal normal-case">({imageEntries.length})</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-chrome/20 bg-graphite-2 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.2em] hover:border-chrome/50 transition-colors"
+                >
+                  <ImagePlus size={11} />
+                  Add Photos
+                </button>
               </div>
-              <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
+
+              {imageEntries.length > 0 ? (
+                <div className="space-y-2">
+                  {imageEntries.map((entry, idx) => {
+                    const src = entry.type === "existing" ? entry.url : entry.preview;
+                    const name = entry.type === "existing" ? "Saved image" : entry.file.name;
+                    return (
+                      <div key={idx} className="flex items-center gap-2 rounded-xl border border-chrome/20 bg-graphite-2/50 p-2">
+                        <GripVertical size={14} className="text-chrome-dim shrink-0 cursor-grab" />
+                        <div className="h-12 w-12 rounded-lg overflow-hidden border border-chrome/30 shrink-0">
+                          <img src={src} alt="" className="h-full w-full object-cover" />
+                        </div>
+                        <p className="flex-1 font-mono text-[9px] text-chrome-dim truncate min-w-0">{name}</p>
+                        <div className="flex flex-col gap-0.5 shrink-0">
+                          <button type="button" onClick={() => moveImage(idx, idx - 1)} disabled={idx === 0} className="font-mono text-[8px] text-chrome-dim hover:text-chrome disabled:opacity-30">▲</button>
+                          <button type="button" onClick={() => moveImage(idx, idx + 1)} disabled={idx === imageEntries.length - 1} className="font-mono text-[8px] text-chrome-dim hover:text-chrome disabled:opacity-30">▼</button>
+                        </div>
+                        {idx === 0 && (
+                          <span className="shrink-0 rounded-full bg-chrome/10 border border-chrome/20 px-1.5 py-0.5 font-mono text-[8px] text-chrome uppercase tracking-[0.2em]">Main</span>
+                        )}
+                        <button type="button" onClick={() => removeImageEntry(idx)} className="shrink-0 text-chrome-dim hover:text-red-400">
+                          <X size={14} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-chrome/20 bg-graphite-2/50 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim hover:border-chrome/50 transition-colors"
+                  >
+                    <Upload size={14} />
+                    Add More Photos
+                  </button>
+                </div>
+              ) : (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-chrome/20 bg-graphite-2/50 px-6 py-10 text-center cursor-pointer hover:border-chrome/50 transition-colors"
+                >
+                  <Upload size={24} className="text-chrome-dim mb-3" />
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Click to upload</p>
+                  <p className="font-mono text-[9px] text-chrome-dim/50 mt-1">PNG, JPG, WEBP — select multiple</p>
+                </div>
+              )}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/heic"
+                multiple
+                className="hidden"
+                onChange={(e) => handleImagesSelected(e.target.files)}
+              />
             </div>
 
+            {/* ── Video panel ── */}
             <div>
               <label className={labelClass}>Video <span className="text-chrome-dim/50 font-normal normal-case">(optional)</span></label>
               <div
@@ -451,32 +510,23 @@ function EditProduct() {
                 ) : product.videoUrl ? (
                   <div className="flex flex-col items-center gap-2">
                     <video src={product.videoUrl} className="max-h-32 rounded-lg mb-1" controls />
-                    <button onClick={(e) => { e.stopPropagation(); videoInputRef.current?.click(); }} className="font-mono text-[9px] uppercase tracking-[0.2em] text-red-400 hover:text-red-300">Replace</button>
+                    <button onClick={(e) => { e.stopPropagation(); videoInputRef.current?.click(); }} className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim hover:text-chrome">Replace</button>
                   </div>
                 ) : (
                   <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Click to upload video</p>
                 )}
               </div>
-              <input ref={videoInputRef} type="file" accept="video/mp4,video/webm" className="hidden" onChange={(e) => setVideoFile(e.target.files?.[0] || null)} />
+              <input ref={videoInputRef} type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" onChange={(e) => { setVideoFile(e.target.files?.[0] || null); }} />
             </div>
 
             <div>
               <label className={labelClass}>Stock <span className="text-red-400">*</span></label>
-              <input
-                value={form.stock}
-                onChange={(e) => handleChange("stock", e.target.value)}
-                type="number"
-                className={errors.stock ? inputErrorClass : inputClass}
-              />
+              <input value={form.stock} onChange={(e) => handleChange("stock", e.target.value)} type="number" className={errors.stock ? inputErrorClass : inputClass} />
               {errors.stock && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.stock}</p>}
             </div>
             <div>
               <label className={labelClass}>Status</label>
-              <select
-                value={form.status}
-                onChange={(e) => handleChange("status", e.target.value)}
-                className={inputClass}
-              >
+              <select value={form.status} onChange={(e) => handleChange("status", e.target.value)} className={inputClass}>
                 <option value="Active">Active</option>
                 <option value="Draft">Draft</option>
                 <option value="Archived">Archived</option>
@@ -490,6 +540,11 @@ function EditProduct() {
         {saveError && (
           <div className="mb-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3">
             <p className="font-mono text-[11px] text-red-400">{saveError}</p>
+          </div>
+        )}
+        {uploadProgress && (
+          <div className="mb-3 rounded-xl border border-chrome/20 bg-graphite-2/50 px-4 py-3">
+            <p className="font-mono text-[11px] text-chrome-dim">{uploadProgress}</p>
           </div>
         )}
         <div className="flex items-center gap-4">

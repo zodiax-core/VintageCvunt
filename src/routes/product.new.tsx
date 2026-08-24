@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useRef } from "react";
-import { Upload, Save, X, Plus } from "lucide-react";
+import { Upload, Save, X, Plus, GripVertical, ImagePlus } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
 import { cleanError } from "@/lib/utils";
@@ -14,6 +14,11 @@ export const Route = createFileRoute("/product/new")({
   }),
 });
 
+interface ImageEntry {
+  file: File;
+  preview: string;
+}
+
 function AddProduct() {
   const navigate = useNavigate();
   const collections = useQuery(api.collections.list) ?? [];
@@ -22,7 +27,9 @@ function AddProduct() {
 
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<string>("");
+  // Multiple images support
+  const [imageFiles, setImageFiles] = useState<ImageEntry[]>([]);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saveError, setSaveError] = useState("");
@@ -119,6 +126,32 @@ function AddProduct() {
     setForm((prev) => ({ ...prev, faqs: prev.faqs.filter((_, idx) => idx !== i) }));
   };
 
+  // ── Multi-image handlers ─────────────────────────────────────────────────
+  const handleImagesSelected = (files: FileList | null) => {
+    if (!files) return;
+    const newEntries: ImageEntry[] = [];
+    for (const file of Array.from(files)) {
+      newEntries.push({ file, preview: URL.createObjectURL(file) });
+    }
+    setImageFiles((prev) => [...prev, ...newEntries]);
+  };
+
+  const removeImage = (idx: number) => {
+    setImageFiles((prev) => {
+      URL.revokeObjectURL(prev[idx].preview);
+      return prev.filter((_, i) => i !== idx);
+    });
+  };
+
+  const moveImage = (from: number, to: number) => {
+    setImageFiles((prev) => {
+      const arr = [...prev];
+      const [item] = arr.splice(from, 1);
+      arr.splice(to, 0, item);
+      return arr;
+    });
+  };
+
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (!form.name.trim()) errs.name = "Required";
@@ -133,18 +166,21 @@ function AddProduct() {
     if (!validate()) return;
     setSaving(true);
     setSaveError("");
-    let images: string[] = [];
+    const images: string[] = [];
     let video: string | undefined;
     try {
-      if (imageFile) {
+      // Upload images in order
+      for (let i = 0; i < imageFiles.length; i++) {
+        const entry = imageFiles[i];
+        setUploadProgress(`Uploading image ${i + 1}/${imageFiles.length}…`);
         try {
           const uploadUrl = await generateUploadUrl({ sessionToken: getSessionToken() ?? "" });
-          const result = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": imageFile.type }, body: imageFile });
+          const result = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": entry.file.type }, body: entry.file });
           if (result.ok) {
             const { storageId } = await result.json();
-            if (storageId) images = [storageId];
+            if (storageId) images.push(storageId);
           } else {
-            setSaveError("Image upload failed (HTTP " + result.status + "). Product saved without image.");
+            setSaveError(`Image ${i + 1} upload failed (HTTP ${result.status}).`);
           }
         } catch (e) {
           setSaveError("Image upload error: " + cleanError(e));
@@ -152,6 +188,7 @@ function AddProduct() {
       }
 
       if (videoFile) {
+        setUploadProgress("Uploading video…");
         try {
           const uploadUrl = await generateUploadUrl({ sessionToken: getSessionToken() ?? "" });
           const result = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": videoFile.type }, body: videoFile });
@@ -159,13 +196,14 @@ function AddProduct() {
             const { storageId } = await result.json();
             if (storageId) video = storageId;
           } else {
-            setSaveError("Video upload failed (HTTP " + result.status + "). Product saved without video.");
+            setSaveError("Video upload failed (HTTP " + result.status + ").");
           }
         } catch (e) {
           setSaveError("Video upload error: " + cleanError(e));
         }
       }
 
+      setUploadProgress("Saving product…");
       const productId = await createProduct({
         sessionToken: getSessionToken() ?? "",
         name: form.name.trim(),
@@ -207,12 +245,14 @@ function AddProduct() {
         }
       }
 
+      setSaved(true);
       navigate({ to: "/product" });
     } catch (err) {
       setSaveError("Failed to save product. Please check your connection and try again.");
       console.error("Failed to create product", err);
     } finally {
       setSaving(false);
+      setUploadProgress("");
     }
   };
 
@@ -429,42 +469,92 @@ function AddProduct() {
 
       <div className="space-y-5">
         <div className="bg-graphite border border-chrome/20 rounded-2xl p-6 space-y-5">
+
+          {/* ── Multi-image upload ── */}
           <div>
-            <label className={labelClass}>Image</label>
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-chrome/20 bg-graphite-2/50 px-6 py-10 text-center cursor-pointer hover:border-chrome/50 transition-colors"
-            >
-              {imageFile ? (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="h-16 w-16 rounded-lg overflow-hidden border border-chrome/30">
-                    <img src={URL.createObjectURL(imageFile)} alt="Preview" className="h-full w-full object-cover" />
-                  </div>
-                  <p className="font-mono text-[10px] text-chrome-dim">{imageFile.name}</p>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setImageFile(null); }}
-                    className="font-mono text-[9px] uppercase tracking-[0.2em] text-red-400 hover:text-red-300"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <Upload size={24} className="text-chrome-dim mb-3" />
-                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Click to upload</p>
-                  <p className="font-mono text-[9px] text-chrome-dim/50 mt-1">PNG, JPG up to 10MB</p>
-                </>
-              )}
+            <div className="flex items-center justify-between mb-1.5">
+              <label className={labelClass + " mb-0"}>
+                Images <span className="text-chrome-dim/50 font-normal normal-case">({imageFiles.length} added)</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-chrome/20 bg-graphite-2 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.2em] hover:border-chrome/50 transition-colors"
+              >
+                <ImagePlus size={11} />
+                Add Photos
+              </button>
             </div>
+
+            {imageFiles.length > 0 ? (
+              <div className="space-y-2">
+                {imageFiles.map((entry, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 rounded-xl border border-chrome/20 bg-graphite-2/50 p-2"
+                  >
+                    <GripVertical size={14} className="text-chrome-dim shrink-0 cursor-grab" />
+                    <div className="h-12 w-12 rounded-lg overflow-hidden border border-chrome/30 shrink-0">
+                      <img src={entry.preview} alt="" className="h-full w-full object-cover" />
+                    </div>
+                    <p className="flex-1 font-mono text-[9px] text-chrome-dim truncate min-w-0">{entry.file.name}</p>
+                    <div className="flex flex-col gap-0.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => moveImage(idx, idx - 1)}
+                        disabled={idx === 0}
+                        className="font-mono text-[8px] text-chrome-dim hover:text-chrome disabled:opacity-30"
+                      >▲</button>
+                      <button
+                        type="button"
+                        onClick={() => moveImage(idx, idx + 1)}
+                        disabled={idx === imageFiles.length - 1}
+                        className="font-mono text-[8px] text-chrome-dim hover:text-chrome disabled:opacity-30"
+                      >▼</button>
+                    </div>
+                    {idx === 0 && (
+                      <span className="shrink-0 rounded-full bg-chrome/10 border border-chrome/20 px-1.5 py-0.5 font-mono text-[8px] text-chrome uppercase tracking-[0.2em]">Main</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeImage(idx)}
+                      className="shrink-0 text-chrome-dim hover:text-red-400"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-chrome/20 bg-graphite-2/50 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim hover:border-chrome/50 transition-colors"
+                >
+                  <Upload size={14} />
+                  Add More Photos
+                </button>
+              </div>
+            ) : (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-chrome/20 bg-graphite-2/50 px-6 py-10 text-center cursor-pointer hover:border-chrome/50 transition-colors"
+              >
+                <Upload size={24} className="text-chrome-dim mb-3" />
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim">Click to upload</p>
+                <p className="font-mono text-[9px] text-chrome-dim/50 mt-1">PNG, JPG, WEBP — select multiple</p>
+              </div>
+            )}
+
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/png,image/jpeg,image/webp"
+              accept="image/png,image/jpeg,image/webp,image/heic"
+              multiple
               className="hidden"
-              onChange={(e) => { setImageFile(e.target.files?.[0] || null); }}
+              onChange={(e) => handleImagesSelected(e.target.files)}
             />
           </div>
 
+          {/* ── Video upload ── */}
           <div>
             <label className={labelClass}>Video <span className="text-chrome-dim/50 font-normal normal-case">(optional)</span></label>
             <div
@@ -488,7 +578,7 @@ function AddProduct() {
             <input
               ref={videoInputRef}
               type="file"
-              accept="video/mp4,video/webm"
+              accept="video/mp4,video/webm,video/quicktime"
               className="hidden"
               onChange={(e) => { setVideoFile(e.target.files?.[0] || null); }}
             />
@@ -524,6 +614,11 @@ function AddProduct() {
       {saveError && (
         <div className="mb-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3">
           <p className="font-mono text-[11px] text-red-400">{saveError}</p>
+        </div>
+      )}
+      {uploadProgress && (
+        <div className="mb-3 rounded-xl border border-chrome/20 bg-graphite-2/50 px-4 py-3">
+          <p className="font-mono text-[11px] text-chrome-dim">{uploadProgress}</p>
         </div>
       )}
       <button

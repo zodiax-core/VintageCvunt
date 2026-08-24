@@ -28,6 +28,7 @@ import type * as models from "../models.js";
 import type * as orders from "../orders.js";
 import type * as products from "../products.js";
 import type * as reviews from "../reviews.js";
+import type * as seed from "../seed.js";
 import type * as settings from "../settings.js";
 import type * as shippingRates from "../shippingRates.js";
 
@@ -58,6 +59,7 @@ declare const fullApi: ApiFromModules<{
   orders: typeof orders;
   products: typeof products;
   reviews: typeof reviews;
+  seed: typeof seed;
   settings: typeof settings;
   shippingRates: typeof shippingRates;
 }>;
