@@ -119,6 +119,7 @@ priceRanges: defineTable({
     role: v.optional(v.string()),
     avatar: v.optional(v.string()),
     notes: v.optional(v.string()),
+    password: v.optional(v.string()),
     passwordHash: v.optional(v.string()),
     passwordSalt: v.optional(v.string()),
     otp: v.optional(v.string()),
