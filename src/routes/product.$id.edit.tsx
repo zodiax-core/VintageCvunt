@@ -26,6 +26,17 @@ interface ExistingImageEntry {
 }
 type ImageEntry = NewImageEntry | ExistingImageEntry;
 
+interface VariantEntry {
+  name: string;
+  price: string;
+  // For existing variants that already have an uploaded image
+  existingImageId?: string;
+  existingImageUrl?: string;
+  // For newly picked files
+  imageFile: File | null;
+  imagePreview: string;
+}
+
 function EditProduct() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
@@ -47,7 +58,10 @@ function EditProduct() {
 
   const [tagInput, setTagInput] = useState("");
   const [sizeInput, setSizeInput] = useState("");
-  const [colorInput, setColorInput] = useState("");
+
+  // Variants
+  const [variants, setVariants] = useState<VariantEntry[]>([]);
+  const variantImageRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const [form, setForm] = useState({
     name: "",
@@ -63,7 +77,6 @@ function EditProduct() {
     status: "Draft" as "Active" | "Draft" | "Archived",
     tags: [] as string[],
     sizes: [] as string[],
-    colors: [] as string[],
     faqs: [] as { question: string; answer: string }[],
   });
 
@@ -91,19 +104,33 @@ function EditProduct() {
         status: product.inStock ? "Active" : "Draft",
         tags: product.tags ?? [],
         sizes: product.sizes ?? [],
-        colors: product.colors ?? [],
         faqs: existingFaqs.map((f) => ({ question: f.question, answer: f.answer })),
       });
 
       // Pre-populate existing images
       const existing: ExistingImageEntry[] = (product.imageUrls ?? []).map(
-        (url, i) => ({
+        (url: string, i: number) => ({
           type: "existing" as const,
           url,
           storageId: product.images[i],
         })
       );
       setImageEntries(existing);
+
+      // Pre-populate existing variants
+      if (product.variants && product.variants.length > 0) {
+        setVariants(
+          product.variants.map((v: any) => ({
+            name: v.name,
+            price: v.price != null ? String(v.price) : "",
+            existingImageId: v.image,
+            existingImageUrl: v.imageUrl,
+            imageFile: null,
+            imagePreview: "",
+          }))
+        );
+      }
+
       setInitialized(true);
     }
   }, [product, existingFaqs, initialized]);
@@ -122,12 +149,9 @@ function EditProduct() {
   const removeTag = (t: string) => setForm((prev) => ({ ...prev, tags: prev.tags.filter((x) => x !== t) }));
   const addSize = () => { const s = sizeInput.trim(); if (s && !form.sizes.includes(s)) { setForm((prev) => ({ ...prev, sizes: [...prev.sizes, s] })); } setSizeInput(""); };
   const removeSize = (s: string) => setForm((prev) => ({ ...prev, sizes: prev.sizes.filter((x) => x !== s) }));
-  const addColor = () => { const c = colorInput.trim(); if (c && !form.colors.includes(c)) { setForm((prev) => ({ ...prev, colors: [...prev.colors, c] })); } setColorInput(""); };
-  const removeColor = (c: string) => setForm((prev) => ({ ...prev, colors: prev.colors.filter((x) => x !== c) }));
 
   const [faqQuestion, setFaqQuestion] = useState("");
   const [faqAnswer, setFaqAnswer] = useState("");
-
   const addFaq = () => {
     const q = faqQuestion.trim();
     const a = faqAnswer.trim();
@@ -137,12 +161,9 @@ function EditProduct() {
       setFaqAnswer("");
     }
   };
+  const removeFaq = (i: number) => setForm((prev) => ({ ...prev, faqs: prev.faqs.filter((_, idx) => idx !== i) }));
 
-  const removeFaq = (i: number) => {
-    setForm((prev) => ({ ...prev, faqs: prev.faqs.filter((_, idx) => idx !== i) }));
-  };
-
-  // ── Multi-image handlers ─────────────────────────────────────────────────
+  // ── Multi-image handlers ────────────────────────────────────────────────
   const handleImagesSelected = (files: FileList | null) => {
     if (!files) return;
     const newEntries: NewImageEntry[] = Array.from(files).map((file) => ({
@@ -152,7 +173,6 @@ function EditProduct() {
     }));
     setImageEntries((prev) => [...prev, ...newEntries]);
   };
-
   const removeImageEntry = (idx: number) => {
     setImageEntries((prev) => {
       const entry = prev[idx];
@@ -160,7 +180,6 @@ function EditProduct() {
       return prev.filter((_, i) => i !== idx);
     });
   };
-
   const moveImage = (from: number, to: number) => {
     setImageEntries((prev) => {
       const arr = [...prev];
@@ -168,6 +187,23 @@ function EditProduct() {
       arr.splice(to, 0, item);
       return arr;
     });
+  };
+
+  // ── Variant handlers ────────────────────────────────────────────────────
+  const addVariant = () => setVariants((prev) => [...prev, { name: "", price: "", imageFile: null, imagePreview: "" }]);
+  const removeVariant = (idx: number) => {
+    setVariants((prev) => {
+      if (prev[idx].imagePreview) URL.revokeObjectURL(prev[idx].imagePreview);
+      return prev.filter((_, i) => i !== idx);
+    });
+  };
+  const updateVariant = (idx: number, field: keyof Pick<VariantEntry, "name" | "price">, value: string) => {
+    setVariants((prev) => prev.map((v, i) => i === idx ? { ...v, [field]: value } : v));
+  };
+  const handleVariantImage = (idx: number, file: File | null) => {
+    if (!file) return;
+    const preview = URL.createObjectURL(file);
+    setVariants((prev) => prev.map((v, i) => i === idx ? { ...v, imageFile: file, imagePreview: preview, existingImageId: undefined, existingImageUrl: undefined } : v));
   };
 
   const validate = (): boolean => {
@@ -187,7 +223,7 @@ function EditProduct() {
     const finalImages: string[] = [];
     let video: string | undefined;
     try {
-      // Build final image list (preserve existing, upload new)
+      // Build final image list (preserve existing storageIds, upload new)
       for (let i = 0; i < imageEntries.length; i++) {
         const entry = imageEntries[i];
         if (entry.type === "existing") {
@@ -217,12 +253,36 @@ function EditProduct() {
           if (result.ok) {
             const { storageId } = await result.json();
             if (storageId) video = storageId;
-          } else {
-            setSaveError("Video upload failed (HTTP " + result.status + ").");
           }
         } catch (e) {
           setSaveError("Video upload error: " + cleanError(e));
         }
+      }
+
+      // Upload variant images
+      const resolvedVariants: { name: string; image?: string; price?: number }[] = [];
+      for (let i = 0; i < variants.length; i++) {
+        const v = variants[i];
+        if (!v.name.trim()) continue;
+        let variantImageId: string | undefined = v.existingImageId;
+        if (v.imageFile) {
+          setUploadProgress(`Uploading variant ${i + 1} image…`);
+          try {
+            const uploadUrl = await generateUploadUrl({ sessionToken: getSessionToken() ?? "" });
+            const result = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": v.imageFile.type }, body: v.imageFile });
+            if (result.ok) {
+              const { storageId } = await result.json();
+              variantImageId = storageId;
+            }
+          } catch (e) {
+            setSaveError("Variant image upload error: " + cleanError(e));
+          }
+        }
+        resolvedVariants.push({
+          name: v.name.trim(),
+          image: variantImageId,
+          price: v.price ? Number(v.price) : undefined,
+        });
       }
 
       setUploadProgress("Saving product…");
@@ -241,7 +301,8 @@ function EditProduct() {
         video: video ?? (videoFile === null && product?.video ? product.video : undefined),
         tags: form.tags,
         sizes: form.sizes,
-        colors: form.colors,
+        colors: [],
+        variants: resolvedVariants.length > 0 ? resolvedVariants : [],
         material: form.materials.trim() || undefined,
         inStock: Number(form.stock) > 0,
         stockCount: Number(form.stock),
@@ -288,7 +349,6 @@ function EditProduct() {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <h2 className="font-display text-2xl text-chrome-dim">Product not found</h2>
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim mt-2">The product you are looking for does not exist.</p>
         <Link to="/product" className="btn-chrome btn-chrome-inner mt-6">
           <span className="btn-label">Back to Products</span>
         </Link>
@@ -319,18 +379,18 @@ function EditProduct() {
               <label className={labelClass}>Category <span className="text-red-400">*</span></label>
               <select value={form.category} onChange={(e) => handleChange("category", e.target.value)} className={errors.category ? inputErrorClass : inputClass}>
                 <option value="">Select category</option>
-                {categoryOptions.map((c) => (<option key={c} value={c}>{c}</option>))}
+                {categoryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
               {errors.category && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.category}</p>}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Price ($) <span className="text-red-400">*</span></label>
+                <label className={labelClass}>Base Price <span className="text-red-400">*</span></label>
                 <input value={form.price} onChange={(e) => handleChange("price", e.target.value)} type="number" step="0.01" className={errors.price ? inputErrorClass : inputClass} />
                 {errors.price && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.price}</p>}
               </div>
               <div>
-                <label className={labelClass}>Compare At Price ($)</label>
+                <label className={labelClass}>Compare At Price</label>
                 <input value={form.comparePrice} onChange={(e) => handleChange("comparePrice", e.target.value)} type="number" step="0.01" className={inputClass} />
               </div>
             </div>
@@ -351,6 +411,7 @@ function EditProduct() {
               <input value={form.dimensions} onChange={(e) => handleChange("dimensions", e.target.value)} className={inputClass} />
             </div>
 
+            {/* Tags */}
             <div>
               <label className={labelClass}>Tags</label>
               <div className="flex gap-2 mb-2 flex-wrap">
@@ -366,6 +427,7 @@ function EditProduct() {
               </div>
             </div>
 
+            {/* Sizes */}
             <div>
               <label className={labelClass}>Sizes</label>
               <div className="flex gap-2 mb-2 flex-wrap">
@@ -381,21 +443,94 @@ function EditProduct() {
               </div>
             </div>
 
+            {/* Variants */}
             <div>
-              <label className={labelClass}>Colors</label>
-              <div className="flex gap-2 mb-2 flex-wrap">
-                {form.colors.map((c) => (
-                  <span key={c} className="inline-flex items-center gap-1 rounded-full border border-chrome/20 bg-graphite-2 px-2.5 py-1 font-mono text-[10px]">
-                    {c}<button onClick={() => removeColor(c)} className="text-chrome-dim hover:text-red-400"><X size={10} /></button>
-                  </span>
-                ))}
+              <div className="flex items-center justify-between mb-2">
+                <label className={labelClass + " mb-0"}>Variants <span className="text-chrome-dim/50 font-normal normal-case">(each with own image &amp; price)</span></label>
+                <button
+                  type="button"
+                  onClick={addVariant}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-chrome/20 bg-graphite-2 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.2em] hover:border-chrome/50 transition-colors"
+                >
+                  <Plus size={11} /> Add Variant
+                </button>
               </div>
-              <div className="flex gap-2">
-                <input value={colorInput} onChange={(e) => setColorInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addColor(); } }} placeholder="Add color" className={`${inputClass} flex-1`} />
-                <button onClick={addColor} type="button" className="btn-chrome btn-chrome-inner px-3 py-2 rounded-xl text-[10px]">Add</button>
+              {variants.length === 0 && (
+                <p className="font-mono text-[10px] text-chrome-dim/50 italic">No variants — product uses base price only.</p>
+              )}
+              <div className="space-y-3">
+                {variants.map((v, idx) => {
+                  const previewSrc = v.imagePreview || v.existingImageUrl || "";
+                  return (
+                    <div key={idx} className="rounded-xl border border-chrome/20 bg-graphite-2/50 p-3 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim mb-1">Name *</label>
+                            <input
+                              value={v.name}
+                              onChange={(e) => updateVariant(idx, "name", e.target.value)}
+                              placeholder="e.g. Midnight Black"
+                              className="w-full rounded-lg border border-chrome/20 bg-graphite px-3 py-2 font-mono text-xs outline-none focus:border-chrome/50"
+                            />
+                          </div>
+                          <div>
+                            <label className="block font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim mb-1">Price Override (optional)</label>
+                            <input
+                              value={v.price}
+                              onChange={(e) => updateVariant(idx, "price", e.target.value)}
+                              type="number"
+                              step="0.01"
+                              placeholder="Leave blank = base price"
+                              className="w-full rounded-lg border border-chrome/20 bg-graphite px-3 py-2 font-mono text-xs outline-none focus:border-chrome/50"
+                            />
+                          </div>
+                        </div>
+                        <button onClick={() => removeVariant(idx)} className="shrink-0 text-chrome-dim hover:text-red-400 mt-4">
+                          <X size={14} />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {previewSrc ? (
+                          <div className="relative h-14 w-14 shrink-0 rounded-lg overflow-hidden border border-chrome/30">
+                            <img src={previewSrc} alt="" className="h-full w-full object-cover" />
+                            <button
+                              onClick={() => setVariants((prev) => prev.map((vv, i) => i === idx ? { ...vv, imageFile: null, imagePreview: "", existingImageId: undefined, existingImageUrl: undefined } : vv))}
+                              className="absolute top-0.5 right-0.5 h-4 w-4 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-red-500/80"
+                            >
+                              <X size={8} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div
+                            onClick={() => variantImageRefs.current[idx]?.click()}
+                            className="h-14 w-14 shrink-0 rounded-lg border-2 border-dashed border-chrome/20 flex items-center justify-center cursor-pointer hover:border-chrome/50 transition-colors"
+                          >
+                            <ImagePlus size={16} className="text-chrome-dim" />
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => variantImageRefs.current[idx]?.click()}
+                          className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim hover:text-chrome transition-colors"
+                        >
+                          {previewSrc ? "Change Image" : "Upload Image"}
+                        </button>
+                        <input
+                          ref={(el) => { variantImageRefs.current[idx] = el; }}
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp,image/heic"
+                          className="hidden"
+                          onChange={(e) => handleVariantImage(idx, e.target.files?.[0] || null)}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
+            {/* FAQ */}
             <div>
               <label className={labelClass}>Product FAQ</label>
               <div className="space-y-2 mb-3">
@@ -423,7 +558,7 @@ function EditProduct() {
         <div className="space-y-5">
           <div className="bg-graphite border border-chrome/20 rounded-2xl p-6 space-y-5">
 
-            {/* ── Multi-image panel ── */}
+            {/* Multi-image panel */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className={labelClass + " mb-0"}>
@@ -483,7 +618,6 @@ function EditProduct() {
                   <p className="font-mono text-[9px] text-chrome-dim/50 mt-1">PNG, JPG, WEBP — select multiple</p>
                 </div>
               )}
-
               <input
                 ref={fileInputRef}
                 type="file"
@@ -494,7 +628,7 @@ function EditProduct() {
               />
             </div>
 
-            {/* ── Video panel ── */}
+            {/* Video panel */}
             <div>
               <label className={labelClass}>Video <span className="text-chrome-dim/50 font-normal normal-case">(optional)</span></label>
               <div

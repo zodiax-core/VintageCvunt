@@ -610,6 +610,50 @@ var Globe = createLucideIcon("globe", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var GripVertical = createLucideIcon("grip-vertical", [
+	["circle", {
+		cx: "9",
+		cy: "12",
+		r: "1",
+		key: "1vctgf"
+	}],
+	["circle", {
+		cx: "9",
+		cy: "5",
+		r: "1",
+		key: "hp0tcf"
+	}],
+	["circle", {
+		cx: "9",
+		cy: "19",
+		r: "1",
+		key: "fkjjf6"
+	}],
+	["circle", {
+		cx: "15",
+		cy: "12",
+		r: "1",
+		key: "1tmaij"
+	}],
+	["circle", {
+		cx: "15",
+		cy: "5",
+		r: "1",
+		key: "19l28e"
+	}],
+	["circle", {
+		cx: "15",
+		cy: "19",
+		r: "1",
+		key: "f4zoj3"
+	}]
+]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var HandCoins = createLucideIcon("hand-coins", [
 	["path", {
 		d: "M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17",
@@ -669,6 +713,36 @@ var House = createLucideIcon("house", [["path", {
 	d: "M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
 	key: "r6nss1"
 }]]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var ImagePlus = createLucideIcon("image-plus", [
+	["path", {
+		d: "M16 5h6",
+		key: "1vod17"
+	}],
+	["path", {
+		d: "M19 2v6",
+		key: "4bpg5p"
+	}],
+	["path", {
+		d: "M21 11.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7.5",
+		key: "1ue2ih"
+	}],
+	["path", {
+		d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21",
+		key: "1xmnt7"
+	}],
+	["circle", {
+		cx: "9",
+		cy: "9",
+		r: "2",
+		key: "af1f0g"
+	}]
+]);
 /**
 * @license lucide-react v0.575.0 - ISC
 *
@@ -1534,4 +1608,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { Download as $, Pencil as A, LogOut as B, Reply as C, PiggyBank as D, Plus as E, MessageSquare as F, History as G, Landmark as H, Menu as I, FileText as J, HandCoins as K, Maximize2 as L, PanelsTopLeft as M, Package as N, Phone as O, PackageCheck as P, Ellipsis as Q, Mail as R, Save as S, Quote as T, IndianRupee as U, LayoutDashboard as V, House as W, EyeOff as X, Eye as Y, ExternalLink as Z, Ship as _, ArrowDownRight as _t, UserPlus as a, ChevronRight as at, Settings as b, TriangleAlert as c, Check as ct, Trash2 as d, Boxes as dt, DollarSign as et, Tag as f, Bell as ft, ShoppingBag as g, ArrowLeft as gt, SlidersHorizontal as h, ArrowRight as ht, User as i, CircleAlert as it, PenLine as j, Percent as k, TrendingUp as l, ChartColumn as lt, SquareCheckBig as m, ArrowUpRight as mt, Wallet as n, Clock as nt, Upload as o, ChevronLeft as ot, Star as p, Banknote as pt, Globe as q, Users as r, CircleX as rt, Truck as s, ChevronDown as st, X as t, CreditCard as tt, TrendingDown as u, Calendar as ut, ShieldCheck as v, Receipt as w, Search as x, ShieldAlert as y, MailOpen as z };
+export { ExternalLink as $, Pencil as A, LogOut as B, Reply as C, PiggyBank as D, Plus as E, MessageSquare as F, House as G, Landmark as H, Menu as I, GripVertical as J, History as K, Maximize2 as L, PanelsTopLeft as M, Package as N, Phone as O, PackageCheck as P, EyeOff as Q, Mail as R, Save as S, Quote as T, IndianRupee as U, LayoutDashboard as V, ImagePlus as W, FileText as X, Globe as Y, Eye as Z, Ship as _, ArrowRight as _t, UserPlus as a, CircleX as at, Settings as b, TriangleAlert as c, ChevronLeft as ct, Trash2 as d, ChartColumn as dt, Ellipsis as et, Tag as f, Calendar as ft, ShoppingBag as g, ArrowUpRight as gt, SlidersHorizontal as h, Banknote as ht, User as i, Clock as it, PenLine as j, Percent as k, TrendingUp as l, ChevronDown as lt, SquareCheckBig as m, Bell as mt, Wallet as n, DollarSign as nt, Upload as o, CircleAlert as ot, Star as p, Boxes as pt, HandCoins as q, Users as r, CreditCard as rt, Truck as s, ChevronRight as st, X as t, Download as tt, TrendingDown as u, Check as ut, ShieldCheck as v, ArrowLeft as vt, Receipt as w, Search as x, ShieldAlert as y, ArrowDownRight as yt, MailOpen as z };

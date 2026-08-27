@@ -6,6 +6,7 @@ import { useAuthContext } from "@/lib/auth-context";
 import { useCurrency } from "@/lib/currency-context";
 import { SearchOverlay } from "@/components/SearchOverlay";
 import { CartDrawer } from "@/components/CartDrawer";
+import { TrackOrderOverlay } from "@/components/TrackOrderOverlay";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -13,6 +14,7 @@ export function SiteNav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [trackOpen, setTrackOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const { cartCount } = useCartContext();
   const { user, isAdmin } = useAuthContext();
@@ -81,6 +83,19 @@ export function SiteNav() {
               </svg>
             </button>
 
+            <button
+              onClick={() => setTrackOpen(true)}
+              className="hover:opacity-70 transition-opacity"
+              aria-label="Track Order"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="1" y="3" width="15" height="13" />
+                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                <circle cx="5.5" cy="18.5" r="2.5" />
+                <circle cx="18.5" cy="18.5" r="2.5" />
+              </svg>
+            </button>
+
             {isAdmin ? (
               <Link to="/admin" className="hidden md:inline font-mono text-[10px] uppercase tracking-[0.2em] bg-foreground text-background px-2.5 py-1 rounded-full hover:opacity-80 transition-opacity">
                 Admin
@@ -131,6 +146,7 @@ export function SiteNav() {
                 <div className="h-px w-full bg-black/10" />
                 <div className="flex flex-col gap-4 font-mono text-[11px] uppercase tracking-[0.24em] text-black/70">
                   <button className="text-left hover:text-black transition-colors" onClick={() => { setMenuOpen(false); setSearchOpen(true); }}>Search</button>
+                  <button className="text-left hover:text-black transition-colors" onClick={() => { setMenuOpen(false); setTrackOpen(true); }}>Track Order</button>
                   {user ? (
                     <Link to="/account" onClick={() => setMenuOpen(false)} className="hover:text-black transition-colors">Account</Link>
                   ) : (
@@ -146,6 +162,7 @@ export function SiteNav() {
       </motion.header>
 
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <TrackOrderOverlay open={trackOpen} onClose={() => setTrackOpen(false)} />
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
     </>
   );

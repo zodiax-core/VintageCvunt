@@ -360,16 +360,16 @@ export const authenticate = mutation({
       throw new Error("Invalid email or password.");
     }
 
-    if (isLocked(existing)) {
+    if (isLocked({ loginAttempts: existing.loginAttempts ?? 0, lockedUntil: existing.lockedUntil })) {
       const remaining = Math.ceil((existing.lockedUntil! - Date.now()) / 60000);
       throw new Error(`Account temporarily locked. Try again in ${remaining} minute(s).`);
     }
 
     if (!existing.passwordHash || !existing.passwordSalt) {
       await ctx.db.patch(existing._id, {
-        loginAttempts: (existing.loginAttempts || 0) + 1,
+        loginAttempts: (existing.loginAttempts ?? 0) + 1,
         lockedUntil:
-          existing.loginAttempts + 1 >= LOCKOUT_THRESHOLD
+          (existing.loginAttempts ?? 0) + 1 >= LOCKOUT_THRESHOLD
             ? Date.now() + LOCKOUT_DURATION_MS
             : undefined,
         updatedAt: Date.now(),

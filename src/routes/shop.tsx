@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useInView } from "react-intersection-observer";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -46,6 +47,12 @@ function Shop() {
   const [priceRange, setPriceRange] = useState(priceRanges[0]);
   const [sort, setSort] = useState(sortOptions[0]);
 
+  const [visibleCount, setVisibleCount] = useState(5);
+  const { ref: loadMoreRef, inView } = useInView({
+    threshold: 0.1,
+    rootMargin: "200px",
+  });
+
   const filtered = useMemo(() => {
     let result = category === "All"
       ? allProducts
@@ -58,6 +65,20 @@ function Shop() {
     }
     return result;
   }, [allProducts, category, priceRange, sort]);
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(5);
+  }, [filtered.length, category, priceRange, sort]);
+
+  // Auto-load more when scrolling into view
+  useEffect(() => {
+    if (inView && visibleCount < filtered.length) {
+      setVisibleCount((prev) => Math.min(prev + 5, filtered.length));
+    }
+  }, [inView, filtered.length, visibleCount]);
+
+  const visibleProducts = filtered.slice(0, visibleCount);
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
@@ -227,7 +248,7 @@ function Shop() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {filtered.map((product) => (
+              {visibleProducts.map((product) => (
                 <Link
                   key={product._id}
                   to="/products/$slug"
@@ -256,6 +277,18 @@ function Shop() {
                   </motion.div>
                 </Link>
               ))}
+            </div>
+          )}
+
+          {visibleCount < filtered.length && (
+            <div className="mt-16 flex flex-col items-center gap-4" ref={loadMoreRef}>
+              <div className="h-4 w-4 rounded-full border-2 border-chrome-dim border-t-chrome animate-spin" />
+              <button
+                onClick={() => setVisibleCount((prev) => Math.min(prev + 5, filtered.length))}
+                className="btn-chrome btn-chrome-inner"
+              >
+                <span className="btn-label">Load More</span>
+              </button>
             </div>
           )}
         </div>

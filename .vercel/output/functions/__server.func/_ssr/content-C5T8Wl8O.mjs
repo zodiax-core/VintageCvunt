@@ -3,7 +3,7 @@ import { a as useQuery, i as useMutation } from "../_libs/convex.mjs";
 import { t as api } from "./api-B0N4M6pc.mjs";
 import { _ as require_react, g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
 import { n as getSessionToken } from "./admin-D4iRQZfC.mjs";
-import { A as Pencil, E as Plus, J as FileText, M as PanelsTopLeft, R as Mail, S as Save, T as Quote, d as Trash2, t as X } from "../_libs/lucide-react.mjs";
+import { A as Pencil, E as Plus, M as PanelsTopLeft, R as Mail, S as Save, T as Quote, X as FileText, d as Trash2, t as X } from "../_libs/lucide-react.mjs";
 import { t as AdminLayout } from "./AdminLayout-CEycyE9k.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/content-C5T8Wl8O.js
 var import_react = /* @__PURE__ */ __toESM(require_react());

@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -36,6 +36,7 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 
 function ProductPage() {
   const { slug } = Route.useParams();
+  const navigate = useNavigate();
   const product = useQuery(api.products.getBySlug, { slug }) ?? null;
   const reviews = useQuery(api.reviews.getByProductId, { productId: product?._id ?? "" }) ?? [];
   const allProducts = useQuery(api.products.list) ?? [];
@@ -46,6 +47,8 @@ function ProductPage() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
+  const [showVariantImage, setShowVariantImage] = useState(false);
+  const [variantError, setVariantError] = useState(false);
   const [defaultsSet, setDefaultsSet] = useState(false);
   const productFaqs = useQuery(api.faq.getByCategory, { category: slug }) ?? [];
   const [reviewForm, setReviewForm] = useState({ name: "", email: "", rating: 5, text: "" });
@@ -54,6 +57,13 @@ function ProductPage() {
   const [addedToCart, setAddedToCart] = useState(false);
   const { addToCart } = useCartContext();
   const { formatPrice } = useCurrency();
+
+  const currentVariant = useMemo(() => {
+    if (!product?.variants || !selectedColor) return null;
+    return product.variants.find((v: any) => v.name === selectedColor) || null;
+  }, [product?.variants, selectedColor]);
+
+  const currentPrice = currentVariant?.price ?? product?.price ?? 0;
 
   const detailsList = useMemo(() => {
     if (!product?.details) return [];
@@ -65,13 +75,21 @@ function ProductPage() {
     return product.material.split("\n").map((l: string) => l.trim()).filter(Boolean);
   }, [product?.material]);
 
-  if (!product) return null;
+  useEffect(() => {
+    if (!defaultsSet && product) {
+      if (product.variants && product.variants.length > 0) {
+        // Variants exist: do NOT auto-select a variant. Start selectedColor as empty.
+        setSelectedColor("");
+        if (product.sizes?.length > 0) setSelectedSize(product.sizes[0]);
+      } else {
+        if (product.sizes?.length > 0) setSelectedSize(product.sizes[0]);
+        if (product.colors?.length > 0) setSelectedColor(product.colors[0]);
+      }
+      setDefaultsSet(true);
+    }
+  }, [product, defaultsSet]);
 
-  if (!defaultsSet) {
-    if (product.sizes?.length > 0) setSelectedSize(product.sizes[0]);
-    if (product.colors?.length > 0) setSelectedColor(product.colors[0]);
-    setDefaultsSet(true);
-  }
+  if (!product) return null;
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,7 +142,7 @@ function ProductPage() {
         <div className="mx-auto max-w-7xl px-6">
           <div className="grid grid-cols-12 gap-6 md:gap-12">
             {/* Images */}
-            <div className="col-span-12 md:col-span-7">
+            <div className="col-span-12 md:col-span-7 space-y-4">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -133,9 +151,38 @@ function ProductPage() {
                 style={{ boxShadow: "var(--shadow-plate)" }}
               >
                 <div className="aspect-[4/5]">
-                   <img src={product.imageUrls?.[0] || "/placeholder.svg"} alt={product.name} className="h-full w-full object-cover" />
+                  <img
+                    src={
+                      (showVariantImage && currentVariant?.imageUrl) ||
+                      product.imageUrls?.[selectedImage] ||
+                      product.imageUrls?.[0] ||
+                      "/placeholder.svg"
+                    }
+                    alt={product.name}
+                    className="h-full w-full object-cover"
+                  />
                 </div>
               </motion.div>
+
+              {/* Image Thumbnails */}
+              {product.imageUrls && product.imageUrls.length > 1 && (
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+                  {product.imageUrls.map((url: string, index: number) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        setSelectedImage(index);
+                        setShowVariantImage(false); // Switch display back to general gallery image
+                      }}
+                      className={`relative h-20 w-16 shrink-0 overflow-hidden rounded-xl border transition-all ${
+                        !showVariantImage && selectedImage === index ? "border-chrome ring-1 ring-chrome/30" : "border-chrome/20 hover:border-chrome/50"
+                      }`}
+                    >
+                      <img src={url} alt="" className="h-full w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Details */}
@@ -147,16 +194,16 @@ function ProductPage() {
               >
                 <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">{product.category}</span>
                 <h1 className="mt-3 font-display text-3xl md:text-6xl leading-[0.95] tracking-tight">{product.name}</h1>
-                <p className="mt-4 md:mt-6 font-mono text-lg md:text-xl tracking-[0.08em] text-chrome">{formatPrice(product.price)}</p>
+                <p className="mt-4 md:mt-6 font-mono text-lg md:text-xl tracking-[0.08em] text-chrome">{formatPrice(currentPrice)}</p>
 
-                {product.compareAtPrice && product.compareAtPrice > product.price && (
+                {product.compareAtPrice && product.compareAtPrice > currentPrice && (
                   <p className="mt-1 font-mono text-sm text-chrome-dim line-through">{formatPrice(product.compareAtPrice)}</p>
                 )}
 
                 {/* Tags */}
                 {product.tags && product.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-4">
-                    {product.tags.map((t) => (
+                    {product.tags.map((t: string) => (
                       <span key={t} className="rounded-full border border-chrome/20 bg-graphite px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim">{t}</span>
                     ))}
                   </div>
@@ -171,7 +218,7 @@ function ProductPage() {
                   <div className="mt-6">
                     <h3 className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim mb-3">Details</h3>
                     <ul className="space-y-1.5">
-                      {detailsList.map((d, i) => (
+                      {detailsList.map((d: string, i: number) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-chrome-dim">
                           <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-chrome-dim/40" />
                           {d}
@@ -186,7 +233,7 @@ function ProductPage() {
                   <div className="mt-6">
                     <h3 className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim mb-3">Materials</h3>
                     <ul className="space-y-1.5">
-                      {materialsList.map((m, i) => (
+                      {materialsList.map((m: string, i: number) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-chrome-dim">
                           <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-chrome-dim/40" />
                           {m}
@@ -209,7 +256,7 @@ function ProductPage() {
                   <div className="mt-6">
                     <h3 className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim mb-2">Sizes</h3>
                     <div className="flex flex-wrap gap-2">
-                      {product.sizes.map((s) => (
+                      {product.sizes.map((s: string) => (
                         <button
                           key={s}
                           onClick={() => setSelectedSize(s)}
@@ -226,12 +273,56 @@ function ProductPage() {
                   </div>
                 )}
 
-                {/* Colors */}
-                {product.colors && product.colors.length > 0 && (
+                {/* Variants */}
+                {product.variants && product.variants.length > 0 && (
+                  <div className="mt-6" id="variant-selector-section">
+                    <h3 className={`font-mono text-[10px] uppercase tracking-[0.3em] mb-2 ${variantError ? "text-red-400 font-semibold" : "text-chrome-dim"}`}>
+                      Select Variant {variantError && " * (Required)"}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {product.variants.map((v: any, i: number) => {
+                        const isSelected = selectedColor === v.name;
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => {
+                              setSelectedColor(v.name);
+                              setVariantError(false);
+                              setSelectedSize(""); // variant name becomes the color selector
+                              if (v.imageUrl) {
+                                setShowVariantImage(true);
+                              } else {
+                                setShowVariantImage(false);
+                              }
+                            }}
+                            className={`rounded-lg border px-3 py-1.5 font-mono text-[11px] transition-all duration-200 ${
+                              isSelected
+                                ? "border-chrome bg-chrome text-background shadow-md scale-[1.02]"
+                                : variantError
+                                ? "border-red-500/50 bg-red-500/5 text-red-400 hover:border-red-500/80"
+                                : "border-chrome/30 bg-graphite text-chrome hover:border-chrome/60"
+                            }`}
+                          >
+                            {v.name}
+                            {v.price && v.price !== product.price && (
+                              <span className="ml-1 opacity-80">({formatPrice(v.price)})</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {variantError && (
+                      <p className="mt-2 font-mono text-[10px] text-red-400">Please choose a variant options before proceeding.</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Colors (fallback when no variants) */}
+                {(!product.variants || product.variants.length === 0) && product.colors && product.colors.length > 0 && (
                   <div className="mt-6">
                     <h3 className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim mb-2">Colors</h3>
                     <div className="flex flex-wrap gap-2">
-                      {product.colors.map((c) => (
+                      {product.colors.map((c: string) => (
                         <button
                           key={c}
                           onClick={() => setSelectedColor(c)}
@@ -250,27 +341,61 @@ function ProductPage() {
 
                 <div className="divider-chrome my-6 md:my-8" />
 
-                {/* Add to Cart */}
-                <button
-                  onClick={() => {
-                    addToCart({
-                      id: `${product._id}_${selectedSize || ''}_${selectedColor || ''}`,
-                      productId: product._id,
-                      name: product.name,
-                      slug: product.slug,
-                      src: product.imageUrls?.[0] || "/placeholder.svg",
-                      webp: product.imageUrls?.[0] || "/placeholder.svg",
-                      price: product.price,
-                      selectedSize: selectedSize || undefined,
-                      selectedColor: selectedColor || undefined,
-                    });
-                    setAddedToCart(true);
-                    setTimeout(() => setAddedToCart(false), 2000);
-                  }}
-                  className="btn-chrome btn-chrome-inner w-full justify-center text-sm !py-4"
-                >
-                  <span className="btn-label">{addedToCart ? "Added ✓" : `Add to Cart — ${formatPrice(product.price)}`}</span>
-                </button>
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  {/* Buy Now (prioritized) */}
+                  <button
+                    onClick={() => {
+                      if (product.variants && product.variants.length > 0 && !selectedColor) {
+                        setVariantError(true);
+                        document.getElementById("variant-selector-section")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        return;
+                      }
+                      addToCart({
+                        id: `${product._id}_${selectedSize || ''}_${selectedColor || ''}`,
+                        productId: product._id,
+                        name: product.name,
+                        slug: product.slug,
+                        src: (showVariantImage && currentVariant?.imageUrl) || product.imageUrls?.[0] || "/placeholder.svg",
+                        webp: (showVariantImage && currentVariant?.imageUrl) || product.imageUrls?.[0] || "/placeholder.svg",
+                        price: currentPrice,
+                        selectedSize: selectedSize || undefined,
+                        selectedColor: selectedColor || undefined,
+                      });
+                      navigate({ to: "/checkout" });
+                    }}
+                    className="btn-chrome bg-chrome text-white hover:bg-chrome-h hover:text-white w-full justify-center text-sm !py-4 font-mono uppercase tracking-[0.2em] font-semibold cursor-pointer"
+                  >
+                    Buy Now
+                  </button>
+
+                  {/* Add to Cart */}
+                  <button
+                    onClick={() => {
+                      if (product.variants && product.variants.length > 0 && !selectedColor) {
+                        setVariantError(true);
+                        document.getElementById("variant-selector-section")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        return;
+                      }
+                      addToCart({
+                        id: `${product._id}_${selectedSize || ''}_${selectedColor || ''}`,
+                        productId: product._id,
+                        name: product.name,
+                        slug: product.slug,
+                        src: (showVariantImage && currentVariant?.imageUrl) || product.imageUrls?.[0] || "/placeholder.svg",
+                        webp: (showVariantImage && currentVariant?.imageUrl) || product.imageUrls?.[0] || "/placeholder.svg",
+                        price: currentPrice,
+                        selectedSize: selectedSize || undefined,
+                        selectedColor: selectedColor || undefined,
+                      });
+                      setAddedToCart(true);
+                      setTimeout(() => setAddedToCart(false), 2000);
+                    }}
+                    className="btn-chrome btn-chrome-inner w-full justify-center text-sm !py-4"
+                  >
+                    <span className="btn-label">{addedToCart ? "Added ✓" : `Add to Cart — ${formatPrice(currentPrice)}`}</span>
+                  </button>
+                </div>
                 <p className="mt-3 text-center font-mono text-[9px] uppercase tracking-[0.24em] text-chrome-dim">
                   Free shipping on orders over PKR 500,000 · 14-day return policy · Serving all Pakistan
                 </p>

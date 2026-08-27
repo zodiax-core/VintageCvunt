@@ -40,6 +40,7 @@ function Customers() {
 
   const filtered = useMemo(() => {
     return customers.filter((c) => {
+      if (!c) return false;
       const q = search.toLowerCase();
       const joined = new Date(c.createdAt).toISOString().split("T")[0];
       if (q && !c.name.toLowerCase().includes(q) && !c.email.toLowerCase().includes(q)) return false;
@@ -49,7 +50,8 @@ function Customers() {
       if (dateFilter === "Past Year" && !isWithinMonths(joined, 12)) return false;
       const min = minSpend ? parseFloat(minSpend) : 0;
       const max = maxSpend ? parseFloat(maxSpend) : Infinity;
-      if (c.totalSpent < min || c.totalSpent > max) return false;
+      const spent = c.totalSpent ?? 0;
+      if (spent < min || spent > max) return false;
       return true;
     });
   }, [customers, search, statusFilter, dateFilter, minSpend, maxSpend]);
@@ -74,12 +76,12 @@ function Customers() {
   function exportCSV() {
     const headers = ["Name", "Email", "Orders", "Total Spent", "Joined", "Status"];
     const rows = filtered.map((c) => [
-      c.name,
-      c.email,
-      c.totalOrders.toString(),
-      c.totalSpent.toFixed(2),
-      new Date(c.createdAt).toISOString().split("T")[0],
-      c.status,
+      c?.name ?? "",
+      c?.email ?? "",
+      (c?.totalOrders ?? 0).toString(),
+      (c?.totalSpent ?? 0).toFixed(2),
+      new Date(c?.createdAt ?? 0).toISOString().split("T")[0],
+      c?.status ?? "",
     ]);
     const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -219,74 +221,80 @@ function Customers() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paged.map((c) => (
-                  <TableRow key={c._id} className="border-chrome/10 hover:bg-chrome/5">
-                    <TableCell className="font-medium text-foreground">{c.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{c.email}</TableCell>
-                    <TableCell className="text-right text-muted-foreground">{c.totalOrders}</TableCell>
-                    <TableCell className="text-right text-foreground">PKR {c.totalSpent.toFixed(2)}</TableCell>
-                    <TableCell className="text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] ${
-                          c.status === "Active"
-                            ? "bg-green-500/20 text-green-400 border-green-500/30"
-                            : "bg-gray-500/20 text-gray-400 border-gray-500/30"
-                        }`}
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                        {c.status}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Link
-                        to="/customer/$id"
-                        params={{ id: c._id }}
-                        className="btn-chrome btn-chrome-inner p-2 rounded-lg"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {paged.map((c) => {
+                  if (!c) return null;
+                  return (
+                    <TableRow key={c._id} className="border-chrome/10 hover:bg-chrome/5">
+                      <TableCell className="font-medium text-foreground">{c.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{c.email}</TableCell>
+                      <TableCell className="text-right text-muted-foreground">{c.totalOrders ?? 0}</TableCell>
+                      <TableCell className="text-right text-foreground">PKR {(c.totalSpent ?? 0).toFixed(2)}</TableCell>
+                      <TableCell className="text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] ${
+                            c.status === "Active"
+                              ? "bg-green-500/20 text-green-400 border-green-500/30"
+                              : "bg-gray-500/20 text-gray-400 border-gray-500/30"
+                          }`}
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                          {c.status}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Link
+                          to="/customer/$id"
+                          params={{ id: c._id }}
+                          className="btn-chrome btn-chrome-inner p-2 rounded-lg"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
         </div>
 
         <div className="md:hidden space-y-3">
-          {paged.map((c) => (
-            <div key={c._id} className="bg-graphite border border-chrome/20 rounded-2xl p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-medium text-foreground">{c.name}</span>
-                <span
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] ${
-                    c.status === "Active"
-                      ? "bg-green-500/20 text-green-400 border-green-500/30"
-                      : "bg-gray-500/20 text-gray-400 border-gray-500/30"
-                  }`}
-                >
-                  <span className="h-1 w-1 rounded-full bg-current" />
-                  {c.status}
-                </span>
+          {paged.map((c) => {
+            if (!c) return null;
+            return (
+              <div key={c._id} className="bg-graphite border border-chrome/20 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-foreground">{c.name}</span>
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] ${
+                      c.status === "Active"
+                        ? "bg-green-500/20 text-green-400 border-green-500/30"
+                        : "bg-gray-500/20 text-gray-400 border-gray-500/30"
+                    }`}
+                  >
+                    <span className="h-1 w-1 rounded-full bg-current" />
+                    {c.status}
+                  </span>
+                </div>
+                <div className="text-sm text-muted-foreground">{c.email}</div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{c.totalOrders ?? 0} orders</span>
+                  <span className="text-foreground font-semibold">PKR {(c.totalSpent ?? 0).toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Joined {new Date(c.createdAt).toLocaleDateString()}</span>
+                  <Link
+                    to="/customer/$id"
+                    params={{ id: c._id }}
+                    className="btn-chrome btn-chrome-inner p-2 rounded-lg"
+                  >
+                    <Eye className="h-3.5 w-3.5 mr-1 inline" /> View
+                  </Link>
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground">{c.email}</div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">{c.totalOrders} orders</span>
-                <span className="text-foreground font-semibold">PKR {c.totalSpent.toFixed(2)}</span>
-              </div>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Joined {new Date(c.createdAt).toLocaleDateString()}</span>
-                <Link
-                  to="/customer/$id"
-                  params={{ id: c._id }}
-                  className="btn-chrome btn-chrome-inner p-2 rounded-lg"
-                >
-                  <Eye className="h-3.5 w-3.5 mr-1 inline" /> View
-                </Link>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {totalPages > 1 && (

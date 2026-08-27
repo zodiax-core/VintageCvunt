@@ -147,7 +147,20 @@ function InvestorDetail() {
   const summary = inv.summary as {
     remainingBalance?: number;
     remainingPrincipal?: number;
-  };
+    message?: string;
+    equity?: {
+      ownershipPercentage: number;
+      postMoneyValuation: number;
+    };
+    loan?: {
+      totalRepayment: number;
+      perInstallment: number;
+      payoffDate: string;
+    };
+    recoveredAmount?: number;
+    principalRecoveredFlag?: boolean;
+    recoveryPct?: number;
+  } | undefined;
   const balance = summary?.remainingBalance ?? summary?.remainingPrincipal ?? 0;
   const isProfitModel =
     inv.investmentModel === "Profit Share" ||
@@ -175,7 +188,7 @@ function InvestorDetail() {
       setOverride("");
       setNote("");
     } catch (err) {
-      setError(err?.message || "Failed to log payout.");
+      setError(err instanceof Error ? err.message : "Failed to log payout.");
     } finally {
       setBusy(false);
     }
@@ -195,7 +208,7 @@ function InvestorDetail() {
       setSettlement("");
       setNote("");
     } catch (err) {
-      setError(err?.message || "Failed to withdraw investor.");
+      setError(err instanceof Error ? err.message : "Failed to withdraw investor.");
     } finally {
       setBusy(false);
     }
@@ -214,7 +227,7 @@ function InvestorDetail() {
       setCloseOpen(false);
       setCloseReason("");
     } catch (err) {
-      setError(err?.message || "Failed to close deal.");
+      setError(err instanceof Error ? err.message : "Failed to close deal.");
     } finally {
       setBusy(false);
     }
@@ -226,7 +239,7 @@ function InvestorDetail() {
     try {
       await markSoldOut({ sessionToken, investorId: inv._id as Id<"investors"> });
     } catch (err) {
-      setError(err?.message || "Failed to mark batch sold out.");
+      setError(err instanceof Error ? err.message : "Failed to mark batch sold out.");
     } finally {
       setBusy(false);
     }
@@ -439,12 +452,12 @@ function InvestorDetail() {
                 </p>
                 <div className="flex items-baseline gap-2">
                   <p className="text-xl font-semibold text-foreground">
-                    {formatPrice(summary.recoveredAmount ?? 0, "PKR")}{" "}
+                    {formatPrice(summary?.recoveredAmount ?? 0, "PKR")}{" "}
                     <span className="text-sm text-muted-foreground">
                       / {formatPrice(inv.investmentAmount, "PKR")} recovered
                     </span>
                   </p>
-                  {summary.principalRecoveredFlag && (
+                  {summary?.principalRecoveredFlag && (
                     <span className="rounded-full border border-green-500/40 bg-green-500/10 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-green-400">
                       Principal Recovered
                     </span>
@@ -453,11 +466,11 @@ function InvestorDetail() {
                 <div className="h-2.5 w-full rounded-full bg-chrome/10 overflow-hidden">
                   <div
                     className="h-full bg-green-500 transition-all duration-300"
-                    style={{ width: `${Math.min(100, summary.recoveryPct ?? 0)}%` }}
+                    style={{ width: `${Math.min(100, summary?.recoveryPct ?? 0)}%` }}
                   />
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {(summary.recoveryPct ?? 0).toFixed(1)}% recovered · After recovery, investor
+                  {(summary?.recoveryPct ?? 0).toFixed(1)}% recovered · After recovery, investor
                   receives {inv.profitSharePercentageAfterPrincipal ?? 0}% of each cycle's profit.
                 </p>
               </div>

@@ -3,7 +3,7 @@ import { a as useQuery, i as useMutation } from "../_libs/convex.mjs";
 import { t as api } from "./api-B0N4M6pc.mjs";
 import { _ as require_react, g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
 import { n as getSessionToken } from "./admin-D4iRQZfC.mjs";
-import { A as Pencil, E as Plus, d as Trash2, et as DollarSign, k as Percent, s as Truck, t as X } from "../_libs/lucide-react.mjs";
+import { A as Pencil, E as Plus, d as Trash2, k as Percent, nt as DollarSign, s as Truck, t as X } from "../_libs/lucide-react.mjs";
 import { t as AdminLayout } from "./AdminLayout-CEycyE9k.mjs";
 import { n as cn } from "./utils-DLpWP-3B.mjs";
 import { a as TableHeader, i as TableHead, n as TableBody, o as TableRow, r as TableCell, t as Table } from "./table-BCmSA03j.mjs";

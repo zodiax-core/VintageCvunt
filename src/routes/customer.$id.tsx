@@ -60,7 +60,7 @@ function CustomerDetail() {
   }
 
   const initials = customer.name.split(" ").map((n) => n[0]).join("");
-  const avgOrderValue = customer.totalOrders > 0 ? customer.totalSpent / customer.totalOrders : 0;
+  const avgOrderValue = (customer.totalOrders ?? 0) > 0 ? (customer.totalSpent ?? 0) / (customer.totalOrders ?? 1) : 0;
   const lastOrderDate = orders && orders.length > 0
     ? new Date(Math.max(...orders.map((o) => o.createdAt))).toLocaleDateString()
     : "N/A";
@@ -131,8 +131,8 @@ function CustomerDetail() {
           <div className="lg:col-span-3 space-y-6">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { label: "Total Orders", value: customer.totalOrders.toString(), icon: ShoppingBag },
-                { label: "Total Spent", value: "PKR " + customer.totalSpent.toFixed(2), icon: DollarSign },
+                { label: "Total Orders", value: (customer.totalOrders ?? 0).toString(), icon: ShoppingBag },
+                { label: "Total Spent", value: "PKR " + (customer.totalSpent ?? 0).toFixed(2), icon: DollarSign },
                 { label: "Avg Order Value", value: "PKR " + avgOrderValue.toFixed(2), icon: Receipt },
                 { label: "Last Order", value: lastOrderDate, icon: Calendar },
               ].map((s) => (

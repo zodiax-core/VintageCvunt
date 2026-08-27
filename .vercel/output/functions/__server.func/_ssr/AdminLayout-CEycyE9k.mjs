@@ -3,7 +3,7 @@ import { _ as require_react, g as require_jsx_runtime } from "../_libs/@radix-ui
 import { n as useAuthContext } from "./auth-context-BqGyC6x_.mjs";
 import { _ as Link, l as useLocation, u as useRouterState, v as useNavigate } from "../_libs/@tanstack/react-router+[...].mjs";
 import { a as AnimatePresence, i as motion } from "../_libs/framer-motion.mjs";
-import { B as LogOut, D as PiggyBank, F as MessageSquare, I as Menu, J as FileText, K as HandCoins, N as Package, Q as Ellipsis, V as LayoutDashboard, W as House, b as Settings, f as Tag, ft as Bell, g as ShoppingBag, i as User, lt as ChartColumn, ot as ChevronLeft, p as Star, r as Users, x as Search } from "../_libs/lucide-react.mjs";
+import { B as LogOut, D as PiggyBank, F as MessageSquare, G as House, I as Menu, N as Package, V as LayoutDashboard, X as FileText, b as Settings, ct as ChevronLeft, dt as ChartColumn, et as Ellipsis, f as Tag, g as ShoppingBag, i as User, mt as Bell, p as Star, q as HandCoins, r as Users, x as Search } from "../_libs/lucide-react.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/AdminLayout-CEycyE9k.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();

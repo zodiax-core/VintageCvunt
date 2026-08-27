@@ -56,7 +56,7 @@ function Settings() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const [shippingForm, setShippingForm] = useState({ name: "", description: "", price: "", estimatedDays: "" });
+  const [shippingForm, setShippingForm] = useState({ name: "", price: "" });
   const [editingShippingId, setEditingShippingId] = useState<Id<"shippingRates"> | null>(null);
 
   useEffect(() => {
@@ -97,22 +97,22 @@ function Settings() {
         sessionToken: getSessionToken() ?? "",
         id: editingShippingId,
         name: shippingForm.name,
-        description: shippingForm.description,
+        description: "",
         price,
-        estimatedDays: shippingForm.estimatedDays,
+        estimatedDays: "",
         isActive: true,
       });
     } else {
       await createShippingRate({
         sessionToken: getSessionToken() ?? "",
         name: shippingForm.name,
-        description: shippingForm.description,
+        description: "",
         price,
-        estimatedDays: shippingForm.estimatedDays,
+        estimatedDays: "",
         isActive: true,
       });
     }
-    setShippingForm({ name: "", description: "", price: "", estimatedDays: "" });
+    setShippingForm({ name: "", price: "" });
     setEditingShippingId(null);
   };
 
@@ -120,9 +120,7 @@ function Settings() {
     setEditingShippingId(rate._id);
     setShippingForm({
       name: rate.name,
-      description: rate.description,
       price: String(rate.price),
-      estimatedDays: rate.estimatedDays,
     });
   };
 
@@ -241,38 +239,26 @@ function Settings() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <input
                 value={shippingForm.name}
                 onChange={(e) => setShippingForm({ ...shippingForm, name: e.target.value })}
-                placeholder="Name (e.g. Standard)"
-                className="rounded-xl border border-chrome/20 bg-background px-4 py-2.5 font-mono text-sm outline-none focus:border-chrome/50"
-              />
-              <input
-                value={shippingForm.description}
-                onChange={(e) => setShippingForm({ ...shippingForm, description: e.target.value })}
-                placeholder="Description"
+                placeholder="City Name (e.g. Karachi)"
                 className="rounded-xl border border-chrome/20 bg-background px-4 py-2.5 font-mono text-sm outline-none focus:border-chrome/50"
               />
               <input
                 value={shippingForm.price}
                 onChange={(e) => setShippingForm({ ...shippingForm, price: e.target.value })}
                 type="number"
-                step="0.01"
-                placeholder="Price"
-                className="rounded-xl border border-chrome/20 bg-background px-4 py-2.5 font-mono text-sm outline-none focus:border-chrome/50"
-              />
-              <input
-                value={shippingForm.estimatedDays}
-                onChange={(e) => setShippingForm({ ...shippingForm, estimatedDays: e.target.value })}
-                placeholder="Est. days (e.g. 3-5)"
+                step="1"
+                placeholder="Delivery Fee (PKR)"
                 className="rounded-xl border border-chrome/20 bg-background px-4 py-2.5 font-mono text-sm outline-none focus:border-chrome/50"
               />
             </div>
             <div className="flex items-center gap-2">
               {editingShippingId && (
                 <button
-                  onClick={() => { setEditingShippingId(null); setShippingForm({ name: "", description: "", price: "", estimatedDays: "" }); }}
+                  onClick={() => { setEditingShippingId(null); setShippingForm({ name: "", price: "" }); }}
                   className="rounded-xl border border-chrome/20 px-4 py-2 font-mono text-[10px] text-chrome-dim hover:text-foreground transition-colors"
                 >
                   Cancel
@@ -292,28 +278,20 @@ function Settings() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-chrome/10">
-                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Name</TableHead>
-                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Description</TableHead>
-                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Price</TableHead>
-                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Est. Days</TableHead>
+                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">City</TableHead>
+                    <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Delivery Fee</TableHead>
                     <TableHead className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {shippingRatesData.map((rate) => (
                     <TableRow key={rate._id} className="border-chrome/10">
-                      <TableCell className="text-foreground">{rate.name}</TableCell>
-                      <TableCell className="text-muted-foreground">{rate.description}</TableCell>
-                      <TableCell className="text-foreground font-mono">{currency} {rate.price.toFixed(2)}</TableCell>
-                      <TableCell className="text-muted-foreground">{rate.estimatedDays}</TableCell>
+                      <TableCell className="text-foreground font-medium">{rate.name}</TableCell>
+                      <TableCell className="text-foreground font-mono">{currency} {rate.price.toLocaleString()}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => editShipping(rate)} className="btn-chrome btn-chrome-inner p-2 rounded-lg">
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button onClick={() => removeShippingRate({ sessionToken: getSessionToken() ?? "", id: rate._id })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400">
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          <button onClick={() => editShipping(rate)} className="btn-chrome btn-chrome-inner p-2 rounded-lg"><Pencil className="h-4 w-4" /></button>
+                          <button onClick={() => removeShippingRate({ sessionToken: getSessionToken() ?? "", id: rate._id })} className="btn-chrome btn-chrome-inner p-2 rounded-lg text-red-400"><Trash2 className="h-4 w-4" /></button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -329,11 +307,10 @@ function Settings() {
                   <div key={rate._id} className="border border-chrome/10 rounded-xl p-3 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-foreground text-sm">{rate.name}</span>
-                      <span className="font-mono text-[11px] text-foreground">{currency} {rate.price.toFixed(2)}</span>
+                      <span className="font-mono text-[11px] text-foreground">{currency} {rate.price.toLocaleString()}</span>
                     </div>
-                    {rate.description && <p className="text-xs text-muted-foreground">{rate.description}</p>}
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">{rate.estimatedDays || "—"}</span>
+                      <span className="text-xs text-muted-foreground">Delivery Fee</span>
                       <div className="flex items-center gap-1">
                         <button onClick={() => editShipping(rate)} className="btn-chrome btn-chrome-inner p-1.5 rounded-lg">
                           <Pencil className="h-3.5 w-3.5" />

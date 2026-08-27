@@ -3,7 +3,7 @@ import { a as useQuery } from "../_libs/convex.mjs";
 import { t as api } from "./api-B0N4M6pc.mjs";
 import { _ as require_react, g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
 import { n as getSessionToken } from "./admin-D4iRQZfC.mjs";
-import { et as DollarSign, g as ShoppingBag, l as TrendingUp, r as Users } from "../_libs/lucide-react.mjs";
+import { g as ShoppingBag, l as TrendingUp, nt as DollarSign, r as Users } from "../_libs/lucide-react.mjs";
 import { t as AdminLayout } from "./AdminLayout-CEycyE9k.mjs";
 import { a as XAxis, c as CartesianGrid, d as Tooltip, i as YAxis, l as Bar, n as BarChart, o as Area, r as LineChart, s as Line, t as AreaChart, u as ResponsiveContainer } from "../_libs/recharts+[...].mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/analytics-DLXqQhY7.js

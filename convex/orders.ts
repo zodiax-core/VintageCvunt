@@ -29,7 +29,7 @@ export const getByEmail = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("orders")
-      .withIndex("by_email", (q) => q.eq("customerEmail", args.email))
+      .filter((q) => q.eq(q.field("customerEmail"), args.email))
       .collect();
   },
 });

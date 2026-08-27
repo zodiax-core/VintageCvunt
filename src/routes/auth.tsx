@@ -157,6 +157,11 @@ function Auth() {
           return;
         }
 
+        if (!user || !("_id" in user)) {
+          setErrors({ form: "Login failed. Please try again." });
+          return;
+        }
+
         login(
           {
             id: user._id,
@@ -304,7 +309,7 @@ function Auth() {
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     onBlur={() => handleBlur("name")}
-                    placeholder="John Doe"
+                    placeholder="Your Name"
                     className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.name && errors.name ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
                   />
                   {touched.name && errors.name && (

@@ -14,9 +14,23 @@ async function resolveImages(ctx: any, images: string[]): Promise<string[]> {
 
 async function enrichProduct(ctx: any, product: any) {
   if (!product) return null;
+  const imageUrls = await resolveImages(ctx, product.images ?? []);
+  
+  // Resolve variant images
+  let variants = product.variants;
+  if (variants) {
+    variants = await Promise.all(
+      variants.map(async (v: any) => {
+        const imageUrl = v.image ? await ctx.storage.getUrl(v.image as any) : undefined;
+        return { ...v, imageUrl };
+      })
+    );
+  }
+  
   return {
     ...product,
-    imageUrls: await resolveImages(ctx, product.images ?? []),
+    imageUrls,
+    variants,
     videoUrl: product.video ? await ctx.storage.getUrl(product.video as any) : undefined,
   };
 }
@@ -104,6 +118,12 @@ export const create = mutation({
     tags: v.array(v.string()),
     sizes: v.array(v.string()),
     colors: v.array(v.string()),
+    variants: v.optional(v.array(v.object({
+      name: v.string(),
+      image: v.optional(v.string()),
+      price: v.optional(v.number()),
+      stock: v.optional(v.number()),
+    }))),
     material: v.optional(v.string()),
     careInstructions: v.optional(v.string()),
     details: v.optional(v.string()),
@@ -140,6 +160,12 @@ export const update = mutation({
     tags: v.optional(v.array(v.string())),
     sizes: v.optional(v.array(v.string())),
     colors: v.optional(v.array(v.string())),
+    variants: v.optional(v.array(v.object({
+      name: v.string(),
+      image: v.optional(v.string()),
+      price: v.optional(v.number()),
+      stock: v.optional(v.number()),
+    }))),
     material: v.optional(v.string()),
     careInstructions: v.optional(v.string()),
     details: v.optional(v.string()),

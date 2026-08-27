@@ -14,6 +14,12 @@ export default defineSchema({
     tags: v.array(v.string()),
     sizes: v.array(v.string()),
     colors: v.array(v.string()),
+    variants: v.optional(v.array(v.object({
+      name: v.string(),
+      image: v.optional(v.string()),
+      stock: v.optional(v.number()),
+      price: v.optional(v.number()),
+    }))),
     material: v.optional(v.string()),
     careInstructions: v.optional(v.string()),
     details: v.optional(v.string()),
@@ -72,33 +78,22 @@ export default defineSchema({
     notes: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
-  })
-    .index("by_orderNumber", ["orderNumber"])
-    .index("by_email", ["customerEmail"])
-    .index("by_status", ["status"]),
+  }),
 
-  customers: defineTable({
+  shippingRates: defineTable({
     name: v.string(),
-    email: v.string(),
-    phone: v.optional(v.string()),
-    address: v.optional(v.string()),
-    totalOrders: v.number(),
-    totalSpent: v.number(),
-    status: v.string(),
-    role: v.optional(v.string()),
-    passwordHash: v.optional(v.string()),
-    passwordSalt: v.optional(v.string()),
-    loginAttempts: v.number(),
-    lockedUntil: v.optional(v.number()),
-    avatar: v.optional(v.string()),
-    notes: v.optional(v.string()),
-    isEmailVerified: v.optional(v.boolean()),
-    otp: v.optional(v.string()),
-    otpExpiresAt: v.optional(v.number()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_email", ["email"]),
+    description: v.optional(v.string()),
+    price: v.number(),
+    estimatedDays: v.optional(v.string()),
+    isActive: v.optional(v.boolean()),
+    createdAt: v.optional(v.number()),
+  }),
+
+priceRanges: defineTable({
+    label: v.string(),
+    min: v.number(),
+    max: v.number(),
+  }),
 
   reviews: defineTable({
     productId: v.string(),
@@ -112,6 +107,28 @@ export default defineSchema({
   })
     .index("by_productId", ["productId"])
     .index("by_status", ["status"]),
+
+  customers: defineTable({
+    name: v.string(),
+    email: v.string(),
+    phone: v.optional(v.string()),
+    address: v.optional(v.string()),
+    totalOrders: v.optional(v.number()),
+    totalSpent: v.optional(v.number()),
+    status: v.optional(v.string()),
+    role: v.optional(v.string()),
+    avatar: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    passwordHash: v.optional(v.string()),
+    passwordSalt: v.optional(v.string()),
+    otp: v.optional(v.string()),
+    otpExpiresAt: v.optional(v.number()),
+    lockedUntil: v.optional(v.number()),
+    loginAttempts: v.optional(v.number()),
+    isEmailVerified: v.optional(v.boolean()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_email", ["email"]),
 
   messages: defineTable({
     name: v.string(),
@@ -171,15 +188,6 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_category", ["category"]),
-
-  shippingRates: defineTable({
-    name: v.string(),
-    description: v.string(),
-    price: v.number(),
-    estimatedDays: v.string(),
-    isActive: v.boolean(),
-    createdAt: v.number(),
-  }),
 
   aboutMilestones: defineTable({
     year: v.string(),

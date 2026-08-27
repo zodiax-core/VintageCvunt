@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -25,11 +25,22 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 
 function Checkout() {
   const { formatPrice } = useCurrency();
-  const { cart, cartTotal, cartCount, clearCart } = useCartContext();
+  const { cart, cartTotal, clearCart } = useCartContext();
   const { user } = useAuthContext();
   const navigate = useNavigate();
   const settings = useQuery(api.settings.get);
   const shippingRates = useQuery(api.shippingRates.list) ?? [];
+
+  const [toastOpen, setToastOpen] = useState(false);
+  const [citySearch, setCitySearch] = useState("");
+  const [cityOpen, setCityOpen] = useState(false);
+
+  // Show registration modal for non-logged-in users
+  useEffect(() => {
+    if (!user) {
+      setToastOpen(true);
+    }
+  }, [user]);
 
   const [billing, setBilling] = useState({
     name: user?.name || "",
@@ -42,21 +53,7 @@ function Checkout() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [screenshot, setScreenshot] = useState<File | null>(null);
-  const [screenshotPreview, setScreenshotPreview] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const copyBankNumber = async () => {
-    try {
-      await navigator.clipboard.writeText("03316809983");
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  };
 
   // Coupon
   const [couponCode, setCouponCode] = useState("");
@@ -70,12 +67,16 @@ function Checkout() {
   const [couponError, setCouponError] = useState("");
   const [couponApplying, setCouponApplying] = useState(false);
 
-  // Shipping
+  // Shipping — driven by city selection
   const [selectedShipping, setSelectedShipping] = useState<typeof shippingRates[number] | null>(null);
 
+  // Set first city as default once rates load and sync citySearch
   useEffect(() => {
     if (shippingRates.length > 0 && !selectedShipping) {
       setSelectedShipping(shippingRates[0]);
+      const defaultCity = shippingRates[0].name;
+      setBilling((prev) => ({ ...prev, city: prev.city || defaultCity }));
+      setCitySearch(prev => prev || defaultCity);
     }
   }, [shippingRates, selectedShipping]);
 
@@ -92,11 +93,10 @@ function Checkout() {
     if (!billing.email.trim()) errs.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(billing.email)) errs.email = "Invalid email";
     if (!billing.phone.trim()) errs.phone = "Phone is required";
-    else if (!/^[\d\s\+\-]{7,15}$/.test(billing.phone)) errs.phone = "Enter a valid phone number";
+    else if (!/^[\d\s+\-]{7,15}$/.test(billing.phone)) errs.phone = "Enter a valid phone number";
     if (!billing.address.trim()) errs.address = "Address is required";
     if (!billing.city.trim()) errs.city = "City is required";
     if (!billing.zip.trim()) errs.zip = "ZIP code is required";
-    if (!screenshot) errs.screenshot = "Payment screenshot is required";
     return errs;
   };
 
@@ -106,15 +106,6 @@ function Checkout() {
     setErrors((prev) => ({ ...prev, [field]: errs[field] || "" }));
   };
 
-  const handleFileChange = (file: File | null) => {
-    if (file) {
-      setScreenshot(file);
-      const reader = new FileReader();
-      reader.onload = (e) => setScreenshotPreview(e.target?.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
     setCouponApplying(true);
@@ -122,11 +113,11 @@ function Checkout() {
     setAppliedCoupon(null);
     try {
       const result = await queryValidateCoupon(couponCode.trim().toUpperCase(), cartTotal);
-      if (result.valid) {
+      if (result.valid && result.coupon) {
         setAppliedCoupon(result.coupon);
         setCouponCode("");
       } else {
-        setCouponError(result.reason);
+        setCouponError(result.reason || "Invalid coupon");
       }
     } catch {
       setCouponError("Failed to validate coupon");
@@ -136,29 +127,25 @@ function Checkout() {
   };
 
   const createOrder = useMutation(api.orders.create);
-  const generateUploadUrl = useMutation(api.products.generateCheckoutUploadUrl);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
     setErrors(errs);
     setTouched({
-      name: true, email: true, phone: true, address: true,
-      city: true, zip: true, screenshot: true,
+      name: true,
+      email: true,
+      phone: true,
+      address: true,
+      city: true,
+      zip: true,
     });
     if (Object.keys(errs).length > 0) return;
 
     setSubmitting(true);
     try {
-      let screenshotId: string | undefined;
-      if (screenshot) {
-        const uploadUrl = await generateUploadUrl();
-        const result = await fetch(uploadUrl, { method: "POST", body: screenshot });
-        const { storageId } = await result.json();
-        screenshotId = storageId;
-      }
-
       const orderNumber = "VC-" + String(Math.floor(100000 + Math.random() * 900000));
+
       await createOrder({
         orderNumber,
         customerId: user?.id || undefined,
@@ -181,7 +168,7 @@ function Checkout() {
         couponCode: appliedCoupon?.code,
         total: grandTotal,
         status: "pending",
-        paymentMethod: "Bank Transfer",
+        paymentMethod: "Cash on Delivery",
         billingAddress: {
           street: billing.address,
           city: billing.city,
@@ -196,7 +183,6 @@ function Checkout() {
           zip: billing.zip,
           country: "Pakistan",
         },
-        screenshot: screenshotId,
       });
 
       clearCart();
@@ -226,13 +212,57 @@ function Checkout() {
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
+      {/* Registration / Auth modal */}
+      {toastOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-md rounded-2xl border border-chrome bg-graphite p-6 text-center shadow-2xl"
+          >
+            <span className="inline-block h-2 w-2 rounded-full bg-chrome animate-pulse mb-3" />
+            <h3 className="font-display text-2xl text-foreground">Patron Identity</h3>
+            <p className="mt-2 font-mono text-xs uppercase tracking-[0.15em] text-chrome-dim">
+              Register or sign in to save your purchase history and track orders
+            </p>
+            <div className="mt-6 flex flex-col gap-3">
+              <Link
+                to="/auth"
+                search={{ mode: "register" }}
+                className="btn-chrome bg-chrome text-background hover:bg-chrome-h w-full justify-center py-3 text-xs uppercase tracking-[0.2em]"
+              >
+                Register Account
+              </Link>
+              <Link
+                to="/auth"
+                search={{ mode: "login" }}
+                className="btn-chrome btn-chrome-inner w-full justify-center py-3 text-xs uppercase tracking-[0.2em]"
+              >
+                Log In
+              </Link>
+              <button
+                type="button"
+                onClick={() => setToastOpen(false)}
+                className="mt-2 font-mono text-[10px] uppercase tracking-[0.2em] text-chrome-dim hover:text-chrome transition-colors"
+              >
+                Continue as Guest / Cancel
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       <SiteNav />
 
       <section className="relative pt-28 md:pt-44 pb-12 md:pb-20 overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.06]" style={{
-          backgroundImage: "linear-gradient(to right, oklch(0.9 0 0 / 0.4) 1px, transparent 1px), linear-gradient(to bottom, oklch(0.9 0 0 / 0.4) 1px, transparent 1px)",
-          backgroundSize: "88px 88px",
-        }} />
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, oklch(0.9 0 0 / 0.4) 1px, transparent 1px), linear-gradient(to bottom, oklch(0.9 0 0 / 0.4) 1px, transparent 1px)",
+            backgroundSize: "88px 88px",
+          }}
+        />
         <div className="relative mx-auto max-w-7xl px-6">
           <motion.p
             initial={{ clipPath: "inset(0 100% 0 0)" }}
@@ -259,6 +289,7 @@ function Checkout() {
             <div className="grid grid-cols-12 gap-8 md:gap-16">
               {/* Left — Billing + Payment */}
               <div className="col-span-12 md:col-span-7 space-y-10">
+
                 {/* Billing */}
                 <div>
                   <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">§ Billing Details</span>
@@ -271,7 +302,9 @@ function Checkout() {
                           onChange={(e) => setBilling({ ...billing, name: e.target.value })}
                           onBlur={() => handleBlur("name")}
                           placeholder="Your Name"
-                          className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.name && errors.name ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
+                          className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${
+                            touched.name && errors.name ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
+                          }`}
                         />
                         {touched.name && errors.name && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.name}</p>}
                       </div>
@@ -283,7 +316,9 @@ function Checkout() {
                           onChange={(e) => setBilling({ ...billing, email: e.target.value })}
                           onBlur={() => handleBlur("email")}
                           placeholder="your@address.com"
-                          className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.email && errors.email ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
+                          className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${
+                            touched.email && errors.email ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
+                          }`}
                         />
                         {touched.email && errors.email && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.email}</p>}
                       </div>
@@ -295,7 +330,9 @@ function Checkout() {
                         onChange={(e) => setBilling({ ...billing, phone: e.target.value })}
                         onBlur={() => handleBlur("phone")}
                         placeholder="+92 300 1234567"
-                        className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.phone && errors.phone ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
+                        className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${
+                          touched.phone && errors.phone ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
+                        }`}
                       />
                       {touched.phone && errors.phone && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.phone}</p>}
                     </div>
@@ -306,30 +343,72 @@ function Checkout() {
                         onChange={(e) => setBilling({ ...billing, address: e.target.value })}
                         onBlur={() => handleBlur("address")}
                         placeholder="Street address"
-                        className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.address && errors.address ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
+                        className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${
+                          touched.address && errors.address ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
+                        }`}
                       />
                       {touched.address && errors.address && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.address}</p>}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                      {/* City — searchable combobox */}
                       <div>
                         <label className="block font-mono text-[10px] uppercase tracking-[0.24em] text-chrome-dim mb-2">City *</label>
-                        <input
-                          value={billing.city}
-                          onChange={(e) => setBilling({ ...billing, city: e.target.value })}
-                          onBlur={() => handleBlur("city")}
-                          placeholder="City"
-                          className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.city && errors.city ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
-                        />
+                        <div className="relative">
+                          <input
+                            value={citySearch}
+                            onChange={(e) => {
+                              setCitySearch(e.target.value);
+                              setCityOpen(true);
+                            }}
+                            onFocus={() => setCityOpen(true)}
+                            onBlur={() => setTimeout(() => setCityOpen(false), 150)}
+                            placeholder="Search city…"
+                            className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${
+                              touched.city && errors.city ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
+                            }`}
+                          />
+                          {cityOpen && shippingRates.length > 0 && (
+                            <div className="absolute z-20 mt-1 w-full rounded-xl border border-chrome/30 bg-graphite shadow-xl overflow-hidden">
+                              <div className="max-h-48 overflow-y-auto scrollbar-thin">
+                                {shippingRates
+                                  .filter((r) => r.name.toLowerCase().includes(citySearch.toLowerCase()))
+                                  .map((rate) => (
+                                    <button
+                                      key={rate._id}
+                                      type="button"
+                                      onMouseDown={() => {
+                                        setBilling((prev) => ({ ...prev, city: rate.name }));
+                                        setCitySearch(rate.name);
+                                        setSelectedShipping(rate);
+                                        setCityOpen(false);
+                                        setTouched((prev) => ({ ...prev, city: true }));
+                                        setErrors((prev) => ({ ...prev, city: "" }));
+                                      }}
+                                      className={`w-full flex items-center justify-between px-4 py-2.5 font-mono text-sm text-left transition-colors hover:bg-chrome/10 ${
+                                        selectedShipping?._id === rate._id ? "bg-chrome/10 text-chrome" : "text-foreground"
+                                      }`}
+                                    >
+                                      <span>{rate.name}</span>
+                                      <span className="text-chrome-dim text-xs">{rate.price === 0 ? "Free" : `PKR ${rate.price.toLocaleString()}`}</span>
+                                    </button>
+                                  ))}
+                                {shippingRates.filter((r) => r.name.toLowerCase().includes(citySearch.toLowerCase())).length === 0 && (
+                                  <p className="px-4 py-3 font-mono text-[11px] text-chrome-dim/60">No cities found</p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                         {touched.city && errors.city && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.city}</p>}
                       </div>
                       <div>
-                        <label className="block font-mono text-[10px] uppercase tracking-[0.24em] text-chrome-dim mb-2">Country *</label>
-                          <input
-                            type="text"
-                            value={billing.country}
-                            disabled
-                            className="w-full rounded-xl border border-chrome/20 bg-graphite/50 px-4 py-3 font-mono text-sm text-chrome-dim/60 outline-none cursor-not-allowed"
-                          />
+                        <label className="block font-mono text-[10px] uppercase tracking-[0.24em] text-chrome-dim mb-2">Country</label>
+                        <input
+                          type="text"
+                          value={billing.country}
+                          disabled
+                          className="w-full rounded-xl border border-chrome/20 bg-graphite/50 px-4 py-3 font-mono text-sm text-chrome-dim/60 outline-none cursor-not-allowed"
+                        />
                       </div>
                       <div>
                         <label className="block font-mono text-[10px] uppercase tracking-[0.24em] text-chrome-dim mb-2">ZIP Code *</label>
@@ -338,7 +417,9 @@ function Checkout() {
                           onChange={(e) => setBilling({ ...billing, zip: e.target.value })}
                           onBlur={() => handleBlur("zip")}
                           placeholder="ZIP"
-                          className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.zip && errors.zip ? "border-red-500/50" : "border-chrome focus:border-chrome/80"}`}
+                          className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${
+                            touched.zip && errors.zip ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
+                          }`}
                         />
                         {touched.zip && errors.zip && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.zip}</p>}
                       </div>
@@ -346,102 +427,20 @@ function Checkout() {
                   </div>
                 </div>
 
-                {/* Payment Screenshot */}
+                {/* Payment Section — COD only */}
                 <div>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">§ Payment Proof</span>
-                  <p className="mt-2 font-mono text-[10px] text-chrome-dim/60">Upload a screenshot of your payment transaction to confirm your order.</p>
-                  <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim/40">Other payment methods coming soon.</p>
-
-                  <div className="mt-5 rounded-2xl border border-chrome bg-graphite p-5">
-                    <div className="flex items-center gap-2">
-                      <svg className="text-chrome-dim/60" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="2" y="5" width="20" height="14" rx="2" />
-                        <line x1="2" y1="10" x2="22" y2="10" />
-                      </svg>
-                      <span className="font-mono text-[11px] uppercase tracking-[0.24em] text-chrome">JazzCash</span>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">§ Payment</span>
+                  <div className="mt-4 flex items-start gap-4 rounded-2xl border border-chrome/20 bg-graphite/30 p-5">
+                    <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-chrome bg-chrome/10">
+                      <div className="h-2 w-2 rounded-full bg-chrome" />
                     </div>
-                    <div className="mt-4 flex items-center justify-between gap-3">
-                      <div>
-                        <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim/60">Account Number</p>
-                        <p className="mt-1 font-mono text-base text-chrome">0331 6809983</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={copyBankNumber}
-                        className="grid h-9 w-9 place-items-center rounded-xl border border-chrome/30 text-chrome-dim transition-colors hover:border-chrome/70 hover:text-chrome"
-                        title="Copy account number"
-                      >
-                        {copied ? (
-                          <svg className="text-emerald-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        ) : (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="9" y="9" width="13" height="13" rx="2" />
-                            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                          </svg>
-                        )}
-                      </button>
+                    <div>
+                      <p className="font-mono text-xs text-chrome">Cash on Delivery (COD)</p>
+                      <p className="mt-1 font-mono text-[10px] text-chrome-dim/60">
+                        Pay in cash upon receiving your parcel. No prepayment required.
+                      </p>
                     </div>
-                    <div className="mt-3 flex items-center justify-between gap-3 border-t border-chrome/15 pt-3">
-                      <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim/60">Account Holder</p>
-                      <p className="font-mono text-xs text-chrome">ANABIYA KASHIF</p>
-                    </div>
-                    <div className="mt-3 flex items-center justify-between gap-3 border-t border-chrome/15 pt-3">
-                      <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dim/60">Amount to Pay</p>
-                      <p className="font-mono text-xs text-chrome">{formatPrice(grandTotal)}</p>
-                    </div>
-                    {copied && (
-                      <p className="mt-3 font-mono text-[9px] uppercase tracking-[0.2em] text-emerald-400">✓ Copied to clipboard</p>
-                    )}
                   </div>
-
-                  <div className="mt-5">
-                    <label className="block font-mono text-[10px] uppercase tracking-[0.24em] text-chrome-dim mb-2">Payment Screenshot *</label>
-                    <div
-                      onClick={() => fileRef.current?.click()}
-                      className={`relative rounded-2xl border-2 border-dashed p-8 text-center cursor-pointer transition-colors ${
-                        screenshot ? "border-chrome/50 bg-chrome/5" : "border-chrome/20 hover:border-chrome/40 bg-graphite/30"
-                      } ${touched.screenshot && errors.screenshot ? "border-red-500/50" : ""}`}
-                    >
-                      {screenshotPreview ? (
-                        <div className="space-y-3">
-                          <img src={screenshotPreview} alt="Payment screenshot" className="mx-auto max-h-40 rounded-xl object-contain" />
-                          <p className="font-mono text-[10px] text-chrome-dim">{screenshot?.name}</p>
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); setScreenshot(null); setScreenshotPreview(""); }}
-                            className="font-mono text-[10px] uppercase tracking-[0.2em] text-red-400 hover:text-red-300 transition-colors"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      ) : (
-                        <div>
-                          <svg className="mx-auto text-chrome-dim/40" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                            <polyline points="17 8 12 3 7 8" />
-                            <line x1="12" y1="3" x2="12" y2="15" />
-                          </svg>
-                          <p className="mt-3 font-mono text-xs text-chrome-dim/60">Click to upload payment screenshot</p>
-                          <p className="mt-1 font-mono text-[9px] text-chrome-dim/40">PNG, JPG — Max 5MB</p>
-                        </div>
-                      )}
-                      <input
-                        ref={fileRef}
-                        type="file"
-                        accept="image/png,image/jpeg"
-                        className="hidden"
-                        onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
-                      />
-                    </div>
-                    {touched.screenshot && errors.screenshot && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.screenshot}</p>}
-                  </div>
-
-                  <p className="mt-4 font-mono text-[9px] uppercase tracking-[0.2em] text-red-400/60 leading-relaxed">
-                    ⚠ Orders with incorrect or fraudulent payment screenshots will be automatically cancelled.
-                    Please ensure your transaction proof matches the order total before submitting.
-                  </p>
                 </div>
               </div>
 
@@ -450,6 +449,8 @@ function Checkout() {
                 <div className="md:sticky md:top-28 rounded-2xl border border-chrome bg-graphite p-6 md:p-8" style={{ boxShadow: "var(--shadow-plate)" }}>
                   <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Order Summary</span>
                   <div className="divider-chrome my-5" />
+
+                  {/* Cart items */}
                   <div className="space-y-3 max-h-48 overflow-y-auto scrollbar-thin">
                     {cart.items.map((item) => (
                       <div key={item.id} className="flex items-center gap-3">
@@ -484,7 +485,7 @@ function Checkout() {
                         <button
                           type="button"
                           onClick={() => setAppliedCoupon(null)}
-                          className="font-mono text-[9px] text-chrome-dim hover:text-red-400"
+                          className="font-mono text-[9px] text-chrome-dim hover:text-red-400 cursor-pointer"
                         >
                           Remove
                         </button>
@@ -501,7 +502,7 @@ function Checkout() {
                           type="button"
                           onClick={handleApplyCoupon}
                           disabled={couponApplying || !couponCode.trim()}
-                          className="btn-chrome btn-chrome-inner px-3 py-2 rounded-xl text-[10px] disabled:opacity-30"
+                          className="btn-chrome btn-chrome-inner px-3 py-2 rounded-xl text-[10px] disabled:opacity-30 cursor-pointer"
                         >
                           {couponApplying ? "..." : "Apply"}
                         </button>
@@ -510,46 +511,26 @@ function Checkout() {
                     {couponError && <p className="mt-1 font-mono text-[9px] text-red-400">{couponError}</p>}
                   </div>
 
-                  {/* Shipping */}
-                  {shippingRates.length > 0 && (
-                    <div className="divider-chrome my-4" />
-                  )}
-                  {shippingRates.length > 0 && (
-                    <div>
-                      <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">Shipping</span>
-                      <div className="mt-2 space-y-2">
-                        {shippingRates.map((rate) => (
-                          <label
-                            key={rate._id}
-                            className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 cursor-pointer transition-colors ${
-                              selectedShipping?._id === rate._id
-                                ? "border-chrome/50 bg-chrome/10"
-                                : "border-chrome/20 hover:border-chrome/30"
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name="shipping"
-                              checked={selectedShipping?._id === rate._id}
-                              onChange={() => setSelectedShipping(rate)}
-                              className="accent-chrome"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="font-mono text-[11px] text-foreground">{rate.name}</p>
-                              {rate.description && (
-                                <p className="font-mono text-[9px] text-chrome-dim">{rate.description}</p>
-                              )}
-                              {rate.estimatedDays && (
-                                <p className="font-mono text-[9px] text-chrome-dim/60">{rate.estimatedDays} days</p>
-                              )}
-                            </div>
-                            <span className="font-mono text-[11px] text-chrome shrink-0">{formatPrice(rate.price)}</span>
-                          </label>
-                        ))}
+                  {/* Delivery charge indicator */}
+                  {selectedShipping && (
+                    <>
+                      <div className="divider-chrome my-4" />
+                      <div className="flex items-center justify-between rounded-xl border border-chrome/20 bg-chrome/5 px-3 py-2.5">
+                        <div>
+                          <p className="font-mono text-[10px] text-chrome-dim uppercase tracking-[0.2em]">Delivery</p>
+                          <p className="font-mono text-[11px] text-foreground mt-0.5">{selectedShipping.name}</p>
+                          {selectedShipping.estimatedDays && (
+                            <p className="font-mono text-[9px] text-chrome-dim/60">{selectedShipping.estimatedDays} days</p>
+                          )}
+                        </div>
+                        <span className="font-mono text-sm text-chrome shrink-0">
+                          {shippingCost === 0 ? "Free" : formatPrice(shippingCost)}
+                        </span>
                       </div>
-                    </div>
+                    </>
                   )}
 
+                  {/* Totals */}
                   <div className="divider-chrome my-5" />
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -582,7 +563,7 @@ function Checkout() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="mt-6 btn-chrome btn-chrome-inner w-full justify-center disabled:opacity-50"
+                    className="mt-6 btn-chrome btn-chrome-inner w-full justify-center disabled:opacity-50 cursor-pointer"
                   >
                     <span className="btn-label">{submitting ? "Processing…" : "Place Order"}</span>
                   </button>

@@ -114,7 +114,7 @@ function OrderDetail() {
 
   async function handleUpdate() {
     try {
-      await updateOrder({ sessionToken: getSessionToken() ?? "", id: order._id as Id<"orders">, status });
+      await updateOrder({ sessionToken: getSessionToken() ?? "", id: order!._id as Id<"orders">, status });
       flashSuccess("Status updated!");
     } catch (err) {
       console.error("Failed to update order", err);
@@ -123,7 +123,7 @@ function OrderDetail() {
 
   async function handleQuickAction(nextStatus: string) {
     try {
-      await updateOrder({ sessionToken: getSessionToken() ?? "", id: order._id as Id<"orders">, status: nextStatus });
+      await updateOrder({ sessionToken: getSessionToken() ?? "", id: order!._id as Id<"orders">, status: nextStatus });
       setStatus(nextStatus);
       flashSuccess(`Order ${nextStatus.toLowerCase()}!`);
     } catch (err) {
@@ -133,7 +133,7 @@ function OrderDetail() {
 
   async function handleDelete() {
     try {
-      await removeOrder({ sessionToken: getSessionToken() ?? "", id: order._id as Id<"orders"> });
+      await removeOrder({ sessionToken: getSessionToken() ?? "", id: order!._id as Id<"orders"> });
       navigate({ to: "/order" });
     } catch (err) {
       console.error("Failed to delete order", err);
@@ -212,9 +212,9 @@ function OrderDetail() {
                           <TableCell>
                             <div className="flex items-center gap-3">
                               {imgSrc ? (
-                                <Link to={product ? `/products/${product.slug}` : "#"} className="shrink-0">
+                                <a href={product ? `/products/${product.slug}` : "#"} className="shrink-0">
                                   <img src={imgSrc} alt={item.name} className="h-10 w-10 rounded-lg object-cover border border-chrome/20" />
-                                </Link>
+                                </a>
                               ) : (
                                 <div className="h-10 w-10 rounded-lg bg-chrome/10 flex items-center justify-center font-mono text-sm text-chrome-dim shrink-0">
                                   {item.name.charAt(0)}
@@ -222,9 +222,9 @@ function OrderDetail() {
                               )}
                               <div>
                                 {product ? (
-                                  <Link to={`/products/${product.slug}`} className="text-foreground font-medium hover:text-chrome-h transition-colors flex items-center gap-1">
+                                  <a href={`/products/${product.slug}`} className="text-foreground font-medium hover:text-chrome-h transition-colors flex items-center gap-1">
                                     {item.name} <ExternalLink className="h-3 w-3" />
-                                  </Link>
+                                  </a>
                                 ) : (
                                   <span className="text-foreground font-medium">{item.name}</span>
                                 )}
@@ -257,9 +257,9 @@ function OrderDetail() {
                     <div key={i} className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {imgSrc ? (
-                          <Link to={product ? `/products/${product.slug}` : "#"} className="shrink-0">
+                          <a href={product ? `/products/${product.slug}` : "#"} className="shrink-0">
                             <img src={imgSrc} alt={item.name} className="h-12 w-12 rounded-lg object-cover border border-chrome/20" />
-                          </Link>
+                          </a>
                         ) : (
                           <div className="h-12 w-12 rounded-lg bg-chrome/10 flex items-center justify-center font-mono text-sm text-chrome-dim shrink-0">
                             {item.name.charAt(0)}
@@ -267,9 +267,9 @@ function OrderDetail() {
                         )}
                         <div className="flex-1 min-w-0">
                           {product ? (
-                            <Link to={`/products/${product.slug}`} className="text-foreground font-medium text-sm hover:text-chrome-h transition-colors flex items-center gap-1">
+                            <a href={`/products/${product.slug}`} className="text-foreground font-medium text-sm hover:text-chrome-h transition-colors flex items-center gap-1">
                               {item.name} <ExternalLink className="h-3 w-3 shrink-0" />
-                            </Link>
+                            </a>
                           ) : (
                             <p className="text-foreground font-medium text-sm">{item.name}</p>
                           )}
@@ -362,7 +362,7 @@ function OrderDetail() {
                   <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Payment</p>
                   <p className="text-foreground text-sm mt-1">{order.paymentMethod}</p>
                   {order.screenshot && (
-                    <button onClick={() => setLightboxImg(order.screenshot)} className="mt-2 w-full group relative">
+                    <button onClick={() => setLightboxImg(order.screenshot ?? null)} className="mt-2 w-full group relative">
                       <img
                         src={order.screenshot}
                         alt="Payment proof"

@@ -14,7 +14,7 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
   const [touchHover, setTouchHover] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const constraintsRef = useRef<HTMLDivElement>(null);
-  const touchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hoverLock = useRef(false);
 
   useEffect(() => {
