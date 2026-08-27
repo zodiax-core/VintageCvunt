@@ -47,10 +47,10 @@ function Shop() {
   const [priceRange, setPriceRange] = useState(priceRanges[0]);
   const [sort, setSort] = useState(sortOptions[0]);
 
-  const [visibleCount, setVisibleCount] = useState(5);
+  const [visibleCount, setVisibleCount] = useState(24);
   const { ref: loadMoreRef, inView } = useInView({
     threshold: 0.1,
-    rootMargin: "200px",
+    rootMargin: "400px",
   });
 
   const filtered = useMemo(() => {
@@ -68,13 +68,13 @@ function Shop() {
 
   // Reset visible count when filters change
   useEffect(() => {
-    setVisibleCount(5);
+    setVisibleCount(24);
   }, [filtered.length, category, priceRange, sort]);
 
   // Auto-load more when scrolling into view
   useEffect(() => {
     if (inView && visibleCount < filtered.length) {
-      setVisibleCount((prev) => Math.min(prev + 5, filtered.length));
+      setVisibleCount((prev) => Math.min(prev + 12, filtered.length));
     }
   }, [inView, filtered.length, visibleCount]);
 
@@ -112,7 +112,7 @@ function Shop() {
       </section>
 
       {/* FILTERS */}
-      <section className="sticky top-0 z-40 border-y border-chrome bg-graphite">
+      <section className="sticky top-[68px] md:top-[84px] z-40 border-y border-chrome bg-graphite transition-all duration-300">
         <div className="mx-auto max-w-7xl px-3 md:px-6 py-3 md:py-5">
           <div className="flex flex-nowrap items-center gap-1.5 md:gap-6 overflow-visible">
             <span className="hidden md:inline font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim mr-2 shrink-0">Filter by</span>
@@ -255,11 +255,9 @@ function Shop() {
                   params={{ slug: product.slug }}
                 >
                   <motion.div
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.6, ease: EASE }}
+                    transition={{ duration: 0.5, ease: EASE }}
                     className="group cursor-pointer"
                   >
                     <div className="relative overflow-hidden rounded-2xl border border-chrome bg-graphite" style={{ boxShadow: "var(--shadow-plate)" }}>
@@ -284,7 +282,7 @@ function Shop() {
             <div className="mt-16 flex flex-col items-center gap-4" ref={loadMoreRef}>
               <div className="h-4 w-4 rounded-full border-2 border-chrome-dim border-t-chrome animate-spin" />
               <button
-                onClick={() => setVisibleCount((prev) => Math.min(prev + 5, filtered.length))}
+                onClick={() => setVisibleCount((prev) => Math.min(prev + 12, filtered.length))}
                 className="btn-chrome btn-chrome-inner"
               >
                 <span className="btn-label">Load More</span>

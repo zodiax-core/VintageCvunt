@@ -58,6 +58,15 @@ function ProductPage() {
   const { addToCart } = useCartContext();
   const { formatPrice } = useCurrency();
 
+  const galleryImages = useMemo(() => {
+    if (!product) return [];
+    const baseImages = product.imageUrls || [];
+    const variantImages = (product.variants || [])
+      .map((v: any) => v.imageUrl)
+      .filter((img: string | undefined): img is string => !!img);
+    return Array.from(new Set([...baseImages, ...variantImages]));
+  }, [product]);
+
   const currentVariant = useMemo(() => {
     if (!product?.variants || !selectedColor) return null;
     return product.variants.find((v: any) => v.name === selectedColor) || null;
@@ -153,9 +162,7 @@ function ProductPage() {
                 <div className="aspect-[4/5]">
                   <img
                     src={
-                      (showVariantImage && currentVariant?.imageUrl) ||
-                      product.imageUrls?.[selectedImage] ||
-                      product.imageUrls?.[0] ||
+                      galleryImages[selectedImage] ||
                       "/placeholder.svg"
                     }
                     alt={product.name}
@@ -165,17 +172,16 @@ function ProductPage() {
               </motion.div>
 
               {/* Image Thumbnails */}
-              {product.imageUrls && product.imageUrls.length > 1 && (
+              {galleryImages.length > 1 && (
                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
-                  {product.imageUrls.map((url: string, index: number) => (
+                  {galleryImages.map((url: string, index: number) => (
                     <button
                       key={index}
                       onClick={() => {
                         setSelectedImage(index);
-                        setShowVariantImage(false); // Switch display back to general gallery image
                       }}
                       className={`relative h-20 w-16 shrink-0 overflow-hidden rounded-xl border transition-all ${
-                        !showVariantImage && selectedImage === index ? "border-chrome ring-1 ring-chrome/30" : "border-chrome/20 hover:border-chrome/50"
+                        selectedImage === index ? "border-chrome ring-1 ring-chrome/30" : "border-chrome/20 hover:border-chrome/50"
                       }`}
                     >
                       <img src={url} alt="" className="h-full w-full object-cover" />
@@ -290,9 +296,10 @@ function ProductPage() {
                               setVariantError(false);
                               setSelectedSize(""); // variant name becomes the color selector
                               if (v.imageUrl) {
-                                setShowVariantImage(true);
-                              } else {
-                                setShowVariantImage(false);
+                                const idx = galleryImages.indexOf(v.imageUrl);
+                                if (idx !== -1) {
+                                  setSelectedImage(idx);
+                                }
                               }
                             }}
                             className={`rounded-lg border px-3 py-1.5 font-mono text-[11px] transition-all duration-200 ${
@@ -342,7 +349,7 @@ function ProductPage() {
                 <div className="divider-chrome my-6 md:my-8" />
 
                 {/* Action Buttons */}
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-3 w-full">
                   {/* Buy Now (prioritized) */}
                   <button
                     onClick={() => {
@@ -356,15 +363,15 @@ function ProductPage() {
                         productId: product._id,
                         name: product.name,
                         slug: product.slug,
-                        src: (showVariantImage && currentVariant?.imageUrl) || product.imageUrls?.[0] || "/placeholder.svg",
-                        webp: (showVariantImage && currentVariant?.imageUrl) || product.imageUrls?.[0] || "/placeholder.svg",
+                        src: galleryImages[selectedImage] || "/placeholder.svg",
+                        webp: galleryImages[selectedImage] || "/placeholder.svg",
                         price: currentPrice,
                         selectedSize: selectedSize || undefined,
                         selectedColor: selectedColor || undefined,
                       });
                       navigate({ to: "/checkout" });
                     }}
-                    className="btn-chrome bg-chrome text-white hover:bg-chrome-h hover:text-white w-full justify-center text-sm !py-4 font-mono uppercase tracking-[0.2em] font-semibold cursor-pointer"
+                    className="btn-chrome bg-chrome text-white hover:bg-chrome-h hover:text-white w-full justify-center text-sm !py-4 font-mono uppercase tracking-[0.2em] font-semibold cursor-pointer whitespace-nowrap"
                   >
                     Buy Now
                   </button>
@@ -382,8 +389,8 @@ function ProductPage() {
                         productId: product._id,
                         name: product.name,
                         slug: product.slug,
-                        src: (showVariantImage && currentVariant?.imageUrl) || product.imageUrls?.[0] || "/placeholder.svg",
-                        webp: (showVariantImage && currentVariant?.imageUrl) || product.imageUrls?.[0] || "/placeholder.svg",
+                        src: galleryImages[selectedImage] || "/placeholder.svg",
+                        webp: galleryImages[selectedImage] || "/placeholder.svg",
                         price: currentPrice,
                         selectedSize: selectedSize || undefined,
                         selectedColor: selectedColor || undefined,
@@ -391,7 +398,7 @@ function ProductPage() {
                       setAddedToCart(true);
                       setTimeout(() => setAddedToCart(false), 2000);
                     }}
-                    className="btn-chrome btn-chrome-inner w-full justify-center text-sm !py-4"
+                    className="btn-chrome btn-chrome-inner w-full justify-center text-sm !py-4 whitespace-nowrap"
                   >
                     <span className="btn-label">{addedToCart ? "Added ✓" : `Add to Cart — ${formatPrice(currentPrice)}`}</span>
                   </button>
