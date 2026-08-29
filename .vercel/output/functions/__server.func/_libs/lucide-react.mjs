@@ -419,6 +419,24 @@ var Clock = createLucideIcon("clock", [["circle", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Copy = createLucideIcon("copy", [["rect", {
+	width: "14",
+	height: "14",
+	x: "8",
+	y: "8",
+	rx: "2",
+	ry: "2",
+	key: "17jyea"
+}], ["path", {
+	d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2",
+	key: "zix9uf"
+}]]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var CreditCard = createLucideIcon("credit-card", [["rect", {
 	width: "20",
 	height: "14",
@@ -1608,4 +1626,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { ExternalLink as $, Pencil as A, LogOut as B, Reply as C, PiggyBank as D, Plus as E, MessageSquare as F, House as G, Landmark as H, Menu as I, GripVertical as J, History as K, Maximize2 as L, PanelsTopLeft as M, Package as N, Phone as O, PackageCheck as P, EyeOff as Q, Mail as R, Save as S, Quote as T, IndianRupee as U, LayoutDashboard as V, ImagePlus as W, FileText as X, Globe as Y, Eye as Z, Ship as _, ArrowRight as _t, UserPlus as a, CircleX as at, Settings as b, TriangleAlert as c, ChevronLeft as ct, Trash2 as d, ChartColumn as dt, Ellipsis as et, Tag as f, Calendar as ft, ShoppingBag as g, ArrowUpRight as gt, SlidersHorizontal as h, Banknote as ht, User as i, Clock as it, PenLine as j, Percent as k, TrendingUp as l, ChevronDown as lt, SquareCheckBig as m, Bell as mt, Wallet as n, DollarSign as nt, Upload as o, CircleAlert as ot, Star as p, Boxes as pt, HandCoins as q, Users as r, CreditCard as rt, Truck as s, ChevronRight as st, X as t, Download as tt, TrendingDown as u, Check as ut, ShieldCheck as v, ArrowLeft as vt, Receipt as w, Search as x, ShieldAlert as y, ArrowDownRight as yt, MailOpen as z };
+export { ExternalLink as $, Pencil as A, LogOut as B, Reply as C, PiggyBank as D, Plus as E, MessageSquare as F, House as G, Landmark as H, Menu as I, GripVertical as J, History as K, Maximize2 as L, PanelsTopLeft as M, Package as N, Phone as O, PackageCheck as P, EyeOff as Q, Mail as R, Save as S, Quote as T, IndianRupee as U, LayoutDashboard as V, ImagePlus as W, FileText as X, Globe as Y, Eye as Z, Ship as _, ArrowUpRight as _t, UserPlus as a, Clock as at, Settings as b, ArrowDownRight as bt, TriangleAlert as c, ChevronRight as ct, Trash2 as d, Check as dt, Ellipsis as et, Tag as f, ChartColumn as ft, ShoppingBag as g, Banknote as gt, SlidersHorizontal as h, Bell as ht, User as i, Copy as it, PenLine as j, Percent as k, TrendingUp as l, ChevronLeft as lt, SquareCheckBig as m, Boxes as mt, Wallet as n, DollarSign as nt, Upload as o, CircleX as ot, Star as p, Calendar as pt, HandCoins as q, Users as r, CreditCard as rt, Truck as s, CircleAlert as st, X as t, Download as tt, TrendingDown as u, ChevronDown as ut, ShieldCheck as v, ArrowRight as vt, Receipt as w, Search as x, ShieldAlert as y, ArrowLeft as yt, MailOpen as z };

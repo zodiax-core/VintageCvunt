@@ -1,15 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { Copy, Check, Upload, X } from "lucide-react";
 import { useCartContext } from "@/lib/cart-context";
 import { useAuthContext } from "@/lib/auth-context";
 import { useCurrency } from "@/lib/currency-context";
 import type { Id } from "../../convex/_generated/dataModel";
+import jazzCashLogo from "@/assets/jazz-cash-logo.png";
 
 export const Route = createFileRoute("/checkout")({
   component: Checkout,
@@ -22,6 +24,50 @@ export const Route = createFileRoute("/checkout")({
 });
 
 const EASE = [0.16, 1, 0.3, 1] as const;
+
+// ─── Payment account details ───────────────
+const JAZZCASH_DETAILS = {
+  accountHolder: "Anabiya Kashif",
+  accountNumber: "0331-6809983",
+};
+
+// ─── JazzCash Logo ───────────────────────────────────────────────────────
+function JazzCashLogo({ size = 22 }: { size?: number }) {
+  return (
+    <img
+      src={jazzCashLogo}
+      alt="JazzCash"
+      width={size}
+      height={size}
+      className="rounded-xl overflow-hidden object-contain bg-white"
+    />
+  );
+}
+
+// ─── Copy button with feedback ───────────────────────────────────────────────
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handle = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  return (
+    <button
+      type="button"
+      onClick={handle}
+      title="Copy"
+      className="ml-2 inline-flex items-center justify-center h-7 w-7 rounded-lg border border-chrome/30 bg-graphite hover:border-chrome/60 transition-colors shrink-0"
+    >
+      {copied ? (
+        <Check className="h-3.5 w-3.5 text-green-400" />
+      ) : (
+        <Copy className="h-3.5 w-3.5 text-chrome-dim" />
+      )}
+    </button>
+  );
+}
 
 function Checkout() {
   const { formatPrice } = useCurrency();
@@ -54,6 +100,15 @@ function Checkout() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
+
+  // Payment method: "cash on delivery" | "jazzcash"
+  const [paymentMethod, setPaymentMethod] = useState<"cash on delivery" | "jazzcash">("cash on delivery");
+
+  // Screenshot upload state
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [uploadingScreenshot, setUploadingScreenshot] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Coupon
   const [couponCode, setCouponCode] = useState("");
@@ -126,7 +181,24 @@ function Checkout() {
     }
   };
 
+  // Handle screenshot file selection
+  const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setScreenshotFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setScreenshotPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const removeScreenshot = () => {
+    setScreenshotFile(null);
+    setScreenshotPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const createOrder = useMutation(api.orders.create);
+  const generateUploadUrl = useMutation(api.orders.generateUploadUrl);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,6 +217,29 @@ function Checkout() {
     setSubmitting(true);
     try {
       const orderNumber = "VC-" + String(Math.floor(100000 + Math.random() * 900000));
+
+      // Resolve which online method was selected
+      const resolvedPaymentMethod = paymentMethod;
+
+      let screenshotStorageId: string | undefined;
+
+      // Upload screenshot to Convex Storage if present and online payment
+      if (screenshotFile && resolvedPaymentMethod === "jazzcash") {
+        setUploadingScreenshot(true);
+        try {
+          const uploadUrl = await generateUploadUrl();
+          const result = await fetch(uploadUrl, {
+            method: "POST",
+            headers: { "Content-Type": screenshotFile.type },
+            body: screenshotFile,
+          });
+          if (!result.ok) throw new Error("Upload failed");
+          const { storageId } = await result.json();
+          screenshotStorageId = storageId;
+        } finally {
+          setUploadingScreenshot(false);
+        }
+      }
 
       await createOrder({
         orderNumber,
@@ -168,7 +263,8 @@ function Checkout() {
         couponCode: appliedCoupon?.code,
         total: grandTotal,
         status: "pending",
-        paymentMethod: "Cash on Delivery",
+        paymentMethod: resolvedPaymentMethod,
+        screenshot: screenshotStorageId,
         billingAddress: {
           street: billing.address,
           city: billing.city,
@@ -210,6 +306,8 @@ function Checkout() {
     );
   }
 
+  const isOnlinePayment = paymentMethod === "jazzcash";
+
   return (
     <div className="relative min-h-screen bg-background text-foreground">
       {/* Registration / Auth modal */}
@@ -229,7 +327,7 @@ function Checkout() {
               <Link
                 to="/auth"
                 search={{ mode: "register" }}
-                className="btn-chrome bg-chrome text-background hover:bg-chrome-h w-full justify-center py-3 text-xs uppercase tracking-[0.2em]"
+                className="btn-chrome bg-chrome text-white hover:text-white hover:bg-chrome-h w-full justify-center py-3 text-xs uppercase tracking-[0.2em]"
               >
                 Register Account
               </Link>
@@ -302,9 +400,8 @@ function Checkout() {
                           onChange={(e) => setBilling({ ...billing, name: e.target.value })}
                           onBlur={() => handleBlur("name")}
                           placeholder="Your Name"
-                          className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${
-                            touched.name && errors.name ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
-                          }`}
+                          className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.name && errors.name ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
+                            }`}
                         />
                         {touched.name && errors.name && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.name}</p>}
                       </div>
@@ -316,9 +413,8 @@ function Checkout() {
                           onChange={(e) => setBilling({ ...billing, email: e.target.value })}
                           onBlur={() => handleBlur("email")}
                           placeholder="your@address.com"
-                          className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${
-                            touched.email && errors.email ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
-                          }`}
+                          className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.email && errors.email ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
+                            }`}
                         />
                         {touched.email && errors.email && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.email}</p>}
                       </div>
@@ -330,9 +426,8 @@ function Checkout() {
                         onChange={(e) => setBilling({ ...billing, phone: e.target.value })}
                         onBlur={() => handleBlur("phone")}
                         placeholder="+92 300 1234567"
-                        className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${
-                          touched.phone && errors.phone ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
-                        }`}
+                        className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.phone && errors.phone ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
+                          }`}
                       />
                       {touched.phone && errors.phone && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.phone}</p>}
                     </div>
@@ -343,9 +438,8 @@ function Checkout() {
                         onChange={(e) => setBilling({ ...billing, address: e.target.value })}
                         onBlur={() => handleBlur("address")}
                         placeholder="Street address"
-                        className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${
-                          touched.address && errors.address ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
-                        }`}
+                        className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.address && errors.address ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
+                          }`}
                       />
                       {touched.address && errors.address && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.address}</p>}
                     </div>
@@ -363,9 +457,8 @@ function Checkout() {
                             onFocus={() => setCityOpen(true)}
                             onBlur={() => setTimeout(() => setCityOpen(false), 150)}
                             placeholder="Search city…"
-                            className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${
-                              touched.city && errors.city ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
-                            }`}
+                            className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.city && errors.city ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
+                              }`}
                           />
                           {cityOpen && shippingRates.length > 0 && (
                             <div className="absolute z-20 mt-1 w-full rounded-xl border border-chrome/30 bg-graphite shadow-xl overflow-hidden">
@@ -384,9 +477,8 @@ function Checkout() {
                                         setTouched((prev) => ({ ...prev, city: true }));
                                         setErrors((prev) => ({ ...prev, city: "" }));
                                       }}
-                                      className={`w-full flex items-center justify-between px-4 py-2.5 font-mono text-sm text-left transition-colors hover:bg-chrome/10 ${
-                                        selectedShipping?._id === rate._id ? "bg-chrome/10 text-chrome" : "text-foreground"
-                                      }`}
+                                      className={`w-full flex items-center justify-between px-4 py-2.5 font-mono text-sm text-left transition-colors hover:bg-chrome/10 ${selectedShipping?._id === rate._id ? "bg-chrome/10 text-chrome" : "text-foreground"
+                                        }`}
                                     >
                                       <span>{rate.name}</span>
                                       <span className="text-chrome-dim text-xs">{rate.price === 0 ? "Free" : `PKR ${rate.price.toLocaleString()}`}</span>
@@ -417,9 +509,8 @@ function Checkout() {
                           onChange={(e) => setBilling({ ...billing, zip: e.target.value })}
                           onBlur={() => handleBlur("zip")}
                           placeholder="ZIP"
-                          className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${
-                            touched.zip && errors.zip ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
-                          }`}
+                          className={`w-full rounded-xl border bg-graphite px-4 py-3 font-mono text-sm placeholder:text-chrome-dim/30 outline-none transition-colors ${touched.zip && errors.zip ? "border-red-500/50" : "border-chrome focus:border-chrome/80"
+                            }`}
                         />
                         {touched.zip && errors.zip && <p className="mt-1 font-mono text-[10px] text-red-400">{errors.zip}</p>}
                       </div>
@@ -427,21 +518,149 @@ function Checkout() {
                   </div>
                 </div>
 
-                {/* Payment Section — COD only */}
+                {/* ─── Payment Section ────────────────────────────────────────── */}
                 <div>
                   <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-chrome-dim">§ Payment</span>
-                  <div className="mt-4 flex items-start gap-4 rounded-2xl border border-chrome/20 bg-graphite/30 p-5">
-                    <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-chrome bg-chrome/10">
-                      <div className="h-2 w-2 rounded-full bg-chrome" />
+                  <div className="mt-5 space-y-3">
+
+                    {/* ── Cash on Delivery ── */}
+                    <label
+                      className={`flex items-start gap-4 cursor-pointer rounded-2xl border p-4 transition-all ${paymentMethod === "cash on delivery"
+                        ? "border-chrome/60 bg-chrome/5"
+                        : "border-chrome/20 bg-graphite hover:border-chrome/35"
+                        }`}
+                    >
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="cash on delivery"
+                        checked={paymentMethod === "cash on delivery"}
+                        onChange={() => setPaymentMethod("cash on delivery")}
+                        className="mt-0.5 shrink-0 accent-current"
+                      />
+                      <div className="flex items-center gap-3 flex-1">
+                        {/* COD icon */}
+                        <div className="h-10 w-10 rounded-xl bg-graphite-2 border border-chrome/20 flex items-center justify-center shrink-0">
+                          <svg className="h-5 w-5 text-chrome-dim" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                            <rect x="2" y="6" width="20" height="12" rx="2" />
+                            <circle cx="12" cy="12" r="2" />
+                            <path d="M6 12h.01M18 12h.01" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-mono text-sm text-foreground">Cash on Delivery</p>
+                          <p className="font-mono text-[10px] text-chrome-dim mt-0.5">Pay in cash when your parcel arrives</p>
+                        </div>
+                      </div>
+                    </label>
+
+                    {/* ── JazzCash Block ── */}
+                    <div
+                      className={`rounded-2xl border transition-all overflow-hidden ${isOnlinePayment
+                        ? "border-chrome/60 bg-chrome/5"
+                        : "border-chrome/20 bg-graphite hover:border-chrome/35"
+                        }`}
+                    >
+                      {/* Header row — clicking selects online payment */}
+                      <label className="flex items-center gap-4 cursor-pointer p-4">
+                        <input
+                          type="radio"
+                          name="payment"
+                          value="jazzcash"
+                          checked={isOnlinePayment}
+                          onChange={() => {
+                            setPaymentMethod("jazzcash");
+                          }}
+                          className="mt-0.5 shrink-0 accent-current"
+                        />
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="h-10 w-10 rounded-xl bg-graphite-2 border border-chrome/20 flex items-center justify-center shrink-0 overflow-hidden">
+                            <JazzCashLogo size={28} />
+                          </div>
+                          <div>
+                            <p className="font-mono text-sm text-foreground">JazzCash</p>
+                            <p className="font-mono text-[10px] text-chrome-dim mt-0.5">Transfer via JazzCash</p>
+                          </div>
+                        </div>
+                      </label>
+
+                      {/* Details — only visible when online is selected */}
+                      <AnimatePresence>
+                        {isOnlinePayment && (
+                          <motion.div
+                            key="online-panel"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                            className="overflow-hidden"
+                          >
+                            <div className="px-4 pb-4 space-y-4 pt-2">
+                              {/* Account details panel */}
+                              <div className="rounded-xl border border-chrome/15 bg-background/60 p-4 space-y-3">
+                                <div>
+                                  <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-chrome-dim/60 mb-1">Account Holder</p>
+                                  <div className="flex items-center">
+                                    <span className="font-mono text-sm text-foreground">{JAZZCASH_DETAILS.accountHolder}</span>
+                                  </div>
+                                </div>
+                                <div>
+                                  <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-chrome-dim/60 mb-1">Mobile Number</p>
+                                  <div className="flex items-center">
+                                    <span className="font-mono text-sm text-foreground">{JAZZCASH_DETAILS.accountNumber}</span>
+                                    <CopyButton text={JAZZCASH_DETAILS.accountNumber} />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Screenshot upload */}
+                              <div>
+                                <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-chrome-dim mb-2">
+                                  Upload Payment Screenshot
+                                </p>
+                                {screenshotPreview ? (
+                                  <div className="relative rounded-xl overflow-hidden border border-chrome/30 bg-background/50">
+                                    <img
+                                      src={screenshotPreview}
+                                      alt="Payment proof"
+                                      className="w-full max-h-48 object-contain"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={removeScreenshot}
+                                      className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 border border-chrome/30 flex items-center justify-center hover:border-red-400/60 transition-colors"
+                                    >
+                                      <X className="h-3.5 w-3.5 text-chrome-dim" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="w-full flex flex-col items-center gap-2 py-6 rounded-xl border border-dashed border-chrome/30 bg-background/30 hover:border-chrome/60 hover:bg-chrome/5 transition-all"
+                                  >
+                                    <Upload className="h-5 w-5 text-chrome-dim" />
+                                    <span className="font-mono text-[10px] text-chrome-dim">Click to upload screenshot</span>
+                                    <span className="font-mono text-[9px] text-chrome-dim/50">PNG, JPG, WEBP up to 5 MB</span>
+                                  </button>
+                                )}
+                                <input
+                                  ref={fileInputRef}
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleScreenshotChange}
+                                  className="hidden"
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                    <div>
-                      <p className="font-mono text-xs text-chrome">Cash on Delivery (COD)</p>
-                      <p className="mt-1 font-mono text-[10px] text-chrome-dim/60">
-                        Pay in cash upon receiving your parcel. No prepayment required.
-                      </p>
-                    </div>
+
                   </div>
                 </div>
+                {/* ────────────────────────────────────────────────────────────── */}
               </div>
 
               {/* Right — Order Summary */}
@@ -562,10 +781,12 @@ function Checkout() {
 
                   <button
                     type="submit"
-                    disabled={submitting}
+                    disabled={submitting || uploadingScreenshot}
                     className="mt-6 btn-chrome btn-chrome-inner w-full justify-center disabled:opacity-50 cursor-pointer"
                   >
-                    <span className="btn-label">{submitting ? "Processing…" : "Place Order"}</span>
+                    <span className="btn-label">
+                      {uploadingScreenshot ? "Uploading…" : submitting ? "Processing…" : "Place Order"}
+                    </span>
                   </button>
 
                   <AnimatePresence>

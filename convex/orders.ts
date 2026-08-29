@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { Id } from "./_generated/dataModel";
 import { requireAdmin } from "./admin";
 
 export const list = query({
@@ -11,14 +12,27 @@ export const list = query({
   },
 });
 
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
 export const getById = query({
   args: { id: v.id("orders") },
   handler: async (ctx, args) => {
     const order = await ctx.db.get(args.id);
     if (!order) return null;
     if (order.screenshot) {
-      const screenshotUrl = await ctx.storage.getUrl(order.screenshot as any);
-      return { ...order, screenshot: screenshotUrl };
+      // Try to resolve as a Convex storage ID first, fall back to raw URL
+      try {
+        const screenshotUrl = await ctx.storage.getUrl(order.screenshot as Id<"_storage">);
+        return { ...order, screenshot: screenshotUrl ?? order.screenshot };
+      } catch {
+        // It's already a plain URL
+        return order;
+      }
     }
     return order;
   },

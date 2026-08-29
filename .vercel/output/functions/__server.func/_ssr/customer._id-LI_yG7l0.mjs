@@ -3,7 +3,7 @@ import { t as api } from "./api-B0N4M6pc.mjs";
 import { g as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
 import { n as getSessionToken } from "./admin-D4iRQZfC.mjs";
 import { _ as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { ft as Calendar, g as ShoppingBag, nt as DollarSign, r as Users, tt as Download, vt as ArrowLeft, w as Receipt } from "../_libs/lucide-react.mjs";
+import { g as ShoppingBag, nt as DollarSign, pt as Calendar, r as Users, tt as Download, w as Receipt, yt as ArrowLeft } from "../_libs/lucide-react.mjs";
 import { t as AdminLayout } from "./AdminLayout-CEycyE9k.mjs";
 import { a as TableHeader, i as TableHead, n as TableBody, o as TableRow, r as TableCell, t as Table } from "./table-BCmSA03j.mjs";
 import { t as Route } from "./customer._id-CIWsUBfg.mjs";
