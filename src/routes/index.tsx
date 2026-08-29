@@ -496,7 +496,7 @@ function Categories() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {cats.map((c, i) => (
-              <Link key={i} to={c.link} data-cursor="hover" className="group relative block overflow-hidden rounded-3xl border border-chrome">
+              <Link key={i} to="/shop" search={{ category: c.name }} data-cursor="hover" className="group relative block overflow-hidden rounded-3xl border border-chrome">
                 <div className="aspect-[3/4] overflow-hidden bg-graphite-2 flex items-center justify-center">
                   {c.imageUrl ? (
                     <img src={c.imageUrl} alt={c.name} className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]" />

@@ -83,6 +83,7 @@ function EditProduct() {
   const existingFaqs = useQuery(api.faq.getByCategory, { category: product?.slug ?? "" }) ?? [];
 
   const updateProduct = useMutation(api.products.update);
+  const getBySlug = useQuery(api.products.getBySlug, { slug: form.slug });
   const generateUploadUrl = useMutation(api.products.generateUploadUrl);
   const createFaq = useMutation(api.faq.create);
   const addToCollection = useMutation(api.collections.addProductToCollection);
@@ -218,6 +219,12 @@ function EditProduct() {
 
   const handleSave = async () => {
     if (!validate()) return;
+    // Check for duplicate slug, but allow the same slug when editing the current product
+    if (form.slug && getBySlug && getBySlug._id && getBySlug._id !== id) {
+      setSaveError("A product with this slug already exists. Please choose a different slug.");
+      setSaving(false);
+      return;
+    }
     setSaving(true);
     setSaveError("");
     const finalImages: string[] = [];

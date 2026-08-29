@@ -67,6 +67,7 @@ function AddProduct() {
   });
 
   const createProduct = useMutation(api.products.create);
+  const getBySlug = useQuery(api.products.getBySlug, { slug: form.slug });
   const generateUploadUrl = useMutation(api.products.generateUploadUrl);
   const createFaq = useMutation(api.faq.create);
   const addToCollection = useMutation(api.collections.addProductToCollection);
@@ -167,6 +168,11 @@ function AddProduct() {
 
   const handleSave = async () => {
     if (!validate()) return;
+    if (form.slug && getBySlug) {
+      setSaveError("A product with this slug already exists. Please choose a different slug.");
+      setSaving(false);
+      return;
+    }
     setSaving(true);
     setSaveError("");
     const images: string[] = [];

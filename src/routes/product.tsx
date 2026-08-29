@@ -50,6 +50,14 @@ function Products() {
     }
   };
 
+  const slugCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of allProducts) {
+      counts[p.slug] = (counts[p.slug] || 0) + 1;
+    }
+    return counts;
+  }, [allProducts]);
+
   const products = useMemo(() => {
     return allProducts.map((p) => ({
       _id: p._id,
@@ -62,8 +70,9 @@ function Products() {
       imageUrl: p.imageUrls?.[0] || null,
       featured: p.featured,
       status: p.inStock ? "Active" as const : "Draft" as const,
+      slugDuplicate: (slugCounts[p.slug] || 0) > 1,
     }));
-  }, [allProducts]);
+  }, [allProducts, slugCounts]);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -140,7 +149,9 @@ function Products() {
                   </div>
                   <div>
                     <p className="font-mono text-[11px]">{product.name}</p>
-                    <p className="font-mono text-[9px] text-chrome-dim">{product.slug}</p>
+                    <p className="font-mono text-[9px] text-chrome-dim">{product.slug}{product.slugDuplicate && (
+                      <span className="ml-1 text-[8px] bg-red-500/20 text-red-400 rounded px-1.5 py-0.5 font-mono">dup</span>
+                    )}</p>
                   </div>
                 </div>
                 {statusBadge(product.status)}
@@ -208,7 +219,9 @@ function Products() {
                     )}
                   </TableCell>
                   <TableCell><span className="font-mono text-[11px]">{product.name}</span></TableCell>
-                  <TableCell><span className="font-mono text-[11px] text-chrome-dim">{product.slug}</span></TableCell>
+                  <TableCell><span className="font-mono text-[11px] text-chrome-dim">{product.slug}{product.slugDuplicate && (
+                      <span className="ml-1 text-[8px] bg-red-500/20 text-red-400 rounded px-1.5 py-0.5 font-mono">dup</span>
+                    )}</span></TableCell>
                   <TableCell><span className="font-mono text-[11px]">{product.category}</span></TableCell>
                   <TableCell><span className="font-mono text-[11px]">${product.price}</span></TableCell>
                   <TableCell>
