@@ -9,7 +9,7 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 
 export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [videoRatio, setVideoRatio] = useState(16 / 9);
   const [touchHover, setTouchHover] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -78,7 +78,7 @@ export function FloatingVideo({ videoUrl }: FloatingVideoProps) {
         <video
           ref={videoRef}
           src={videoUrl}
-          autoPlay
+          preload="metadata"
           loop
           muted
           playsInline

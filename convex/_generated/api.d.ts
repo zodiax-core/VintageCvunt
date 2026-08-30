@@ -10,6 +10,7 @@
 
 import type * as aboutMilestones from "../aboutMilestones.js";
 import type * as admin from "../admin.js";
+import type * as adminStorage from "../adminStorage.js";
 import type * as assets from "../assets.js";
 import type * as capital from "../capital.js";
 import type * as collections from "../collections.js";
@@ -41,6 +42,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   aboutMilestones: typeof aboutMilestones;
   admin: typeof admin;
+  adminStorage: typeof adminStorage;
   assets: typeof assets;
   capital: typeof capital;
   collections: typeof collections;

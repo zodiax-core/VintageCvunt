@@ -431,6 +431,7 @@ function SmallCase({ imageUrl, name, price }: { imageUrl: string; name: string; 
       <div className="relative overflow-hidden rounded-2xl border border-chrome bg-graphite" style={{ boxShadow: "var(--shadow-plate)" }}>
         <div className="aspect-[4/5] overflow-hidden">
           <img
+            loading="lazy"
             src={imageUrl}
             alt={name}
             className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06] group-hover:rotate-[1deg]"
@@ -499,7 +500,7 @@ function Categories() {
               <Link key={i} to="/shop" search={{ category: c.name }} data-cursor="hover" className="group relative block overflow-hidden rounded-3xl border border-chrome">
                 <div className="aspect-[3/4] overflow-hidden bg-graphite-2 flex items-center justify-center">
                   {c.imageUrl ? (
-                    <img src={c.imageUrl} alt={c.name} className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]" />
+                    <img src={c.imageUrl} alt={c.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]" />
                   ) : (
                     <div className="font-display text-6xl text-chrome-dim/20 italic">{c.name.charAt(0)}</div>
                   )}
